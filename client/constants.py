@@ -37,3 +37,5 @@ class NumberStates:
     number_8 = dc.replace(all_on)
     number_9 = dc.replace(all_on, CE=False)
     number_0 = dc.replace(all_on, CG=False)
+
+light_fade_time = 8

@@ -37,8 +37,8 @@ class MainWindow(EmptyWindow):
     @Slot(WholeOutputState)
     def set_output_state(self, new_output_state: WholeOutputState):
         self.lights_line.set_output_state(new_output_state.lights)
-        self.four_digits.set_anodes(new_output_state.anode)
-        self.four_digits.set_cathodes(new_output_state.cathode)
+        self.four_digits.set_anodes(new_output_state.anode, refresh=False)
+        self.four_digits.set_cathodes(new_output_state.cathode, refresh=True)
         self.output_state = dc.replace(new_output_state)
 
     def update_input_state(self, *, buttons: InputState.Buttons | None = None, switches: InputState.Switches | None = None):

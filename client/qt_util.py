@@ -2,7 +2,7 @@ import dataclasses as dc
 from threading import Event
 from typing import Literal, overload, override
 
-from PySide6.QtCore import QSize, Qt, Signal, Slot
+from PySide6.QtCore import QSize, QTimer, Qt, Signal, Slot
 from PySide6.QtGui import QColor, QKeyEvent, QPalette
 from PySide6.QtWidgets import (
     QApplication,
@@ -156,10 +156,17 @@ class LightDisplay(QPushButton):
         if size is not None:
             self.setFixedSize(size)
 
+        self.off_timer = QTimer(interval=c.light_fade_time, singleShot=True)
+        self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
+
     def set_light(self, light_on: bool):
-        if self.light_on != light_on: # avoid redundant color setting, probably saves a bit of time
+        if self.light_on != light_on: # Avoid redundant color setting
             self.light_on = light_on
-            set_color(self, self.on_color if self.light_on else self.off_color)
+            if light_on:
+                self.off_timer.stop()
+                set_color(self, self.on_color)
+            else:
+                self.off_timer.start()
 
 # TODO: much redundancy. Probably some way to make a subclass of
 #  QAbstractButton both of these classes multiple-inherit from?
@@ -175,13 +182,19 @@ class CircleLightDisplay(QRadioButton):
         self.on_color = on_color
         self.off_color = off_color
         set_color(self, self.off_color)
+        self.off_timer = QTimer(interval=c.light_fade_time, singleShot=True)
+        self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
         # Intentionally lacks size parameter. Radio buttons just crop if given
         #  smaller size and do not expand with a larger one
 
     def set_light(self, light_on: bool):
-        if self.light_on != light_on: # Avoid redundant color setting
-            self.light_on = light_on  #  (prob not a significant optimization).
-            set_color(self, self.on_color if self.light_on else self.off_color)
+        if self.light_on != light_on:
+            light_on = light_on
+            if self.light_on:
+                self.off_timer.stop()
+                set_color(self, self.on_color)
+            else:
+                self.off_timer.start()
 
 
 #   AAAA
@@ -238,14 +251,16 @@ class BoardComponents:
             self.setLayout(self.layout_hook)
 
         @Slot(OutputState.Anode)
-        def set_anodes(self, new_anodes: OutputState.Anode): 
+        def set_anodes(self, new_anodes: OutputState.Anode, *, refresh: bool): 
             self.current_anodes = dc.replace(new_anodes)
-            self._refresh()
+            if refresh:
+                self._refresh()
 
         @Slot(OutputState.Cathode)
-        def set_cathodes(self, new_lights: OutputState.Cathode):
+        def set_cathodes(self, new_lights: OutputState.Cathode, *, refresh: bool): 
             self.current_pattern = dc.replace(new_lights)
-            self._refresh()
+            if refresh:
+                self._refresh()
 
         def _refresh(self):
             for anode, digit in zip(dc.astuple(self.current_anodes), self.digits):
