@@ -25,7 +25,7 @@ class Sizes:
 
 class NumberStates:
     all_off = OutputState.Cathode()
-    all_on = OutputState.Cathode(*[True] * 8)
+    all_on = OutputState.Cathode(*[True] * 7) # 8th arg defaults to false — DP
 
     number_1 = OutputState.Cathode(CB=True, CC=True)
     number_2 = dc.replace(all_on, CC=False, CF=False)
