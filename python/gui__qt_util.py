@@ -19,8 +19,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-import constants as c
-from states import InputState, OutputState
+import gui__constants as c
+from gui__states import InputState, OutputState
 
 
 def choose_number(number: int) -> OutputState.Cathode:

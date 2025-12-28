@@ -2,7 +2,7 @@ import dataclasses as dc
 
 from PySide6.QtCore import QSize
 
-from states import OutputState
+from gui__states import OutputState
 
 
 class Colors:

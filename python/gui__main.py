@@ -7,8 +7,8 @@ import dataclasses as dc
 
 from PySide6.QtCore import Signal, Slot
 
-from qt_util import BoardComponents, EmptyWindow, make_app
-from states import InputState, OutputState, WholeInputState, WholeOutputState
+from gui__qt_util import BoardComponents, EmptyWindow, make_app
+from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
 
 
 class MainWindow(EmptyWindow):
