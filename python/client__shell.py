@@ -1,0 +1,173 @@
+import os
+import platform
+import readline
+import socket
+from functools import partial
+from pathlib import Path
+
+from shared__util import (
+    AnyCommand,
+    BuildLiveCommand,
+    NamedFile,
+    StartLiveCommand,
+    WaveformSimCommand,
+    serialize_dataclass,
+)
+
+
+class VerilogGatherError(RuntimeError):
+    '''Raised by get_verilog_from_folder if anything bad happens.
+    That function will print the relevant message.'''
+    pass
+
+def is_verilog(filename: str):
+    extension = filename.split(".")[-1]
+    return extension == "v" or extension == "sv"
+
+def send_message(message: str, sock: socket.socket):
+    message = f"{len(message):010}{message}"
+    sock.send(message.encode())
+
+def print_function_error(caller: str, message: str):
+    print(f'{caller}(): {message}')
+
+def get_verilog_from_folder(folder: str, caller: str):
+    print_error = partial(print_function_error, caller)
+    try:
+        all_filenames = os.listdir(folder)
+    except FileNotFoundError:
+        print_error(f'folder argument "{folder}" does not exist')
+        raise VerilogGatherError
+    except NotADirectoryError:
+        print_error(f'folder argument "{folder}" is a file, not a folder')
+        raise VerilogGatherError
+
+    v_filenames = [name for name in all_filenames if is_verilog(name)]
+    file_paths = [Path(folder, name) for name in v_filenames]
+
+    if len(file_paths) == 0:
+        print_error(f'{folder} contains no .v/.sv files. Please make sure '
+            'that all input files have the proper extensions.')
+        raise VerilogGatherError
+
+    # TODO: Is there a possible exception where a file can't be read?
+    #   For now can catch generic Exception and print, and tell user to contact me
+    return [NamedFile.from_fp(open(file_path, "r"), close_after=True) for file_path in file_paths]
+
+def send_command(command: AnyCommand):
+    dict_command = serialize_dataclass(command)
+    sock.send(type(command).CODE.encode())
+    send_message(str(dict_command), sock)
+
+def build_live_sim(folder: str):
+    global sock
+    print_error = partial(print_function_error, "build_live_sim")
+    try:
+        files = get_verilog_from_folder(folder, "build_live_sim")
+    except VerilogGatherError:
+        return
+    except Exception as e:
+        print_error(f"Unexpected exception: {e}. "
+              "Please contact developer.")
+        return
+
+    command = BuildLiveCommand(files)
+    send_command(command)
+
+def start_live_sim():
+    global sock
+
+    command = StartLiveCommand()
+    send_command(command)
+    # TODO: server will send its socket to the Verilator executable
+    #   This side sends its socket to the GUI.
+    #       Qt must be run in the main thread. Not sure if you can
+    #       just make a new QApp, run it, exit, and then continue,
+    #       or if a secondary process is needed.
+    #   When app quits, send some quit message from this function
+    #       then return to shell loop
+
+def waveform_sim(output_filename: str, folder: str):
+    global sock
+    print_error = partial(print_function_error, "waveform_sim")
+
+    if output_filename.split(".")[-1] != "vcd":
+        print_error(f"output filename should be a .vcd")
+        return
+    name_as_path = Path(output_filename)
+    if output_filename != name_as_path.name:
+        # will ultimately save directly to a defined output folder
+        print_error(f"output filename should be a name, not a path")
+        return
+    
+    # TODO: make absolute/better-defined
+    output_folder = Path("./waveforms/")
+    output_folder.mkdir(exist_ok=True)
+    
+    output_path = Path(output_folder, output_filename)
+
+    try:
+        files = get_verilog_from_folder(folder, "waveform_sim")
+    except VerilogGatherError:
+        return
+    except Exception as e:
+        print_error(f"unexpected exception: {e}. "
+            "Please contact developer.")
+        return
+
+    try:
+        fp = open(output_path, "x")
+    except FileExistsError:
+        print_error(f'output file "{output_path}" already exists')
+        return
+    
+
+    command = WaveformSimCommand(str(output_path), files)
+    send_command(command)
+    fp.write(f"Output for waveform with input {files} would be here!")
+
+    # Convert command to JSON
+    # TODO:
+    #  Await response
+    #  If good, populate output location
+    #   Result will be a NamedFile. Just call its to_disk and we're good.
+    #  If bad, delete fp and print error message
+    fp.close()
+
+if __name__ == "__main__":
+    # tab complete on Mac and Linux
+    # TODO: Windows code. Seemed more complex.
+    # TODO: add code to also autocomplete the three commands at start of line?
+    if platform.system() == "Darwin":
+        readline.parse_and_bind("bind ^I rl_complete")
+    elif platform.system() == "Linux":
+        readline.parse_and_bind("tab: complete")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.connect(("127.0.0.1", 9834))
+        while True:
+            try:
+                command_string = input("> ").strip()
+            except KeyboardInterrupt:
+                print("exit (Ctrl+C)")
+                exit(0)
+            words = command_string.split(" ")
+            words[0] = words[0].lower()
+            match words:
+                case ["build_live_sim", folder]:
+                    build_live_sim(folder)
+                case ["start_live_sim"]:
+                    start_live_sim()
+                case ["waveform_sim", output_filename, folder]:
+                    print("waveform", output_filename, folder)
+                    waveform_sim(output_filename, folder)
+                case ["build_live_sim", *_]:
+                    print("Proper usage: build_live_sim <input_directory>")
+                case ["start_live_sim", *_]:
+                    print("Proper usage: start_live_sim")
+                case ["waveform_sim", *_]:
+                    print("Proper usage: waveform_sim <output_filename.vcd> <input_directory>")
+                case ["exit"]:
+                    exit(0)
+                case [*e]:
+                    print(f'Unexpected input "{" ".join(e)}"')
