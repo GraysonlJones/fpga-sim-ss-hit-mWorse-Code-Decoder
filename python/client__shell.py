@@ -11,7 +11,10 @@ from shared__util import (
     NamedFile,
     StartLiveCommand,
     WaveformSimCommand,
+    deserialize_dataclass,
     serialize_dataclass,
+    send_message,
+    big_receive
 )
 
 
@@ -24,9 +27,6 @@ def is_verilog(filename: str):
     extension = filename.split(".")[-1]
     return extension == "v" or extension == "sv"
 
-def send_message(message: str, sock: socket.socket):
-    message = f"{len(message):010}{message}"
-    sock.send(message.encode())
 
 def print_function_error(caller: str, message: str):
     print(f'{caller}(): {message}')

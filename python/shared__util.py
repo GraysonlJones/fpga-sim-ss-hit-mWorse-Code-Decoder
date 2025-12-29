@@ -4,6 +4,7 @@ from __future__ import annotations
 import ast
 import dataclasses as dc
 import os
+import socket
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, TextIO
@@ -63,3 +64,33 @@ class WaveformSimCommand:
     CODE: ClassVar[str] = "WS"
 
 AnyCommand = BuildLiveCommand | StartLiveCommand |WaveformSimCommand
+
+class UnexpectedTermination(Exception):
+    pass
+class NormalTermination(Exception):
+    pass
+class BadHeader(Exception):
+    pass
+
+# Credit https://stackoverflow.com/a/17668009/
+def big_receive(sock: socket.socket):
+    '''Safely receives up to 10 GB after a
+    a 10-byte ASCII number header.'''
+    length_bytes = sock.recv(10)
+    if not length_bytes: # disconnected, returned empty array
+        raise NormalTermination
+    try:
+        expected_length = int(length_bytes.decode())
+    except ValueError:
+        raise BadHeader(f"{length_bytes}")
+    data = bytearray() # mutable equivalent of bytes type
+    while len(data) < expected_length:
+        packet = sock.recv(expected_length - len(data))
+        if not packet:
+            raise UnexpectedTermination
+        data.extend(packet)
+    return data
+
+def send_message(message: str, sock: socket.socket):
+    message = f"{len(message):010}{message}"
+    sock.send(message.encode())

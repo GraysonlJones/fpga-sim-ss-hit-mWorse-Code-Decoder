@@ -2,39 +2,17 @@ import readline  # For input() side effect
 import socket
 
 from shared__util import (
+    BadHeader,
     BuildLiveCommand,
+    NormalTermination,
     StartLiveCommand,
+    UnexpectedTermination,
     WaveformSimCommand,
+    big_receive,
     deserialize_dataclass,
+    send_message,
+    serialize_dataclass
 )
-
-
-class UnexpectedTermination(Exception):
-    pass
-class NormalTermination(Exception):
-    pass
-class BadHeader(Exception):
-    pass
-
-
-# Credit https://stackoverflow.com/a/17668009/
-def big_receive(sock: socket.socket):
-    '''Safely receives up to 10 GB after a
-    a 10-byte ASCII number header.'''
-    length_bytes = sock.recv(10)
-    if not length_bytes: # disconnected, returned empty array
-        raise NormalTermination
-    try:
-        expected_length = int(length_bytes.decode())
-    except ValueError:
-        raise BadHeader(f"{length_bytes}")
-    data = bytearray() # mutable equivalent of bytes type
-    while len(data) < expected_length:
-        packet = sock.recv(expected_length - len(data))
-        if not packet:
-            raise UnexpectedTermination
-        data.extend(packet)
-    return data
 
 def header_to_dc(header: str):
     match header:
