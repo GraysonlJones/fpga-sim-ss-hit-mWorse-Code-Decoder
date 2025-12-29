@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING, ClassVar, TextIO
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
-def serialize_dataclass(input: DataclassInstance) -> dict:
-    '''Turns any dataclass into a dict.'''
+def serialize_dataclass(input: DataclassInstance) -> str:
+    '''Turns any dataclass into a string representation of a dict.'''
     if dc.is_dataclass(input) and not isinstance(input, type):
-        return dc.asdict(input)
+        return str(dc.asdict(input))
     else:
         raise TypeError(f"{input} is not a dataclass")
 

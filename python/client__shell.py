@@ -55,9 +55,9 @@ def get_verilog_from_folder(folder: str, caller: str):
     return [NamedFile.from_fp(open(file_path, "r"), close_after=True) for file_path in file_paths]
 
 def send_command(command: AnyCommand):
-    dict_command = serialize_dataclass(command)
+    str_command = serialize_dataclass(command)
     sock.send(type(command).CODE.encode())
-    send_message(str(dict_command), sock)
+    send_message(str_command, sock)
 
 def build_live_sim(folder: str):
     global sock
