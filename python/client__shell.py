@@ -5,6 +5,8 @@ import socket
 from functools import partial
 from pathlib import Path
 
+from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
+from gui__main import run_app
 from shared__util import (
     AnyCommand,
     BuildLiveCommand,
@@ -16,6 +18,7 @@ from shared__util import (
     send_message,
     big_receive
 )
+import gui__constants as c
 
 
 class VerilogGatherError(RuntimeError):
@@ -76,6 +79,7 @@ def build_live_sim(folder: str):
 
 def start_live_sim():
     global sock
+    global app
 
     command = StartLiveCommand()
     send_command(command)
@@ -86,6 +90,11 @@ def start_live_sim():
     #       or if a secondary process is needed.
     #   When app quits, send some quit message from this function
     #       then return to shell loop
+
+    # app starts as None (declared in main), and run_app() returns a
+    #   QApplication instance which is then reused in future runs.
+    #   Deleting the app and creating a new one each time is messier.
+    app = run_app(sock, app)
 
 def waveform_sim(output_filename: str, folder: str):
     global sock
@@ -138,6 +147,7 @@ if __name__ == "__main__":
     # tab complete on Mac and Linux
     # TODO: Windows code. Seemed more complex.
     # TODO: add code to also autocomplete the three commands at start of line?
+    app = None
     if platform.system() == "Darwin":
         readline.parse_and_bind("bind ^I rl_complete")
     elif platform.system() == "Linux":
