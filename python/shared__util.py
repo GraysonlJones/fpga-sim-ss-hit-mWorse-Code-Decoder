@@ -7,25 +7,55 @@ import os
 import socket
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, TextIO
+from typing import TYPE_CHECKING, Any, ClassVar, TextIO
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
+def is_dc_type(input: Any):
+    return dc.is_dataclass(input) and isinstance(input, type)
+
+def is_dc_instance(input: Any):
+    return dc.is_dataclass(input) and not isinstance(input, type)
+
 def serialize_dataclass(input: DataclassInstance) -> str:
-    '''Turns any dataclass into a string representation of a dict.'''
-    if dc.is_dataclass(input) and not isinstance(input, type):
+    '''Turns a dataclass into a string representation of a dict.
+
+    See `deserialize_dataclass()` for acceptable types list (dataclasses and
+    Python literal structures).'''
+    if is_dc_instance(input): # TODO: recursively check that fields are all appropriate and throw type error otherwise
         return str(dc.asdict(input))
     else:
         raise TypeError(f"{input} is not a dataclass")
 
 def deserialize_dataclass[T: DataclassInstance](input: str, dc_type: type[T]) -> T:
-    '''Attempts to turn the string input into a dict then into
-    an instance of the given dataclass type'''
-    if dc.is_dataclass(dc_type) and isinstance(dc_type, type):
+    '''Attempts to turn the string input into a dict then recursively into
+    an instance of the given dataclass type.
+
+    CAUTION: For safety, uses `ast.literal_eval()`, so it only works properly
+    if every field is one of:
+    * dataclass subtype
+    * Python literal structure, meaning, according to docstring:
+        * string
+        * bytes
+        * number
+        * tuple
+        * list
+        * dict
+        * set
+        * boolean
+        * None
+    '''
+    if is_dc_type(dc_type):
         # evaluate string to dict. like eval() but safer
         input_dict: dict = ast.literal_eval(input)
-        return dc_type(**input_dict)
+        dc_out = dc_type(**input_dict)
+        for field in dc.fields(dc_type):
+            field_type: type = field.type # pyright: ignore[reportAssignmentType]
+            if is_dc_type(field_type): # if dataclass, recurse
+                dict_str = str(getattr(dc_out, field.name)) # must convert back to string for literal_eval
+                setattr(dc_out, field.name, deserialize_dataclass(dict_str, field_type))
+        return dc_out
     else:
         raise TypeError
 
