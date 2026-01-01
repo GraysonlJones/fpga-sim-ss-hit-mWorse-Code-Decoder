@@ -13,7 +13,9 @@ from shared__util import (
     NamedFile,
     StartLiveCommand,
     WaveformSimCommand,
-    deserialize_dataclass,
+    ErrorMessage,
+    AckMessage,
+    receive_error_or_ack,
     serialize_dataclass,
     send_message,
     big_receive
@@ -80,6 +82,7 @@ def build_live_sim(folder: str):
 def start_live_sim():
     global sock
     global app
+    print_error = partial(print_function_error, "start_live_sim")
 
     command = StartLiveCommand()
     send_command(command)
@@ -94,7 +97,15 @@ def start_live_sim():
     # app starts as None (declared in main), and run_app() returns a
     #   QApplication instance which is then reused in future runs.
     #   Deleting the app and creating a new one each time is messier.
-    app = run_app(sock, app)
+    result = receive_error_or_ack(sock)
+    match result:
+        case ErrorMessage(content):
+            print_error(f"server returned error message: {content}")
+        case AckMessage():
+            print_error(f"launching simulation successfully!")
+            app = run_app(sock, app)
+        case _:
+            print_error(f"unexpected response {result}")
 
 def waveform_sim(output_filename: str, folder: str):
     global sock
@@ -141,6 +152,10 @@ def waveform_sim(output_filename: str, folder: str):
     #  If good, populate output location
     #   Result will be a NamedFile. Just call its to_disk and we're good.
     #  If bad, delete fp and print error message
+    # response = big_receive(sock).decode()
+    # match response:
+    #     case _:
+    #         pass
     fp.close()
 
 if __name__ == "__main__":

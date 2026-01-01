@@ -6,12 +6,16 @@ import dataclasses as dc
 import socket
 import threading
 
-import gui__constants as c
 from gui__qt_util import BoardComponents, EmptyWindow, make_app
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
-from PySide6.QtCore import Signal, Slot
-from PySide6.QtWidgets import QApplication
-from shared__util import big_receive, deserialize_dataclass
+from PySide6.QtCore import QTimer, Signal, Slot
+from PySide6.QtWidgets import QApplication, QPushButton
+from shared__util import (
+    big_receive,
+    deserialize_dataclass,
+    send_message,
+    serialize_dataclass,
+)
 
 
 class MainWindow(EmptyWindow):
@@ -35,12 +39,26 @@ class MainWindow(EmptyWindow):
         self.main_layout.addWidget(self.lights_line)
         self.main_layout.addWidget(self.switches_line)
 
+        self.quit_button = QPushButton("Quit!")
+        self.quit_button.pressed.connect(self.ready_quit)
+
+        self.main_layout.addWidget(self.quit_button)
+
+
         self.switches_line.state_changed.connect(lambda x: self.update_input_state(switches=x))
         self.plus_buttons.state_changed.connect(lambda x: self.update_input_state(buttons=x))
 
-        self.input_changed.connect(lambda x: print(x))
+        self.latest: None | WholeInputState = None
+
+        self.should_quit = False
+
+        self.input_changed.connect(self.update_latest)
         self.output_changed.connect(self.set_output_state)
         self.close_signal.connect(self.quit_program)
+
+        self.update_timer = QTimer(interval=8)
+        self.update_timer.timeout.connect(self.update_server)
+        self.update_timer.start()
 
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
@@ -58,16 +76,36 @@ class MainWindow(EmptyWindow):
         if switches is not None:
             self.input_state.switches = dc.replace(switches)
         self.input_changed.emit(self.input_state)
+    
+    def ready_quit(self):
+        self.should_quit = True
 
     @Slot()
     def quit_program(self):
+        # print("Quitting")
         # print("Fetching app instance")
         app: QApplication = QApplication.instance() # pyright: ignore[reportAssignmentType]
         # print("Closing window")
         self.close()
         # print("Closing app")
         app.exit()
-        # print("Closed app")
+        print("Closed app")
+
+    def update_server(self):
+        if not self.should_quit:
+            if self.latest is not None:
+                send_message(serialize_dataclass(self.latest), self.sock)
+                self.latest = None
+            else:
+                send_message("", self.sock)
+        else:
+            self.update_timer.stop()
+            send_message("exit", self.sock)
+
+
+    def update_latest(self, new_latest: WholeInputState):
+        self.latest = new_latest
+
 
 def listen(window: MainWindow):
     sock = window.sock
@@ -75,20 +113,22 @@ def listen(window: MainWindow):
         response = big_receive(sock).decode()
 
         if response == "exit":
-            print("Server sent exit")
+            # print(f"{response}: time to exit")
             break
         else:
-            print(f"received: {response}")
+            # print(f"received: {response}")
             output_state = deserialize_dataclass(response, WholeOutputState)
-            print(output_state)
+            # TODO: add some kind of like, blinking indicator every time we get a new state to indicate that things aren't frozen?
             window.output_changed.emit(output_state)
-    print("Telling app to close")
+    # print("Telling app to close")
     window.close_signal.emit()
-    # On return, run_app() returns and client resumes shell loop
 
 def run_app(sock: socket.socket, app: QApplication | None):
     if app is None:
         app = make_app()
+    else:
+        print("reusing app")
     window = MainWindow(sock)
+    window.raise_() # Put window on front. Necessary when reusing app
     app.exec()
     return app

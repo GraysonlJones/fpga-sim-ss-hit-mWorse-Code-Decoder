@@ -93,6 +93,17 @@ class WaveformSimCommand:
 
     CODE: ClassVar[str] = "WS"
 
+@dataclass
+class ErrorMessage:
+    body: str
+
+    CODE: ClassVar[str] = "ER"
+
+@dataclass
+class AckMessage:
+
+    CODE: ClassVar[str] = "AK"
+
 AnyCommand = BuildLiveCommand | StartLiveCommand |WaveformSimCommand
 
 class UnexpectedTermination(Exception):
@@ -124,3 +135,30 @@ def big_receive(sock: socket.socket):
 def send_message(message: str, sock: socket.socket):
     message = f"{len(message):010}{message}"
     sock.send(message.encode())
+
+def header_to_dc(header: str):
+    match header:
+        case BuildLiveCommand.CODE:
+            return BuildLiveCommand
+        case StartLiveCommand.CODE:
+            return StartLiveCommand
+        case WaveformSimCommand.CODE:
+            return WaveformSimCommand
+        case _:
+            raise ValueError(header)
+
+def receive_error_or_ack(sock: socket.socket):
+    header = sock.recv(2)
+    if header == b'': #TODO: maybe raise exception instead?
+        print("Connection disconnected")
+        return ErrorMessage
+    else:
+        match header.decode():
+            case ErrorMessage.CODE:
+                dc_type = ErrorMessage
+            case AckMessage.CODE:
+                dc_type = AckMessage
+            case _:
+                raise ValueError(header)
+        message = big_receive(sock).decode()
+        return deserialize_dataclass(message, dc_type)

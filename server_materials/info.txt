@@ -1,0 +1,10 @@
+This is, for now, a "model folder" for what goes on the server, with the
+main Python script run from this folder in reality.
+
+C++ program flips the clock every time a message (blank or containing a new
+input state) is received. Clock speeds of e.g. 40 MHz like the real FPGA
+are unattainable, but, with a fading effect so the lights aren't extremely
+flickery, I think even 60 Hz is fine.
+
+Stuff like where waveforms, compiled programs, etc, save to on the server
+should be indicated here once I have that settled!
