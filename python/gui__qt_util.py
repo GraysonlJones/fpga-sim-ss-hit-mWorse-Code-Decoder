@@ -144,7 +144,8 @@ class LightDisplay(QPushButton):
     def __init__(self, *,
                 size: QSize | None = c.Sizes.light,
                 on_color: QColor | str = c.Colors.Light.on,
-                off_color: QColor | str = c.Colors.Light.off):
+                off_color: QColor | str = c.Colors.Light.off,
+                fade_time: int = c.light_fade_time):
         super().__init__()
         self.light_on = False
         self.setDisabled(True)
@@ -156,7 +157,7 @@ class LightDisplay(QPushButton):
         if size is not None:
             self.setFixedSize(size)
 
-        self.off_timer = QTimer(interval=c.light_fade_time, singleShot=True)
+        self.off_timer = QTimer(interval=fade_time, singleShot=True)
         self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
 
     def set_light(self, light_on: bool):
@@ -174,7 +175,8 @@ class LightDisplay(QPushButton):
 class CircleLightDisplay(QRadioButton):
     def __init__(self, *,
                 on_color: QColor | str = c.Colors.Light.on,
-                off_color: QColor | str = c.Colors.Light.off):
+                off_color: QColor | str = c.Colors.Light.off,
+                fade_time: int = c.light_fade_time):
         super().__init__()
         self.light_on = False
         self.setDisabled(True)
@@ -182,7 +184,7 @@ class CircleLightDisplay(QRadioButton):
         self.on_color = on_color
         self.off_color = off_color
         set_color(self, self.off_color)
-        self.off_timer = QTimer(interval=c.light_fade_time, singleShot=True)
+        self.off_timer = QTimer(interval=fade_time, singleShot=True)
         self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
         # Intentionally lacks size parameter. Radio buttons just crop if given
         #  smaller size and do not expand with a larger one
@@ -208,14 +210,14 @@ class SevenSegmentLight:
         super().__init__()
         self.layout = QGridLayout()
 
-        self.CA = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.CB = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.CC = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.CD = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off)
-        self.DP = CircleLightDisplay(on_color=c.Colors.Segment.radio_on, off_color=c.Colors.Segment.off)
+        self.CA = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.CB = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.CC = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.CD = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
+        self.DP = CircleLightDisplay(on_color=c.Colors.Segment.radio_on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time)
 
         self.layout.addWidget(self.CA, 0, 1) # horizontal bits
         self.layout.addWidget(self.CG, 2, 1)
