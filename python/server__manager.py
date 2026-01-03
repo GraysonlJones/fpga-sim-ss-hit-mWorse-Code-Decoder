@@ -3,6 +3,7 @@ import readline  # For input() side effect
 import socket
 import subprocess
 import time
+from os import makedirs, environ
 from pathlib import Path
 from typing import IO
 
@@ -66,7 +67,7 @@ def to_output_state(inp: str):
     _, dp_str = parts[1].split(",")
     _, an_str = parts[2].split(",")
     _, led_str = parts[3].split(",")
-    led = str_to_bool_list(led_str)
+    led = str_to_bool_list(str(reversed(led_str)), inv=True)
     seg = list(reversed(str_to_bool_list(seg_str))) + str_to_bool_list(dp_str)
     an = str_to_bool_list(an_str)
     return WholeOutputState(
@@ -112,14 +113,54 @@ def live_sim(sock: socket.socket):
             send_message(serialize_dataclass(to_output_state(new_output)), conn)
     # TODO: properly close process. Writing "exit\n" and calling process.wait() hangs forever...
 
+def try_make(files: list[NamedFile]):
+    '''Runs make with the given list of NamedFiles, saving them to
+    a folder first. Assumes that the client has checked that there is one
+    called top.v.'''
+    makedirs(Path("./user_inputs"), exist_ok=True)
+    for file in files:
+        file.to_disk(Path("./user_inputs"))
+    
+    names = [file.name for file in files]
+    try:
+        names.remove("top.v")
+    except ValueError:
+        return ErrorMessage(f"Lacking a top.v. Client should have caught this.")
+    names.insert(0, "top.v") # put at front to indicate top to Verilator
+
+    # List is passed in as an environment variable
+    filenames_str = " ".join([f"./user_inputs/{name}" for name in names])
+    # Must append to existing environment or Verilator fails
+    envvars = environ.copy() | {"COMPILE_FILES": filenames_str}
+
+    proc = subprocess.run(["make"], stderr=subprocess.PIPE, env=envvars)
+
+    match proc.returncode:
+        case 0:
+            return AckMessage()
+        case other:
+            return ErrorMessage(f"make return code {other}:\n {proc.stderr.decode()}")
+
+def build_live(sock: socket.socket, files: list[NamedFile]):
+    result = try_make(files)
+    sock.send(result.CODE.encode())
+    send_message(serialize_dataclass(result), sock)
+
 if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
         server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_sock.bind(("0.0.0.0", 9834))
         server_sock.listen()
 
+        # PERHAPS: Have a rule that the top module MUST be called Vtop
+        #   I certainly could get around the name-finding thing with code, but
+        #   it would be good for the users' learning, debugging experience etc
+        #   to have a clear idea which one is the top module.
+
         conn, addr = server_sock.accept()
         while True:
+            # TODO: maybe, instead of fixed-size header codes,
+            #   prefix dataclass serializations with type name?
             header = conn.recv(2)
             if header == b'':
                 print("Connection disconnected normally")
@@ -138,11 +179,11 @@ if __name__ == "__main__":
                 exit(0)
             dict_str = message.decode()
             command = deserialize_dataclass(dict_str, dc_type)
-            print(command)
+            # print(command)
 
             match command:
                 case BuildLiveCommand(files):
-                    # build_live(conn, files)
+                    build_live(conn, files)
                     pass
                 case StartLiveCommand():
                     live_sim(conn)

@@ -75,9 +75,25 @@ def build_live_sim(folder: str):
         print_error(f"Unexpected exception: {e}. "
               "Please contact developer.")
         return
+    
+    for file in files:
+        if file.name == "top.v":
+            break
+    else:
+        print_error("No file named top.v. Top module MUST be named top.v.")
+        return
 
     command = BuildLiveCommand(files)
     send_command(command)
+
+    result = receive_error_or_ack(sock)
+    match result:
+        case ErrorMessage(content):
+            print_error(f"server returned error message: {content}")
+        case AckMessage():
+            print_error(f"Build is good!")
+        case _:
+            print_error(f"unexpected response {result}")
 
 def start_live_sim():
     global sock
