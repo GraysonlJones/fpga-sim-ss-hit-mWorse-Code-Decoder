@@ -7,7 +7,15 @@ import os
 import socket
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, TextIO
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    TextIO,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -30,11 +38,14 @@ def serialize_dataclass(input: DataclassInstance) -> str:
 
 def deserialize_dataclass[T: DataclassInstance](input: str, dc_type: type[T]) -> T:
     '''Attempts to turn the string input into a dict then recursively into
-    an instance of the given dataclass type.
+    an instance of the given dataclass type, also handling fields that are
+    lists of dataclasses.
 
     CAUTION: For safety, uses `ast.literal_eval()`, so it only works properly
     if every field is one of:
     * dataclass subtype
+    * list[dataclass subtype] <--- would be nice if this generally handled any
+                literal containing a dataclass subtype
     * Python literal structure, meaning, according to docstring:
         * string
         * bytes
@@ -55,6 +66,13 @@ def deserialize_dataclass[T: DataclassInstance](input: str, dc_type: type[T]) ->
             if is_dc_type(field_type): # if dataclass, recurse
                 dict_str = str(getattr(dc_out, field.name)) # must convert back to string for literal_eval
                 setattr(dc_out, field.name, deserialize_dataclass(dict_str, field_type))
+            else: # check for list[dataclass]
+                hints = get_type_hints(dc_type)
+                field_type = hints[field.name]
+                if get_origin(field_type) == list:
+                    if is_dc_type(inner_type := get_args(field_type)[0]):
+                        for i, item in enumerate(field_list := getattr(dc_out, field.name)):
+                            field_list[i] = deserialize_dataclass(str(item), inner_type)
         return dc_out
     else:
         raise TypeError
