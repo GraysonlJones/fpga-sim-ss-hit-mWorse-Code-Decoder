@@ -29,6 +29,8 @@ from shared__util import (
     serialize_dataclass,
 )
 
+executable_path = Path("./obj_dir/Vtop")
+
 def bool_list_to_int(bl: list[bool]):
     return sum(int(b) << i for i, b in enumerate(reversed(bl)))
 
@@ -49,10 +51,16 @@ def flat_input_dict(input_state: WholeInputState) -> dict[str, int]:
     }
 
 def live_sim(sock: socket.socket):
-    sock.send(AckMessage.CODE.encode())
-    send_message(serialize_dataclass(AckMessage()), sock)
+    global executable_path
+    if not executable_path.is_file():
+        sock.send(ErrorMessage.CODE.encode())
+        send_message(serialize_dataclass(ErrorMessage("Nothing has been compiled yet. Run build_live_sim first!")), sock)
+        return
+    else:
+        sock.send(AckMessage.CODE.encode())
+        send_message(serialize_dataclass(AckMessage()), sock)
 
-    process = subprocess.Popen("./obj_dir/Vtop", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    process = subprocess.Popen(executable_path, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     in_pipe: IO[str] = process.stdin # pyright: ignore[reportAssignmentType]
     out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
     time.sleep(1)
