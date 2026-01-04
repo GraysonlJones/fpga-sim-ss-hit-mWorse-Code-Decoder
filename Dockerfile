@@ -27,8 +27,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zlibc zlib1g zlib1g-dev; exit 0
 
 
-
-
 # Download Verilator source to /usr/bin/
 WORKDIR /usr/bin/
 # fix git certificate issue
@@ -64,11 +62,6 @@ WORKDIR ./fpga-sim
 COPY python/server__manager.py python/gui__states.py python/shared__util.py \
     server_materials/Makefile server_materials/Makefile_obj \
     server_materials/simulator_driver.cpp .
-
-# ADD ../python/server__manager.py ../python/gui__states ../python/shared__util .
-# ADD ../server_materials/Makefile ../server_materials/Makefile_obj.mak ../server_materials/simulator_driver.cpp .
-
-# COPY . .
 
 EXPOSE 9834
 
