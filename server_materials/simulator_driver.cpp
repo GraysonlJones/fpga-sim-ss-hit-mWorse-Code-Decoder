@@ -8,8 +8,11 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <sstream>
 
 #include <array>
+#include <unordered_map>
+#include <vector>
 
 // Include common routines
 #include <verilated.h>
@@ -48,29 +51,17 @@ class OutputItem {
     private:
         unsigned int* read_source;
         int width;
-        std::string name;
 
         unsigned int value;
         int mask;
     public:
-        // Returns boolean for if the state has changed, and a string represenation of the state
-        // A full correct state structure will always be sent if anything changes
-        // May cause some latency so maybe cut this down if things are slow!
-        std::pair<bool, std::string> poll() {
-        
+        std::string name;
+        // Returns boolean for if the state has changed, and an int of current state
+        std::pair<bool, int> poll() {
             unsigned int new_value = *(this->read_source) & mask;
             bool anything_new = (value != new_value);
-            value = *(this->read_source) & mask;
-
-            // unfortunately bitsets are fixed-size
-            std::bitset<16> temp_bitset(new_value);
-            // substr to get chars from index up \u2014 e.g. 14 to 15 for width 2
-            std::string bit_string = temp_bitset.to_string().substr(16 - this->width);
-            std::string message = this->name + "," + bit_string + "|";
-            
-      //      std::cout << this->value << std::endl;
-
-            return std::pair<bool, std::string>(anything_new, message);
+            value = new_value;
+            return std::pair<bool, int>(anything_new, value);
         }
 
         OutputItem(unsigned int* read_source, const std::string& name, int width) {
@@ -89,9 +80,70 @@ class OutputItem {
         }
 };
 
-std::pair<std::string, std::string> split_at_comma(std::string input) {
+std::vector<std::string> split_string(const std::string& input_string, const char* separator) {
+    std::vector<std::string> result = {};
+    std::string segment = input_string;
+
+    while(true) {
+        auto next_sep = segment.find(*separator);
+        if(next_sep != std::string::npos) { // At least one segment left
+            result.push_back(segment.substr(0, next_sep));
+            if(next_sep + 1 < segment.length()) { // There is stuff after segment, so continue loop
+                segment = segment.substr(next_sep + 1);
+            }
+            else { // this was the last segment, followed by a separator with nothing after it
+                break;
+            }
+        }
+        else { // No more separators. Just put rest of string in last spot
+            result.push_back(segment);
+            break;
+        }
+    }
+
+    return result;
+}
+
+
+std::pair<std::string, std::string> split_at_comma(const std::string& input) {
     auto comma_index = input.find(",");
     return std::pair<std::string, std::string>(input.substr(0, comma_index), input.substr(comma_index + 1));
+}
+
+
+std::unordered_map<std::string, int> py_string_to_map(const std::string& input) {
+    // Converts a Python str() representation of a string:string dict to a map
+    // Example input: "{'key_1': 14, 'key_2': 2}"
+
+    std::unordered_map<std::string, int> output = {};
+
+    // Get rid of the outer curly brackets: "'key_1': 14, 'key_2': 2}"
+    auto trimmed_input = input.substr(1, input.length() - 2);
+
+    // Vector of {"'key1': 14", " 'key_2': 2"} 
+                              // ^ Note leading spaces after index 0
+    auto keyval_strings = split_string(trimmed_input, ",");
+
+    size_t index = 0;
+
+    for(std::string keyval : keyval_strings) {
+        if(index > 0) {
+            keyval = keyval.substr(1); // Trim leading space
+        }
+
+        // Vector of {"'key1'", " 14"}
+        std::vector<std::string> split = split_string(keyval, ":");
+
+        std::string key = split[0];
+        key = key.substr(1, key.length() - 2); // chop off single quotes
+        int val = stoi(split[1]); // stoi discards whitespace automatically
+
+        output[key] = val;
+
+        index ++;
+    }
+
+    return output;
 }
 
 // From an input string updates the relevant component
@@ -119,38 +171,74 @@ void update_input(const std::string& input_string, Vtop* top) {
     }
 }
 
-// From an input string updates the relevant component
-std::vector<std::string> split_string(const std::string& input_string, const char* separator) {
-    std::vector<std::string> result = {};
-    std::string segment = input_string;
-
-    while(true) {
-        auto next_sep = segment.find(*separator);
-        if(next_sep != std::string::npos) { // At least one segment left
-            result.push_back(segment.substr(0, next_sep));
-            if(next_sep + 1 < segment.length()) { // There is stuff after segment, so continue loop
-                segment = segment.substr(next_sep + 1);
-            }
-            else { // this was the last segment, followed by a separator with nothing after it
-                break;
-            }
-        }
-        else { // No more separators. Just put rest of string in last spot
-            result.push_back(segment);
-            break;
-        }
-    }
-
-    return result;
-}
 
 void parse_and_update_input(const std::string& input_string, Vtop* top) {
+    auto update_dict = py_string_to_map(input_string);
     auto parts = split_string(input_string, "|");
 
     for(auto i : parts) {
         //std::cout << i;
         update_input(i, top);
     }
+}
+
+void update_from_key_val(std::string key, int val, Vtop* top) {
+    if(key == "UB") {
+        top->UB = val;
+    }
+    else if(key == "DB") {
+        top->DB = val;
+    }
+    else if(key == "LB") {
+        top->LB = val;
+    }
+    else if(key == "RB") {
+        top->RB = val;
+    }
+    else if(key == "CB") {
+        top->CB = val;
+    }
+    else if(key == "Switches") {
+        top->switches = val;
+    }
+    else {
+        std::cout << "Bad key: " << key << " (Val is " << val << ")" << std::endl;
+    }
+}
+
+void update_inputs(const std::string& input_string, Vtop* top) {
+    auto update_dict = py_string_to_map(input_string);
+
+    for(auto i : update_dict) {
+        auto key = i.first;
+        auto val = i.second;
+
+        update_from_key_val(key, val, top);
+    }
+}
+
+std::string map_to_py_string(std::unordered_map<std::string, int> dict) {
+    std::stringstream py_string_stream;
+
+    bool inserted_one = false;
+    for(auto i : dict) {
+        if(inserted_one) { // Comma before entries after first
+            py_string_stream << ", ";
+        }
+        else {
+            inserted_one = true;
+        }
+
+        auto key = i.first;
+        auto val = i.second;
+
+        std::stringstream key_val_stream;
+        key_val_stream << "'" << key << "': " << val;
+
+        py_string_stream << key_val_stream.str();
+    }
+
+    return "{" + py_string_stream.str() + "}";
 }
 
 int main(int argc, char** argv) {
@@ -204,10 +292,10 @@ int main(int argc, char** argv) {
     std::string input;
 
     std::array<OutputItem, 4> outputs_array = {
-        OutputItem ((unsigned int*) &(top->segment), "segment", 7),
-        OutputItem ((unsigned int*) &(top->dp), "dp", 1),
-        OutputItem ((unsigned int*) &(top->anode), "anode", 4),
-        OutputItem ((unsigned int*) &(top->lights), "lights", 16)
+        OutputItem ((unsigned int*) &(top->segment), "Segment", 7),
+        OutputItem ((unsigned int*) &(top->dp), "DP", 1),
+        OutputItem ((unsigned int*) &(top->anode), "Anode", 4),
+        OutputItem ((unsigned int*) &(top->lights), "Lights", 16)
     };
 
 
@@ -220,7 +308,8 @@ int main(int argc, char** argv) {
             // No new input sent
         }
         else {
-            parse_and_update_input(input, top.get()); // .get() to access inner pointer
+            update_inputs(input, top.get()); // .get() to access inner pointer
+            //std::cerr << "received " << input << std::endl;
         }
 
         top->clk = !(top->clk); // Flip clock
@@ -228,17 +317,20 @@ int main(int argc, char** argv) {
         contextp->timeInc(1);  // Advance one time unit
         top->eval(); // and run one frame of the model
 
-        std::string print_string = "";
         bool need_to_send = false;
 
+        std::unordered_map<std::string, int> output_map = {};
+
         for(auto &i : outputs_array) {
-            auto [anything_new, message] = i.poll();
+            auto [anything_new, state] = i.poll();
             need_to_send |= anything_new;
-            print_string += message;
+            
+            output_map[i.name] = state;
         }
 
         if(need_to_send) {
-            std::cout << print_string << std::endl; // flush necessary for Python subprocess pipe
+            std::cout << map_to_py_string(output_map) << std::endl; // flush necessary for Python subprocess pipe
+           // std::cerr << "sending " << map_to_py_string(output_map) << std::endl;
         }
         else {
            std::cout << "" << std::endl;

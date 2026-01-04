@@ -2,7 +2,9 @@ import dataclasses as dc
 from threading import Event
 from typing import Literal, overload, override
 
-from PySide6.QtCore import QSize, QTimer, Qt, Signal, Slot
+import gui__constants as c
+from gui__states import InputState, OutputState
+from PySide6.QtCore import QSize, Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QColor, QKeyEvent, QPalette
 from PySide6.QtWidgets import (
     QApplication,
@@ -18,9 +20,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-import gui__constants as c
-from gui__states import InputState, OutputState
 
 
 def choose_number(number: int) -> OutputState.Cathode:
@@ -260,13 +259,13 @@ class BoardComponents:
 
         @Slot(OutputState.Cathode)
         def set_cathodes(self, new_lights: OutputState.Cathode, *, refresh: bool): 
-            self.current_pattern = dc.replace(new_lights)
+            self.current_pattern = dc.replace(new_lights).inverted() # Go from active-low board to True-on GUI
             if refresh:
                 self._refresh()
 
         def _refresh(self):
             for anode, digit in zip(dc.astuple(self.current_anodes), self.digits):
-                if anode:
+                if not anode: # Active-low board 
                     digit.set_lights(self.current_pattern)
                 else:
                     digit.set_lights(c.NumberStates.all_off)

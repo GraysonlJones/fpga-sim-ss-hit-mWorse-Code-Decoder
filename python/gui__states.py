@@ -3,6 +3,7 @@ Declares state classes. Dependency of constants but of course not a constant
 so I put this at the very top. TODO: Probably not the best way to lay it out.
 '''
 
+import dataclasses as dc
 from dataclasses import dataclass
 
 
@@ -61,6 +62,11 @@ class OutputState:
         CF: bool = False
         CG: bool = False
         DP: bool = False
+
+        def inverted(self):
+            inv_dict = {key: not val for key, val in dc.asdict(self).items()}
+
+            return OutputState.Cathode(**inv_dict)
 
     @dataclass
     class Lights:
