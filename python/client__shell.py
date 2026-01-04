@@ -1,6 +1,5 @@
 import os
 import platform
-import readline
 import shlex
 import socket
 from functools import partial
@@ -181,8 +180,10 @@ if __name__ == "__main__":
     # TODO: add code to also autocomplete the three commands at start of line?
     app = None
     if platform.system() == "Darwin":
+        import readline
         readline.parse_and_bind("bind ^I rl_complete")
     elif platform.system() == "Linux":
+        import readline
         readline.parse_and_bind("tab: complete")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

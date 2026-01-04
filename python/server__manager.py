@@ -1,6 +1,5 @@
 import ast
 import dataclasses as dc
-import readline  # For input() side effect
 import socket
 import subprocess
 import time
