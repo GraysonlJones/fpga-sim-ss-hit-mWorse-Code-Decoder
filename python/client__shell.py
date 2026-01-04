@@ -1,26 +1,27 @@
 import os
 import platform
 import readline
+import shlex
 import socket
 from functools import partial
 from pathlib import Path
 
-from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
+import gui__constants as c
 from gui__main import run_app
+from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
 from shared__util import (
+    AckMessage,
     AnyCommand,
     BuildLiveCommand,
+    ErrorMessage,
     NamedFile,
     StartLiveCommand,
     WaveformSimCommand,
-    ErrorMessage,
-    AckMessage,
+    big_receive,
     receive_error_or_ack,
-    serialize_dataclass,
     send_message,
-    big_receive
+    serialize_dataclass,
 )
-import gui__constants as c
 
 
 class VerilogGatherError(RuntimeError):
@@ -192,7 +193,7 @@ if __name__ == "__main__":
             except KeyboardInterrupt:
                 print("exit (Ctrl+C)")
                 exit(0)
-            words = command_string.split(" ")
+            words = shlex.split(command_string)
             words[0] = words[0].lower()
             match words:
                 case ["build_live_sim", folder]:
