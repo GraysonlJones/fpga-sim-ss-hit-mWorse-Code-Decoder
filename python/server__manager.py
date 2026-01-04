@@ -125,7 +125,7 @@ def try_make(files: list[NamedFile]):
         case 0:
             return AckMessage()
         case other:
-            return ErrorMessage(f"make return code {other}:\n {proc.stderr.decode()}")
+            return ErrorMessage(f"\n\n{proc.stderr.decode()}")
 
 def build_live(sock: socket.socket, files: list[NamedFile]):
     result = try_make(files)
