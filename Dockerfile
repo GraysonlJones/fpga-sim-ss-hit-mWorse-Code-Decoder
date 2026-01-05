@@ -57,11 +57,13 @@ RUN /root/.local/bin/uv python install 3.13
 WORKDIR ~
 RUN mkdir fpga-sim
 WORKDIR ./fpga-sim
+RUN mkdir user_inputs
 
 
 COPY python/server__manager.py python/gui__states.py python/shared__util.py \
     server_materials/Makefile server_materials/Makefile_obj \
-    server_materials/simulator_driver.cpp .
+    server_materials/simulator_driver.cpp \
+    server_materials/Waveform_Run.sh .
 
 EXPOSE 9834
 

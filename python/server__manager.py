@@ -1,9 +1,10 @@
 import ast
 import dataclasses as dc
 import socket
+from string import Template
 import subprocess
 import time
-from os import makedirs, environ
+from os import environ
 from pathlib import Path
 from typing import IO
 
@@ -110,16 +111,16 @@ def try_make(files: list[NamedFile]):
     '''Runs make with the given list of NamedFiles, saving them to
     a folder first. Assumes that the client has checked that there is one
     called top.v.'''
-    makedirs(Path("./user_inputs"), exist_ok=True)
-    for file in files:
-        file.to_disk(Path("./user_inputs"))
-    
+
     names = [file.name for file in files]
     try:
         names.remove("top.v")
     except ValueError:
         return ErrorMessage(f"Lacking a top.v. Client should have caught this.")
     names.insert(0, "top.v") # put at front to indicate top to Verilator
+
+    for file in files:
+        file.to_disk(Path("./user_inputs"))
 
     # List is passed in as an environment variable
     filenames_str = " ".join([f"./user_inputs/{name}" for name in names])
@@ -136,6 +137,58 @@ def try_make(files: list[NamedFile]):
             return AckMessage()
         case other:
             return ErrorMessage(f"\n\n{proc.stderr.decode()}")
+        
+def try_waveform_run(name: str, files: list[NamedFile]):
+    names = [file.name for file in files]
+    try:
+        names.remove("tb.v")
+    except ValueError:
+        return None, ErrorMessage(f"Lacking a tb.v (Client should have caught this)")
+    names.insert(0, "tb.v") # put at front to indicate top to Verilator
+
+    for file in files:
+        if file.name == "tb.v":
+            break
+    tb_file = file
+    if tb_file.content.find("$DUMP_FILENAME") == -1:
+        return None, ErrorMessage("Testbench did not include wildcard $DUMP_FILENAME")
+    else:
+        tb_file.content = Template(tb_file.content).safe_substitute(DUMP_FILENAME=name)
+
+    # Delete the output file in case a previous run put one there
+    Path(name).unlink(missing_ok=True)
+
+    for file in files:
+        file.to_disk(Path("./user_inputs"))
+
+    filenames_str = " ".join([f"./user_inputs/{name}" for name in names])
+    envvars = environ.copy() | {"COMPILE_FILES": filenames_str, "CXXFLAGS": "-fdiagnostics-color"}
+    proc = subprocess.run(["/bin/bash", "./Waveform_Run.sh"], stderr=subprocess.PIPE, env=envvars)
+
+    match proc.returncode:
+        case 0:
+            try:
+                output_file = NamedFile.from_fp(open(name, "r"), close_after=True)
+            except FileNotFoundError:
+                return None, ErrorMessage("Testbench ran successfully but did not "
+                f"output to file {name}; should have lines $dumpfile(\"{name}\");\n$dumpvars(0, tb);")
+            return output_file, AckMessage()
+        case other:
+            return None, ErrorMessage(f"\n\n{proc.stderr.decode()}")
+
+def waveform_sim(sock: socket.socket, name: str, files: list[NamedFile]):
+    print(f"Name: {name}")
+    output_file, result = try_waveform_run(name, files)
+
+    sock.send(result.CODE.encode())
+    send_message(serialize_dataclass(result), sock)
+
+    match output_file, result:
+        case None, ErrorMessage():
+            pass # Already sent error message, nothing more to do
+        case NamedFile(), AckMessage():
+            send_message(serialize_dataclass(output_file), sock) # pyright: ignore[reportArgumentType]
+
 
 def build_live(sock: socket.socket, files: list[NamedFile]):
     result = try_make(files)
@@ -185,5 +238,5 @@ if __name__ == "__main__":
                     live_sim(conn)
                     pass
                 case WaveformSimCommand(name, files):
-                    # waveform_sim(conn, name, files)
+                    waveform_sim(conn, name, files)
                     pass

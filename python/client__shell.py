@@ -17,6 +17,7 @@ from shared__util import (
     StartLiveCommand,
     WaveformSimCommand,
     big_receive,
+    deserialize_dataclass,
     receive_error_or_ack,
     send_message,
     serialize_dataclass,
@@ -150,29 +151,25 @@ def waveform_sim(output_filename: str, folder: str):
         print_error(f"unexpected exception: {e}. "
             "Please contact developer.")
         return
-
-    try:
-        fp = open(output_path, "x")
-    except FileExistsError:
+    if output_path.is_file():
         print_error(f'output file "{output_path}" already exists')
         return
     
 
-    command = WaveformSimCommand(str(output_path), files)
+    command = WaveformSimCommand(output_filename, files)
     send_command(command)
-    fp.write(f"Output for waveform with input {files} would be here!")
 
-    # Convert command to JSON
-    # TODO:
-    #  Await response
-    #  If good, populate output location
-    #   Result will be a NamedFile. Just call its to_disk and we're good.
-    #  If bad, delete fp and print error message
-    # response = big_receive(sock).decode()
-    # match response:
-    #     case _:
-    #         pass
-    fp.close()
+
+    result = receive_error_or_ack(sock)
+    match result:
+        case ErrorMessage(content):
+            print_error(f"server returned error message: {content}")
+            return
+        case AckMessage():
+            print_error(f"Build is good!")
+    file_message = big_receive(sock).decode()
+    output_file = deserialize_dataclass(file_message, NamedFile)
+    output_file.to_disk(output_folder)
 
 if __name__ == "__main__":
     # tab complete on Mac and Linux
