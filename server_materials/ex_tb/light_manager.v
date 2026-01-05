@@ -3,7 +3,7 @@
 module light_manager(
     input clk,
     input enabled,
-    output reg light)
+    output reg light);
 
 always @(posedge clk) begin
     if(enabled) begin
@@ -14,5 +14,5 @@ always @(posedge clk) begin
     end
 end
 
-    
+
 endmodule
