@@ -31,7 +31,7 @@ class VerilogGatherError(RuntimeError):
 
 def is_verilog(filename: str):
     extension = filename.split(".")[-1]
-    return extension == "v" or extension == "sv"
+    return extension == "v"# or extension == "sv"
 
 
 def print_function_error(caller: str, message: str):
@@ -52,7 +52,7 @@ def get_verilog_from_folder(folder: str, caller: str):
     file_paths = [Path(folder, name) for name in v_filenames]
 
     if len(file_paths) == 0:
-        print_error(f'{folder} contains no .v/.sv files. Please make sure '
+        print_error(f'{folder} contains no .v files. Please make sure '
             'that all input files have the proper extensions.')
         raise VerilogGatherError
 
