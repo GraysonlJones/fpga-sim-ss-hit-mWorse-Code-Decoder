@@ -44,6 +44,13 @@ class MainWindow(EmptyWindow):
 
         self.main_layout.addWidget(self.quit_button)
 
+        self.paused = False
+
+        self.pause_play_button = QPushButton("Pause")
+        self.pause_play_button.pressed.connect(self.pause_play)
+
+        self.main_layout.addWidget(self.pause_play_button)
+
 
         self.switches_line.state_changed.connect(lambda x: self.update_input_state(switches=x))
         self.plus_buttons.state_changed.connect(lambda x: self.update_input_state(buttons=x))
@@ -93,11 +100,12 @@ class MainWindow(EmptyWindow):
 
     def update_server(self):
         if not self.should_quit:
-            if self.latest is not None:
-                send_message(serialize_dataclass(self.latest), self.sock)
-                self.latest = None
-            else:
-                send_message("", self.sock)
+            if not self.paused:
+                if self.latest is not None:
+                    send_message(serialize_dataclass(self.latest), self.sock)
+                    self.latest = None
+                else:
+                    send_message("", self.sock)
         else:
             self.update_timer.stop()
             send_message("exit", self.sock)
@@ -105,6 +113,13 @@ class MainWindow(EmptyWindow):
 
     def update_latest(self, new_latest: WholeInputState):
         self.latest = new_latest
+
+    def pause_play(self):
+        self.paused = not self.paused
+        if self.paused:
+            self.pause_play_button.setText("Play")
+        else:
+            self.pause_play_button.setText("Pause")
 
 
 def listen(window: MainWindow):
