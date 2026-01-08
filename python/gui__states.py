@@ -52,6 +52,7 @@ class OutputState:
         AN1: bool = False
         AN2: bool = False
         AN3: bool = False
+
     @dataclass
     class Cathode:
         CA: bool = False
@@ -62,11 +63,6 @@ class OutputState:
         CF: bool = False
         CG: bool = False
         DP: bool = False
-
-        def inverted(self):
-            inv_dict = {key: not val for key, val in dc.asdict(self).items()}
-
-            return OutputState.Cathode(**inv_dict)
 
     @dataclass
     class Lights:

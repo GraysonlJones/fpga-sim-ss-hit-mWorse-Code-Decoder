@@ -260,13 +260,13 @@ class BoardComponents:
 
         @Slot(OutputState.Cathode)
         def set_cathodes(self, new_lights: OutputState.Cathode, *, refresh: bool): 
-            self.current_pattern = dc.replace(new_lights).inverted() # Go from active-low board to True-on GUI
+            self.current_pattern = dc.replace(new_lights) # Inverted from active low on server side
             if refresh:
                 self._refresh()
 
         def _refresh(self):
             for anode, digit in zip(dc.astuple(self.current_anodes), self.digits):
-                if not anode: # Active-low board 
+                if anode: # Board is active low but inversion happens on server side
                     digit.set_lights(self.current_pattern)
                 else:
                     digit.set_lights(c.NumberStates.all_off)

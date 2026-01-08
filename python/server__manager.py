@@ -35,10 +35,13 @@ executable_path = Path("./obj_dir/Vtop")
 def bool_list_to_int(bl: list[bool]):
     return sum(int(b) << i for i, b in enumerate(reversed(bl)))
 
-def int_to_bool_list(num: int, width: int):
+def int_to_bool_list(num: int, width: int, *, invert: bool = False):
     partial_list = [bool(int(c)) for c in bin(num)[2:]]
     false_prefix = [False] * (width - len(partial_list))
-    return false_prefix + partial_list
+    if not invert:
+        return false_prefix + partial_list
+    else:
+        return [not x for x in (false_prefix + partial_list)]
 
 def flat_input_dict(input_state: WholeInputState) -> dict[str, int]:
     switches: list[bool] = list(dc.asdict(input_state.switches).values())
@@ -93,9 +96,9 @@ def live_sim(sock: socket.socket):
         output_string = out_pipe.readline().strip()
         if output_string != "":
             output_dict: dict[str, int] = ast.literal_eval(output_string)
-            new_segment = list(reversed(int_to_bool_list(output_dict["Segment"], 7))) # FPGA is G-A
-            new_dp = int_to_bool_list(output_dict["DP"], 1)
-            new_anode = int_to_bool_list(output_dict["Anode"], 4)
+            new_segment = list(reversed(int_to_bool_list(output_dict["Segment"], 7, invert=True))) # FPGA is G-A
+            new_dp = int_to_bool_list(output_dict["DP"], 1, invert=True)
+            new_anode = int_to_bool_list(output_dict["Anode"], 4, invert=True)
             new_lights = int_to_bool_list(output_dict["Lights"], 16)
 
             output_state = WholeOutputState(
