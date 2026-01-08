@@ -149,8 +149,8 @@ class LightDisplay(QPushButton):
         self.light_on = False
         self.setDisabled(True)
 
-        self.on_color = on_color
-        self.off_color = off_color
+        self.on_color = QColor(on_color)
+        self.off_color = QColor(off_color)
         set_color(self, self.off_color)
         
         if size is not None:
@@ -162,7 +162,7 @@ class LightDisplay(QPushButton):
     def set_light(self, light_on: bool):
         if self.light_on != light_on: # Avoid redundant color setting
             self.light_on = light_on
-            if light_on:
+            if self.light_on:
                 self.off_timer.stop()
                 set_color(self, self.on_color)
             else:
@@ -180,9 +180,10 @@ class CircleLightDisplay(QRadioButton):
         self.light_on = False
         self.setDisabled(True)
 
-        self.on_color = on_color
-        self.off_color = off_color
+        self.on_color = QColor(on_color)
+        self.off_color = QColor(off_color)
         set_color(self, self.off_color)
+
         self.off_timer = QTimer(interval=fade_time, singleShot=True)
         self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
         # Intentionally lacks size parameter. Radio buttons just crop if given
@@ -190,7 +191,7 @@ class CircleLightDisplay(QRadioButton):
 
     def set_light(self, light_on: bool):
         if self.light_on != light_on:
-            light_on = light_on
+            self.light_on = light_on
             if self.light_on:
                 self.off_timer.stop()
                 set_color(self, self.on_color)
