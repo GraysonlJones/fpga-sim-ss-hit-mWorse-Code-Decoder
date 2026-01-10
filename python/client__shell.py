@@ -6,6 +6,7 @@ from functools import partial
 from pathlib import Path
 
 import gui__constants as c
+from client__paths import waveforms_folder
 from gui__main import run_app
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
 from shared__util import (
@@ -136,11 +137,10 @@ def waveform_sim(output_filename: str, folder: str):
         # will ultimately save directly to a defined output folder
         print_error(f"output filename should be a name, not a path")
         return
-    
-    # TODO: make absolute/better-defined
-    output_folder = Path("./waveforms/")
+
+    output_folder = waveforms_folder
     output_folder.mkdir(exist_ok=True)
-    
+
     output_path = Path(output_folder, output_filename)
 
     try:

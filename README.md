@@ -32,7 +32,6 @@ another Python 3.13 program invoking Verilator on the server.
 1. Clone this git repository and open the folder in your IDE.
 
 2. Build Docker image. From the `fpga-sim` directory:
-
     ```
     docker build -t fpga-sim-server:v1 .
     ````
@@ -40,17 +39,7 @@ another Python 3.13 program invoking Verilator on the server.
     This will take a while (maybe 5-15 minutes), as this involves building
     Verilator from source in a VM. This only needs to happen once.
 
-3. `cd ./python`, then initialize the Python project using `uv venv`.
-    This will download the proper Python version and create a virtual
-    environment the first time, and print out a command for to activate it.
-    
-    Run the suggested command; your IDE may then suggest to automatically
-    activate the venv from now on, which I strongly recommend.
-
-    In VSCode, I also recommend setting `terminal.integrated.cwd` to `./python`
-    so the terminal then always starts there.
-
-4. Start the server:
+3. Start the server:
 
     ```
     docker run -p 9834:9834 fpga-sim-server:v1
@@ -66,13 +55,20 @@ another Python 3.13 program invoking Verilator on the server.
 
     If the server is ever stuck with no client connected, quit with `ctrl+C`.
 
-5. Set up and start the client:
+4. Run the client from the terminal, in `fpga-sim`:
 
     ```
-    uv run ./client__shell.py
+    uv run ./python/client__shell.py
     ```
 
-6. The client gives you a command-line interface (CLI). You can run three
+    This will take a little bit the first time, as uv must
+    set up a virtual environment. After this, the command should not have any
+    unusual startup delay.
+
+    **You cannot run the script with a different command**, as the Python
+    version must be correct and PySide6 must be available.
+
+5. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server:
 
 * `build_live_sim <input_directory>`
@@ -80,7 +76,8 @@ specific commands here, along with `exit` to quit the client and server:
     will be sent to the server to try to build for live simulation.
     * The top module must be called `top`. All filenames must match their
     module names (i.e. `top` ↔︎ `top.v`, etc).
-        * Example files are in `../server_materials/ex_live`.
+        * An example is in `./examples/ex_live/`.
+            * The inputs and outputs of the top module must match this exactly!
 
 * `start_live_sim`
     * If a live simulation build has succeeded during this session,
@@ -95,9 +92,9 @@ specific commands here, along with `exit` to quit the client and server:
     * Just like `build_live_sim`, it will search the input folder for
     `.v` files. There must be a `tb` module/file. Same rule about matching
     file/module names as with the other command.
-    * The output will go to the provided file in `python/waveforms`. If
+    * The output will go to the provided file in `./waveforms/`. If
     it already exists, it will not run the command, to prevent an accidental
     overwrite.
-        * Example files are in `../server_materials/ex_tb`.
+        * An example is in `./examples/ex_tb/`.
 * Mac/Linux-only: in the CLI, tab autocomplete works for files/folders within
 this folder and below (Python's `readline` package is not on Windows).
