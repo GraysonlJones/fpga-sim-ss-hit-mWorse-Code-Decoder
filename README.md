@@ -69,14 +69,17 @@ another Python 3.13 program invoking Verilator on the server.
     version must be correct and PySide6 must be available.
 
 5. The client gives you a command-line interface (CLI). You can run three
-specific commands here, along with `exit` to quit the client and server:
+specific commands here, along with `exit` to quit the client and server,
+and `help` to get formal help. Each command can also be run as `command -h` to
+see specific help. List of commands:
 
 * `build_live_sim <input_directory>`
-    * All `.v` files in the given directory (subfolders ignored)
+    * Directory name is appended to `verilog/live_sim` then searched.
+    All `.v` files there (subfolders ignored).
     will be sent to the server to try to build for live simulation.
     * The top module must be called `top`. All filenames must match their
     module names (i.e. `top` ↔︎ `top.v`, etc).
-        * An example is in `./examples/ex_live/`.
+        * An example is in `ex_live`.
             * The inputs and outputs of the top module must match this exactly!
 
 * `start_live_sim`
@@ -88,13 +91,17 @@ specific commands here, along with `exit` to quit the client and server:
     will crash and you will need to start the server and client again.
         * Preventing bad closures is a TODO. I think it is doable.
     
-* `waveform_sim <output_filename.vcd> <input_directory>`
-    * Just like `build_live_sim`, it will search the input folder for
-    `.v` files. There must be a `tb` module/file. Same rule about matching
-    file/module names as with the other command.
+* `waveform_sim [-ov] <output_filename.vcd> <input_directory>`
+    * Like `build_live_sim` but using `verilog/testbench`. The driving
+    testbench module must similiarly be `tb` module/file.
     * The output will go to the provided file in `./waveforms/`. If
     it already exists, it will not run the command, to prevent an accidental
     overwrite.
-        * An example is in `./examples/ex_tb/`.
-* Mac/Linux-only: in the CLI, tab autocomplete works for files/folders within
-this folder and below (Python's `readline` package is not on Windows).
+        * `ex_tb` is a provided example.
+    * If `-ov` flag is present, it will 
+* Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
+autocomplete for commands, and, in the ending position, folder names for
+`waveform_sim`/`build_live_sim`. The terminal also has up/down history
+browsing.
+    * There is a third-party library for readline I want to eventually add
+    so Windows has a better experience.

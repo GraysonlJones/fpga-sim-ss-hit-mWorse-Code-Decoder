@@ -1,14 +1,21 @@
 import os
 import platform
+import readline
 import shlex
 import socket
-from functools import partial
+from argparse import ArgumentParser
+from enum import Enum, auto
 from pathlib import Path
 
-import gui__constants as c
-from client__paths import waveforms_folder
+from client__parsers import (
+    ContinueException,
+    attempt_parse_and_run,
+    build_parser,
+    start_parser,
+    wavef_parser,
+)
+from client__paths import live_sim_folder, testbench_folder, waveforms_folder
 from gui__main import run_app
-from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
 from shared__util import (
     AckMessage,
     AnyCommand,
@@ -25,189 +32,168 @@ from shared__util import (
 )
 
 
-class VerilogGatherError(RuntimeError):
-    '''Raised by get_verilog_from_folder if anything bad happens.
-    That function will print the relevant message.'''
-    pass
-
-def is_verilog(filename: str):
-    extension = filename.split(".")[-1]
-    return extension == "v"# or extension == "sv"
-
-
-def print_function_error(caller: str, message: str):
-    print(f'{caller}(): {message}')
-
-def get_verilog_from_folder(folder: str, caller: str):
-    print_error = partial(print_function_error, caller)
-    try:
-        all_filenames = os.listdir(folder)
-    except FileNotFoundError:
-        print_error(f'folder argument "{folder}" does not exist')
-        raise VerilogGatherError
-    except NotADirectoryError:
-        print_error(f'folder argument "{folder}" is a file, not a folder')
-        raise VerilogGatherError
-
-    v_filenames = [name for name in all_filenames if is_verilog(name)]
-    file_paths = [Path(folder, name) for name in v_filenames]
-
-    if len(file_paths) == 0:
-        print_error(f'{folder} contains no .v files. Please make sure '
-            'that all input files have the proper extensions.')
-        raise VerilogGatherError
-
-    # TODO: Is there a possible exception where a file can't be read?
-    #   For now can catch generic Exception and print, and tell user to contact me
-    return [NamedFile.from_fp(open(file_path, "r"), close_after=True) for file_path in file_paths]
+def print_parser_error(parser: ArgumentParser, message: str):
+    print(parser.format_usage())
+    print(message)
 
 def send_command(command: AnyCommand):
+    global sock
     str_command = serialize_dataclass(command)
     sock.send(type(command).CODE.encode())
     send_message(str_command, sock)
 
-def build_live_sim(folder: str):
-    global sock
-    print_error = partial(print_function_error, "build_live_sim")
-    try:
-        files = get_verilog_from_folder(folder, "build_live_sim")
-    except VerilogGatherError:
-        return
-    except Exception as e:
-        print_error(f"Unexpected exception: {e}. "
-              "Please contact developer.")
-        return
+def waveform_sim(output_filename: str, input_files: list[NamedFile], overwrite: bool):
+    waveforms_folder.mkdir(exist_ok=True)
     
-    for file in files:
-        if file.name == "top.v":
-            break
-    else:
-        print_error("No file named top.v. Top module MUST be named top.v.")
+    output_path = Path(waveforms_folder, output_filename)
+
+    if (not overwrite) and output_path.is_file():
+        print(f'Cannot overwrite existing file "{output_path}"; pass -ov option if you wish to allow overwriting.')
         return
 
-    command = BuildLiveCommand(files)
+    command = WaveformSimCommand(output_filename, input_files)
     send_command(command)
 
     result = receive_error_or_ack(sock)
     match result:
         case ErrorMessage(content):
-            print_error(f"server returned error message: {content}")
+            print(f"Sent files to server, but it returned an error message: {content}")
+            return
         case AckMessage():
-            print_error(f"Build is good!")
-        case _:
-            print_error(f"unexpected response {result}")
+            print(f"Successfully ran testbench simulation. See output at waveforms/{output_filename}")
+    file_message = big_receive(sock).decode()
+    output_file = deserialize_dataclass(file_message, NamedFile)
+    output_file.to_disk(waveforms_folder)
+    
+
+def build_live_sim(input_files: list[NamedFile]):
+    global sock
+
+    command = BuildLiveCommand(input_files)
+    send_command(command)
+
+    result = receive_error_or_ack(sock)
+    match result:
+        case ErrorMessage(content):
+            print(f"Server returned error message: {content}")
+        case AckMessage():
+            print(f"Successfully built live simulation. Run with {start_parser.prog}.")
 
 def start_live_sim():
-    global sock
     global app
-    print_error = partial(print_function_error, "start_live_sim")
 
     command = StartLiveCommand()
     send_command(command)
-    # TODO: server will send its socket to the Verilator executable
-    #   This side sends its socket to the GUI.
-    #       Qt must be run in the main thread. Not sure if you can
-    #       just make a new QApp, run it, exit, and then continue,
-    #       or if a secondary process is needed.
-    #   When app quits, send some quit message from this function
-    #       then return to shell loop
 
-    # app starts as None (declared in main), and run_app() returns a
-    #   QApplication instance which is then reused in future runs.
-    #   Deleting the app and creating a new one each time is messier.
     result = receive_error_or_ack(sock)
     match result:
         case ErrorMessage(content):
-            print_error(f"server returned error message: {content}")
+            print(f"Server returned error message: {content}")
         case AckMessage():
-            print_error(f"launching simulation successfully!")
+            print(f"Server started simulation. Launching GUI now.")
             app = run_app(sock, app)
-        case _:
-            print_error(f"unexpected response {result}")
 
-def waveform_sim(output_filename: str, folder: str):
-    global sock
-    print_error = partial(print_function_error, "waveform_sim")
+class SuggestMode(Enum):
+    NONE = auto()
+    TB = auto()
+    LIVE = auto()
 
-    if output_filename.split(".")[-1] != "vcd":
-        print_error(f"output filename should be a .vcd")
-        return
-    name_as_path = Path(output_filename)
-    if output_filename != name_as_path.name:
-        # will ultimately save directly to a defined output folder
-        print_error(f"output filename should be a name, not a path")
-        return
+def is_overwrite(text: str):
+    return "-overwrite".startswith(text) and len(text) <= len("-overwrite")
 
-    output_folder = waveforms_folder
-    output_folder.mkdir(exist_ok=True)
+def suggest_folders(path: Path):
+    return [thing for thing in os.listdir(path) if path.joinpath(thing).is_dir()]
 
-    output_path = Path(output_folder, output_filename)
+def filter_start(li: list[str], text: str):
+    return [x for x in li if x.startswith(text)]
 
+def commands_completer(text: str, state: int):
+    '''Matches signature expected'''
+    # if help and/or exit are included, output is spaced super wonky.
+    options: list[str] = [build_parser.prog, start_parser.prog, wavef_parser.prog]
+
+    full_line = readline.get_line_buffer().lstrip()
+
+    shlexd = shlex.split(full_line)
+
+    current_word = max(len(shlexd) - 1, 0) # start at 0. both 1 and 0 tokens = word 0
+
+    # must check emptiness first or the function will except, with readline silencing the error
+    if full_line != "" and full_line[-1] == " " and len(shlexd) > 0: # treat trailing space a new word being started
+        current_word += 1
+
+    matches = [] # default value
+
+    if current_word == 0: # empty line/one word maybe partially typed
+        matches = filter_start(options, full_line)
+    else:
+        suggest_mode = SuggestMode.NONE
+        match shlexd:
+            case [build_parser.prog, *_] if current_word == 1:
+                suggest_mode = SuggestMode.LIVE
+            case [wavef_parser.prog, arg1, arg2, *_] if is_overwrite(arg1) or is_overwrite(arg2) and current_word == 3:
+                suggest_mode = SuggestMode.TB
+            case [wavef_parser.prog, arg1, *_] if not is_overwrite(arg1) and current_word == 2:
+                suggest_mode = SuggestMode.TB
+
+        try:
+            last_term = shlexd[current_word]
+        except IndexError:
+            last_term = ""
+
+        if suggest_mode == suggest_mode.LIVE:
+            matches = filter_start(suggest_folders(live_sim_folder), last_term)
+        elif suggest_mode == suggest_mode.TB:
+            matches = filter_start(suggest_folders(testbench_folder), last_term)
     try:
-        files = get_verilog_from_folder(folder, "waveform_sim")
-    except VerilogGatherError:
-        return
-    except Exception as e:
-        print_error(f"unexpected exception: {e}. "
-            "Please contact developer.")
-        return
-    if output_path.is_file():
-        print_error(f'output file "{output_path}" already exists')
-        return
-    
-
-    command = WaveformSimCommand(output_filename, files)
-    send_command(command)
-
-
-    result = receive_error_or_ack(sock)
-    match result:
-        case ErrorMessage(content):
-            print_error(f"server returned error message: {content}")
-            return
-        case AckMessage():
-            print_error(f"Build is good!")
-    file_message = big_receive(sock).decode()
-    output_file = deserialize_dataclass(file_message, NamedFile)
-    output_file.to_disk(output_folder)
+        return matches[state]
+    except IndexError:
+        return None
 
 if __name__ == "__main__":
-    # tab complete on Mac and Linux
-    # TODO: Windows code. Seemed more complex.
-    # TODO: add code to also autocomplete the three commands at start of line?
-    app = None
-    if platform.system() == "Darwin":
-        import readline
-        readline.parse_and_bind("bind ^I rl_complete")
-    elif platform.system() == "Linux":
-        import readline
-        readline.parse_and_bind("tab: complete")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.connect(("127.0.0.1", 9834))
+
+        is_mac = (platform.system() == "Darwin")
+        is_linux = (platform.system() == "Linux")
+
+        if is_mac or is_linux: # no readline on Windows, unfortunately!
+            import readline
+            readline.set_completer(commands_completer)
+            readline.parse_and_bind("bind ^I rl_complete" if is_mac else "tab: complete")
+            print("Suggestions and autocomplete are available with tab!")
+
+        app = None
+
         while True:
             try:
                 command_string = input("> ").strip()
             except KeyboardInterrupt:
                 print("exit (Ctrl+C)")
                 exit(0)
+
             words = shlex.split(command_string)
-            words[0] = words[0].lower()
-            match words:
-                case ["build_live_sim", folder]:
-                    build_live_sim(folder)
-                case ["start_live_sim"]:
-                    start_live_sim()
-                case ["waveform_sim", output_filename, folder]:
-                    print("waveform", output_filename, folder)
-                    waveform_sim(output_filename, folder)
-                case ["build_live_sim", *_]:
-                    print("Proper usage: build_live_sim <input_directory>")
-                case ["start_live_sim", *_]:
-                    print("Proper usage: start_live_sim")
-                case ["waveform_sim", *_]:
-                    print("Proper usage: waveform_sim <output_filename.vcd> <input_directory>")
-                case ["exit"]:
-                    exit(0)
-                case [*e]:
-                    print(f'Unexpected input "{" ".join(e)}"')
+            if len(words) == 0:
+                continue
+
+            command = words[0]
+            args = words[1:]
+
+            try:
+                match command:
+                    case wavef_parser.prog:
+                        attempt_parse_and_run(wavef_parser, args, waveform_sim)
+                    case build_parser.prog:
+                        attempt_parse_and_run(build_parser, args, build_live_sim)
+                    case start_parser.prog:
+                        attempt_parse_and_run(start_parser, args, start_live_sim)
+                    case "exit" | "quit":
+                        exit()
+                    case "help" | "?" | "-h":
+                        print("Available commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* exit")
+                    case _:
+                        print(f"Unrecognized command: {command}"
+                        "\n\nAvailable commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* help")
+            except ContinueException:
+                continue # when help is called or a bad argument is passed

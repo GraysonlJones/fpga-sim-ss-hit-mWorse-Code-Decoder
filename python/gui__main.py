@@ -141,8 +141,9 @@ def listen(window: MainWindow):
 def run_app(sock: socket.socket, app: QApplication | None):
     if app is None:
         app = make_app()
+        print("Spawned a new QApplication")
     else:
-        print("reusing app")
+        print("Reusing app")
     window = MainWindow(sock)
     window.raise_() # Put window on front. Necessary when reusing app
     app.exec()
