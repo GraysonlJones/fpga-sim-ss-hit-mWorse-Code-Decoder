@@ -3,11 +3,31 @@
 ***Note:** Assumes some terminal familiarity. Instructions for students would be
 much more detailed.*
 
-Supports Mac, Windows, and Linux (at least Ubuntu out of the box should work
-once the software is added).
+Supports MacOS 13+, Windows 10/11, and Linux.
+See [Qt's docs](https://doc.qt.io/qt-6/supported-platforms.html) for some
+specifics on OS support.
 
 Attribution: The client runs on Python 3.13 with PySide6, with
-another Python 3.13 program invoking Verilator on the server.
+another Python 3.13 program invoking Verilator on the server. The server
+runs in an Ubuntu container.
+
+Note for Linux: Qt support varies by distribution and window manager; Ubuntu
+22.04 with no intentional major changes to the configuration is the only one I
+have tested on, but I think that any Debian or Ubuntu-based distribution should
+be able to run this without difficulty
+(Linux Mint and of course Debian being the most prominent of those).
+
+According to [Verilator's installation instructions](https://verilator.org/guide/latest/install.html#os-requirements),
+"Verilator is developed and has primary testing on Ubuntu, with additional
+testing on Apple OS-X, FreeBSD and Windows MSVC". Therefore, if you have bad
+performance
+(an in-GUI framerate counter to check it is something I will likely add)
+it *should* be possible to install Verilator natively, copy the files listed in
+the Dockerfile's `COPY` line into a folder outside of the client project, and
+run the server natively on your own computer. Success is not guaranteed, and
+I also don't know that performance will necessarily improve. If you get
+most of the way there and run into problems, feel free to contact me about it
+and I may be able to help.
 
 
 ## Required software
@@ -24,8 +44,6 @@ another Python 3.13 program invoking Verilator on the server.
     * [Visual Studio Code download page](https://code.visualstudio.com/Download)
         * I am using [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
         and [this VCD waveform viewer extension](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview)
-        * Python extensions may be needed to have it automatically handle
-        virtual environments. I am not super sure about this.
 
 ## Installation and usage
 
