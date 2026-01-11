@@ -5,7 +5,9 @@ much more detailed.*
 
 Supports MacOS 13+, Windows 10/11, and Linux.
 See [Qt's docs](https://doc.qt.io/qt-6/supported-platforms.html) for some
-specifics on OS support.
+specifics on OS support. This was developed on a Mac, and for now, with
+autocomplete currently unavailable on Windows, the experience is best on
+Mac/Linux.
 
 Attribution: The client runs on Python 3.13 with PySide6, with
 another Python 3.13 program invoking Verilator on the server. The server
@@ -104,11 +106,15 @@ see specific help. List of commands:
     * If a live simulation build has succeeded during this session,
     this will start it. It will open up a window where you can interact
     with the program as if it were a real FPGA.
-    * The window **MUST** be closed with the in-window quit button, rather
-    than quitting its app or the window's X button. Otherwise, the session
-    will crash and you will need to start the server and client again.
-        * Preventing bad closures is a TODO. I think it is doable.
-    
+    * The window **MUST** be closed with the quit button at the bottom, rather
+    than by quitting its app or with the window's X button. Otherwise, the
+    session will crash and you will need to start the server and client again.
+        * Preventing bad closures is a TODO. Graying out the X button should be
+        easy, but preventing quitting might not be possible.
+    * To allow running programs closer to what you can run on a real board,
+    the plus-shaped buttons will stay pressed if you are holding shift when you
+    release the mouse.
+
 * `waveform_sim [-ov] <output_filename.vcd> <input_directory>`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
     testbench module must similiarly be `tb` module/file.
