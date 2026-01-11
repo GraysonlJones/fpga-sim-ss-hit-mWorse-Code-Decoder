@@ -50,6 +50,10 @@ and I may be able to help.
 ## Installation and usage
 
 1. Clone this git repository and open the folder in your IDE.
+Open Docker Desktop.
+
+* **Docker must be open when building the image and every time the server
+is running.**
 
 2. Build Docker image. From the `fpga-sim` directory:
     ```
