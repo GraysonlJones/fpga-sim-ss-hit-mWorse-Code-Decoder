@@ -98,7 +98,8 @@ see specific help. List of commands:
     it already exists, it will not run the command, to prevent an accidental
     overwrite.
         * `ex_tb` is a provided example.
-    * If `-ov` flag is present, it will 
+    * If `-ov` flag is present, the output file can be overwritten. Otherwise
+    an error will be printed if it already exists, to avoid accidents.
 * Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
