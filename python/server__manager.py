@@ -204,16 +204,12 @@ if __name__ == "__main__":
         server_sock.bind(("0.0.0.0", 9834))
         server_sock.listen()
 
-        # PERHAPS: Have a rule that the top module MUST be called Vtop
-        #   I certainly could get around the name-finding thing with code, but
-        #   it would be good for the users' learning, debugging experience etc
-        #   to have a clear idea which one is the top module.
-
-
         # Dockerfile makes this but in case someone tries running natively
         Path("./user_inputs").mkdir(exist_ok=True)
 
         conn, addr = server_sock.accept()
+        server_sock.close() # No more connections
+        conn.send("Ack!".encode()) # Clients after close will receive EOF instead
         while True:
             # TODO: maybe, instead of fixed-size header codes,
             #   prefix dataclass serializations with type name?

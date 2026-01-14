@@ -3,6 +3,7 @@ import platform
 import readline
 import shlex
 import socket
+import subprocess
 from argparse import ArgumentParser
 from enum import Enum, auto
 from pathlib import Path
@@ -149,11 +150,41 @@ def commands_completer(text: str, state: int):
         return matches[state]
     except IndexError:
         return None
+    
+def get_latest_container_port():
+    '''Gets the port of the latest-started Docker server container.
+    Error if there are no containers open or if Docker seems to be unopened.'''
+    # Command prints string with 0 or more lines of this if successful:
+    #   '{container hex id}|0.0.0.0:{port}->9834/tcp, [::]:{port}->9834/tcp'
+    proc = subprocess.run('docker ps --format "{{.ID}}|{{.Ports}}" --filter "ancestor=fpga-sim-server:v1"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    match proc.returncode:
+        case 0:
+            output = proc.stdout.decode()
+            for line in output.splitlines():
+                port_string = line.split("|")[1]
+                start = len("0.0.0.0:")
+                end = port_string.find("->9834")
+                return port_string[start:end]
+            else:
+                raise RuntimeError(f"No container for the server was found running; make sure that you started one, and that it was built with the exact command specified in the instructions.")
+        case _:
+            raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
 
 if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            socket_port = int(get_latest_container_port())
+        except RuntimeError as e:
+            print(e)
+            exit(1)
+
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.connect(("127.0.0.1", 9834))
+        sock.connect(("127.0.0.1", socket_port))
+        if len(sock.recv(2048).decode()) == 0:
+            print("Container rejected connection! Make sure there is not another client script running already connected to it; there must be one container running for every client.")
+            exit(1)
+        else:
+            print(f"Connected to Docker container running at port {socket_port}.")
 
         is_mac = (platform.system() == "Darwin")
         is_linux = (platform.system() == "Linux")
@@ -163,6 +194,9 @@ if __name__ == "__main__":
             readline.set_completer(commands_completer)
             readline.parse_and_bind("bind ^I rl_complete" if is_mac else "tab: complete")
             print("Suggestions and autocomplete are available with tab!")
+        else:
+            print("Run help or ? to see available commands!")
+            
 
         app = None
 

@@ -66,7 +66,7 @@ is running.**
 3. Start the server:
 
     ```
-    docker run -p 9834:9834 fpga-sim-server:v1
+    docker run -p 0:9834 fpga-sim-server:v1
     ```
 
     This must happen before starting the client, or the client will not have

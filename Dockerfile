@@ -3,7 +3,7 @@
 # Build image from this file's directory above python/server_materials with:
     # docker build -t fpga-sim-server:v1 .
 # Start container running server program with:
-    # docker run -p 9834:9834 fpga-sim-server:v1 
+    # docker run -p 0:9834 fpga-sim-server:v1
 FROM ubuntu:22.04
 WORKDIR /usr/bin/
 
@@ -59,11 +59,12 @@ RUN mkdir fpga-sim
 WORKDIR ./fpga-sim
 RUN mkdir user_inputs
 
-
-COPY python/server__manager.py python/gui__states.py python/shared__util.py \
-    server_materials/Makefile server_materials/Makefile_obj \
-    server_materials/simulator_driver.cpp \
-    server_materials/Waveform_Run.sh .
+COPY python/gui__states.py python/shared__util.py .
+COPY server_materials/Makefile .
+COPY server_materials/Makefile_obj .
+COPY server_materials/simulator_driver.cpp .
+COPY server_materials/Waveform_Run.sh .
+COPY python/server__manager.py .
 
 EXPOSE 9834
 
