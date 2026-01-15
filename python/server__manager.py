@@ -204,31 +204,35 @@ if __name__ == "__main__":
         server_sock.bind(("0.0.0.0", 9834))
         server_sock.listen()
 
+        print("Local server has started! Run the client script in another window/tab to connect.")
+
         # Dockerfile makes this but in case someone tries running natively
         Path("./user_inputs").mkdir(exist_ok=True)
 
         conn, addr = server_sock.accept()
         server_sock.close() # No more connections
         conn.send("Ack!".encode()) # Clients after close will receive EOF instead
+
+        print("Your local client has connected to this server. Run commands in its terminal and watch output here. Errors will be redirected to the client if they occur.")
         while True:
             # TODO: maybe, instead of fixed-size header codes,
             #   prefix dataclass serializations with type name?
             header = conn.recv(2)
             if header == b'':
-                print("Connection disconnected normally")
+                print("Client disconnected normally")
                 exit(0)
             dc_type = header_to_dc(header.decode())
             try:
                 message = big_receive(conn)
             except UnexpectedTermination:
-                print("Connection terminated after sending length value, without sending full message")
+                print("Client terminated after sending length value, without sending full message")
                 exit(1)
             except NormalTermination:
-                print("Connection disconnected normally")
+                print("Client disconnected normally")
                 exit(0)
             except BadHeader as e:
-                print(f"Connection sent invalid header {str(e)}")
-                exit(0)
+                print(f"Client sent invalid header {str(e)}")
+                exit(1)
             dict_str = message.decode()
             command = deserialize_dataclass(dict_str, dc_type)
             # print(command)
