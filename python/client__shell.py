@@ -7,6 +7,7 @@ import subprocess
 from argparse import ArgumentParser
 from enum import Enum, auto
 from pathlib import Path
+from typing import IO
 
 from client__parsers import (
     ContinueException,
@@ -171,6 +172,14 @@ def get_latest_container_port():
             raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
 
 if __name__ == "__main__":
+    # Launch docker first:
+    process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    # wait until first print-out
+    out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
+    out_pipe.readline()
+
+    print("Automatically started up Docker container. Launching client.")
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             socket_port = int(get_latest_container_port())
@@ -181,7 +190,8 @@ if __name__ == "__main__":
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.connect(("127.0.0.1", socket_port))
         if len(sock.recv(2048).decode()) == 0:
-            print("Container rejected connection! Make sure there is not another client script running already connected to it; there must be one container running for every client.")
+            print("Auto-started container rejected connection for some reason.")
+            print("Quitting. Try running again; if it fails again, please contact the developer!")
             exit(1)
         else:
             print(f"Connected to Docker container running at port {socket_port}.")
