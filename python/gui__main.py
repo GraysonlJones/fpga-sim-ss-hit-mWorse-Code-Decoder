@@ -103,7 +103,7 @@ class MainWindow(EmptyWindow):
         self.close()
         # print("Closing app")
         app.exit()
-        print("Closed app")
+        # print("Closed app")
 
     def update_server(self):
         if not self.should_quit:
@@ -159,9 +159,9 @@ def listen(window: MainWindow):
 def run_app(sock: socket.socket, app: QApplication | None):
     if app is None:
         app = make_app()
-        print("Spawned a new QApplication")
-    else:
-        print("Reusing app")
+        # print("Spawned a new QApplication")
+    # else:
+        # print("Reusing app")
     window = MainWindow(sock)
     window.raise_() # Put window on front. Necessary when reusing app
     app.exec()

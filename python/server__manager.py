@@ -67,15 +67,13 @@ def live_sim(sock: socket.socket):
     process = subprocess.Popen(executable_path, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     in_pipe: IO[str] = process.stdin # pyright: ignore[reportAssignmentType]
     out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
-    time.sleep(1)
-    
+
     while(True):
         inp = big_receive(conn).decode()
         match inp:
             case "exit":
                 print("Client requested live sim exit")
                 send_message("exit", conn)
-                time.sleep(1)
                 print("Returning to main command loop")
                 break
             case "": # Give sim process empty line to indicate no new input
