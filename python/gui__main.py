@@ -5,11 +5,13 @@ Start with run_app call
 import dataclasses as dc
 import socket
 import threading
+import time
+from statistics import mean
 
 from gui__qt_util import BoardComponents, EmptyWindow, make_app
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
 from PySide6.QtCore import QTimer, Signal, Slot
-from PySide6.QtWidgets import QApplication, QPushButton
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton
 from shared__util import (
     big_receive,
     deserialize_dataclass,
@@ -63,9 +65,14 @@ class MainWindow(EmptyWindow):
         self.output_changed.connect(self.set_output_state)
         self.close_signal.connect(self.quit_program)
 
-        self.update_timer = QTimer(interval=8)
+        self.update_timer = QTimer(interval=17)
         self.update_timer.timeout.connect(self.update_server)
         self.update_timer.start()
+
+        self.last_few_fps: list[float] = []
+        self.last_time = time.time()
+        self.fps_counter = QLabel("__.__/60 FPS")
+        self.main_layout.addWidget(self.fps_counter)
 
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
@@ -106,6 +113,17 @@ class MainWindow(EmptyWindow):
                     self.latest = None
                 else:
                     send_message("", self.sock)
+                new_time = time.time()
+
+                self.last_few_fps.append(1/(new_time - self.last_time))
+                if len(self.last_few_fps) == 10:
+                    self.fps_counter.setText(f"<code>{mean(self.last_few_fps):.2f}/60</code> FPS")
+                    self.last_few_fps.clear()
+                self.last_time = new_time
+            else:
+                self.fps_counter.setText(f"<code>__.__/60</code> FPS (paused)")
+                self.last_few_fps.clear() # While paused, times are meaningless
+                self.last_time = time.time()
         else:
             self.update_timer.stop()
             send_message("exit", self.sock)
