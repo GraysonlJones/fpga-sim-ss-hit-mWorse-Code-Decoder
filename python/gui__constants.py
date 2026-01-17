@@ -1,8 +1,7 @@
 import dataclasses as dc
 
-from PySide6.QtCore import QSize
-
 from gui__states import OutputState
+from PySide6.QtCore import QSize
 
 
 class Colors:

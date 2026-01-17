@@ -1,9 +1,10 @@
 # Run this to copy all the files to run the server natively on your machine,
 # if Verilator is installed, to their own folder.
-from pathlib import Path
 import shutil
-from client__paths import top_folder
+from pathlib import Path
 from sys import argv
+
+from client__paths import top_folder
 
 if shutil.which("verilator") is None:
     print("Verilator is not in your terminal's path. Please install it or the server set up by this will not work.")
