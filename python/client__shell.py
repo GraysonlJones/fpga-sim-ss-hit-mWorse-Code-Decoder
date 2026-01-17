@@ -7,6 +7,7 @@ import subprocess
 from argparse import ArgumentParser
 from enum import Enum, auto
 from pathlib import Path
+from sys import argv
 from typing import IO
 
 from client__parsers import (
@@ -172,29 +173,47 @@ def get_latest_container_port():
             raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
 
 if __name__ == "__main__":
-    # Launch docker first:
-    process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    # wait until first print-out
-    out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
-    out_pipe.readline()
+    try:
+        socket_port = int(argv[1])
+        docker_mode = False
+    except IndexError: # No argument passed
+        docker_mode = True
+        # Launch docker:
+        process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        # wait until first print-out
+        out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
+        out_pipe.readline()
 
-    print("Automatically started up Docker container. Launching client.")
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        print("Automatically started up Docker container. Launching client.")
         try:
             socket_port = int(get_latest_container_port())
         except RuntimeError as e:
             print(e)
             exit(1)
+    except ValueError:
+        print(f"Could not convert {argv[1]} to a port number. Exiting.")
+        exit(1)
 
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.connect(("127.0.0.1", socket_port))
-        if len(sock.recv(2048).decode()) == 0:
-            print("Auto-started container rejected connection for some reason.")
-            print("Quitting. Try running again; if it fails again, please contact the developer!")
+        try:
+            sock.connect(("0.0.0.0", socket_port))
+            if len(sock.recv(2048).decode()) == 0:
+                raise ConnectionError("Not refused, but failed")
+        except (ConnectionError, ConnectionRefusedError) as e:
+            if docker_mode:
+                print("Auto-started container rejected connection for some reason.")
+                print("Quitting. Try running again; if it fails again, please contact the developer!")
+            else:
+                print(f"Failed to connect to the native server that may be running at port {socket_port}. Make sure it is running and that the port number matches what it output!")
+            print(f"Original exception: {e}")
             exit(1)
+
+        if docker_mode:
+            print(f"Connected to automatically-started Docker container running at port {socket_port}")
         else:
-            print(f"Connected to Docker container running at port {socket_port}.")
+            print(f"Connected to native server running at port {socket_port}")
 
         is_mac = (platform.system() == "Darwin")
         is_linux = (platform.system() == "Linux")

@@ -19,18 +19,6 @@ have tested on, but I think that any Debian or Ubuntu-based distribution should
 be able to run this without difficulty
 (Linux Mint and of course Debian being the most prominent of those).
 
-According to [Verilator's installation instructions](https://verilator.org/guide/latest/install.html#os-requirements),
-"Verilator is developed and has primary testing on Ubuntu, with additional
-testing on Apple OS-X, FreeBSD and Windows MSVC". Therefore, if you have bad
-performance
-(an in-GUI framerate counter to check it is something I will likely add)
-it *should* be possible to install Verilator natively, copy the files listed in
-the Dockerfile's `COPY` line into a folder outside of the client project, and
-run the server natively on your own computer. Success is not guaranteed, and
-I also don't know that performance will necessarily improve. If you get
-most of the way there and run into problems, feel free to contact me about it
-and I may be able to help.
-
 
 ## Required software
 
@@ -73,23 +61,7 @@ is running.**
     and the image rebuilt, all steps before copying that file will be skipped,
     for a much shorter total build time (in my experience under 10 seconds).
 
-3. Start the server:
-
-    ```
-    docker run -p 0:9834 fpga-sim-server:v1
-    ```
-
-    This must happen before starting the client, or the client will not have
-    something to connect to. Every time you quit the client, the server
-    will terminate, so you will have to run this again.
-
-    I recommend opening it in a system terminal outside of the IDE to easily
-    have it in a separate window you can switch back and forth with. It does
-    not matter what folder your terminal is in when you run this command.
-
-    If the server is ever stuck with no client connected, quit with `ctrl+C`.
-
-4. Run the client from the terminal, in `fpga-sim`:
+3. Run the program from the terminal, in `fpga-sim`:
 
     ```
     uv run ./python/client__shell.py
@@ -102,7 +74,32 @@ is running.**
     **You cannot run the script with a different command**, as the Python
     version must be correct and PySide6 must be available.
 
-5. The client gives you a command-line interface (CLI). You can run three
+    * While Ubuntu is the primary target for Verilator, it compiles on
+    Mac (Clang or G++) and MSVC (Windows), and some other systems;
+    see [Verilator's install instructions](https://verilator.org/guide/latest/install.html#os-requirements) for more info.
+    If it is installed on your computer, this program has an alternative mode
+    to run the server natively.
+    This likely has better performance on computers with little RAM and
+    Verilator is a much smaller download than Docker Desktop.
+
+        I have not had any issues running the server directly on Mac, with
+        Verilator built from source using Clang, but I would not recommend it as
+        the default method for students because installing Verilator is
+        intimidating you are new to terminals.
+        * If using this mode, first run `python/setup_host_server.py` to set up
+        the server folder. With no arguments it will place it in
+        `fpga-sim/host_server`, or if passed a path it will create a folder
+        exactly at `<that path>/host_server` with the same contents.
+            * A really annoying rule enforced by my setup script is that the
+            path the server is placed at must contain no spaces, due to
+            GNU make, which is used to invoke Verilator. There is no
+            way around this other than using a different path.
+        * Run `python3.13 server__manager.py`
+        (no non-stdlib package dependencies so no need for environment setup).
+        It will start up a server and print out a port number; run the client
+        script as you would normally, but pass the port number as its argument.
+
+4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
 and `help` to get formal help. Each command can also be run as `command -h` to
 see specific help. List of commands:

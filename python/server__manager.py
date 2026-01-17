@@ -1,11 +1,11 @@
 import ast
 import dataclasses as dc
+import shutil
 import socket
-from string import Template
 import subprocess
-import time
 from os import environ
 from pathlib import Path
+from string import Template
 from typing import IO
 
 from gui__states import (  # For live sim loop
@@ -197,15 +197,30 @@ def build_live(sock: socket.socket, files: list[NamedFile]):
     send_message(serialize_dataclass(result), sock)
 
 if __name__ == "__main__":
+    i_am_a_docker = "FPGA_DOCKER_SERVER" in environ
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
         server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_sock.bind(("0.0.0.0", 9834))
-        server_sock.listen()
 
-        print("Local server has started! Run the client script in another window/tab to connect.")
+        if i_am_a_docker:
+            server_sock.bind(("0.0.0.0", 9834))
+            server_sock.listen()
+            # Used as "ack" message so client knows the server is ready
+            print("Only the computer will ever see this </3")
+        else:
+            if shutil.which("verilator") is None:
+                print("Verilator is not in your terminal path.")
+                print("Try running this in a fresh terminal if you just installed Verilator.")
+                exit(1)
+            server_sock.bind(("0.0.0.0", 0))
+            _, port = server_sock.getsockname()
+            server_sock.listen()
 
-        # Dockerfile makes this but in case someone tries running natively
-        Path("./user_inputs").mkdir(exist_ok=True)
+            print(f"Local server has started and is bound to port {port}")
+            print(f"Run the client script, with the port number as its argument, in another window/tab to connect.")
+
+            my_folder = Path(__file__).resolve().parent.parent 
+            my_folder.joinpath("./user_inputs").mkdir(exist_ok=True) 
 
         conn, addr = server_sock.accept()
         server_sock.close() # No more connections

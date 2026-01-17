@@ -70,4 +70,7 @@ EXPOSE 9834
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Used by server manager to know if it is in Docker or not
+ENV FPGA_DOCKER_SERVER="Yes this is the server"
+
 CMD ["/root/.local/bin/python3.13", "./server__manager.py"]
