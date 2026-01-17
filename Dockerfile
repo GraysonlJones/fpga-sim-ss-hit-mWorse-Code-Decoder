@@ -12,8 +12,8 @@ WORKDIR /usr/bin/
 
 # Verilator core dependencies, plus git to download it
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git help2man perl python3 make autoconf g++ flex bison ccache \
-    libgoogle-perftools-dev numactl perl-doc \
+    git help2man perl python3 make autoconf g++ flex bison \
+    mold ccache libgoogle-perftools-dev numactl perl-doc \
     git
 
 
@@ -54,9 +54,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 # Updating path wasn't working so just use absolute one for the one uv call
 RUN /root/.local/bin/uv python install 3.13
 
-WORKDIR ~
-RUN mkdir fpga-sim
-WORKDIR ./fpga-sim
+WORKDIR /root/fpga-sim
 RUN mkdir user_inputs
 
 COPY python/gui__states.py python/shared__util.py .

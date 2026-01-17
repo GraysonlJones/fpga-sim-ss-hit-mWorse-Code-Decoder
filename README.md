@@ -60,8 +60,18 @@ is running.**
     docker build -t fpga-sim-server:v1 .
     ````
 
-    This will take a while (maybe 5-15 minutes), as this involves building
-    Verilator from source in a VM. This only needs to happen once.
+    This step requires internet, as it is downloading the base Docker Ubuntu
+    image and then within the VM it is creating running commands to download
+    software. Make sure you are on a decent connection, or it will be slowed
+    down.
+
+    The build process this launches takes quite a while.
+    I don't have a "clean start" time estimate, but the longest step, building
+    Verilator from source, takes about 6 minutes on my fast MacBook Pro.
+
+    Docker has a great caching system so, if the server code needs to be updated
+    and the image rebuilt, all steps before copying that file will be skipped,
+    for a much shorter total build time (in my experience under 10 seconds).
 
 3. Start the server:
 
