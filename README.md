@@ -1,7 +1,7 @@
 # Graphical FPGA Simulator
 
 ***Note:** Assumes some terminal familiarity. Instructions for students would be
-much more detailed.*
+much more detailed.
 
 Supports MacOS 13+, Windows 10/11, and Linux.
 See [Qt's docs](https://doc.qt.io/qt-6/supported-platforms.html) for some
@@ -13,10 +13,10 @@ Attribution: The client runs on Python 3.13 with PySide6, with
 another Python 3.13 program invoking Verilator on the server. The server
 runs in an Ubuntu container.
 
-Note for Linux: Qt support varies by distribution and window manager; Ubuntu
-22.04 with no intentional major changes to the configuration is the only one I
-have tested on, but I think that any Debian or Ubuntu-based distribution should
-be able to run this without difficulty
+Note for Linux users: Qt support varies by distribution and window manager;
+Ubuntu 22.04 with no intentional major changes to the configuration is the only
+one I have tested on, but I think that any Debian or Ubuntu-based distribution
+should be able to run this without difficulty
 (Linux Mint and of course Debian being the most prominent of those).
 
 
@@ -26,7 +26,7 @@ be able to run this without difficulty
     * [git installation instructions](https://git-scm.com/install/windows)
 * **uv** to set up the Python environment
     * [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/)
-* **Docker Desktop** to run the server-side code.
+* **Docker Desktop** to run the server-side code. Not needed if running in [native mode](#native-mode).
     * [Docker installation page](https://www.docker.com/products/docker-desktop/).
     This may take a while (I think it took 5-10 minutes for me on Windows on
     fast internet).
@@ -40,7 +40,7 @@ be able to run this without difficulty
 1. Clone this git repository and open the folder in your IDE.
 Open Docker Desktop.
 
-* **Docker must be open when building the image and every time the server
+* **Docker must be open when building the image and every time the program
 is running.**
 
 2. Build Docker image. From the `fpga-sim` directory:
@@ -73,31 +73,6 @@ is running.**
 
     **You cannot run the script with a different command**, as the Python
     version must be correct and PySide6 must be available.
-
-    * While Ubuntu is the primary target for Verilator, it compiles on
-    Mac (Clang or G++) and MSVC (Windows), and some other systems;
-    see [Verilator's install instructions](https://verilator.org/guide/latest/install.html#os-requirements) for more info.
-    If it is installed on your computer, this program has an alternative mode
-    to run the server natively.
-    This likely has better performance on computers with little RAM and
-    Verilator is a much smaller download than Docker Desktop.
-
-        I have not had any issues running the server directly on Mac, with
-        Verilator built from source using Clang, but I would not recommend it as
-        the default method for students because installing Verilator is
-        intimidating you are new to terminals.
-        * If using this mode, first run `python/setup_host_server.py` to set up
-        the server folder. With no arguments it will place it in
-        `fpga-sim/host_server`, or if passed a path it will create a folder
-        exactly at `<that path>/host_server` with the same contents.
-            * A really annoying rule enforced by my setup script is that the
-            path the server is placed at must contain no spaces, due to
-            GNU make, which is used to invoke Verilator. There is no
-            way around this other than using a different path.
-        * Run `python3.13 server__manager.py`
-        (no non-stdlib package dependencies so no need for environment setup).
-        It will start up a server and print out a port number; run the client
-        script as you would normally, but pass the port number as its argument.
 
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
@@ -141,3 +116,55 @@ autocomplete for commands, and, in the ending position, folder names for
 browsing.
     * There is a third-party library for readline I want to eventually add
     so Windows has a better experience.
+
+### Native mode
+
+While Ubuntu is the primary target for Verilator, it also compiles on
+Mac (both Clang and G++) and Windows, and some other systems;
+see [Verilator's install instructions](https://verilator.org/guide/latest/install.html#os-requirements) for more info.
+
+If Verilator is installed on your computer, this program has an alternative mode
+to run the server directly without Docker.
+This likely has better performance on computers with little RAM.
+
+I would not recommend this as the default method for students because installing
+Verilator is intimidating if you are new to terminals.
+
+On Mac, using the built-in Clang to compile Verilog, this works smoothly, with
+the requirements I needed downloaded from brew, and I am sure it works well on
+most Linux distributions.
+Windows support for Verilator appears to be more rough; if you attempt to
+install Verilator and natively run the server on any platform, please let me
+know about your experience, successful or not!
+
+Using this mode:
+1. From the top fpga-sim folder, set up the server with:
+
+    ```
+    uv run python/setup_host_server.py <path>
+    ```
+
+    With no arguments, this will place the server in `fpga-sim/host_server`, or
+    it otherwise will place it in `<path>/host_server`.
+    A rule enforced by my setup script, which cannot be circumvented, is that
+    **the path must contain no spaces**, because GNU make is used by the server.
+    This script will also fail with a warning if Verilator has not yet been
+    installed.
+
+2. Open the server's folder in a new terminal. The only dependencies for the
+    server are included with Python, so just use the `python3.13` alias that uv
+    automatically created when setting up the fpga-sim folder's environment:
+
+    ```
+    python3.13 server__manager.py
+    ```
+
+    The server will print the port number it is running at.
+
+3. Run the client from the fpga-sim project, the same way as described in
+    the main instructions' step 3, but pass the port number as its third
+    argument. The program will detect this and connect to the native server you
+    opened, rather than starting up a docker container.
+
+    The script should operate the same, except that when the server is stopped
+    the last-built live sim persists rather than being lost on closing it.
