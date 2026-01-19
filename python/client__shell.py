@@ -177,13 +177,14 @@ if __name__ == "__main__":
         docker_mode = False
     except IndexError: # No argument passed
         docker_mode = True
+        print("Launching Docker container.")
         # Launch docker:
         process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         # wait until first print-out
         out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
         out_pipe.readline()
 
-        print("Automatically started up Docker container. Launching client.")
+        print("Docker container started successfully. Launching client.")
         try:
             socket_port = int(get_latest_container_port())
         except RuntimeError as e:
