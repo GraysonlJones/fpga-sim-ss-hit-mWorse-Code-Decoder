@@ -1,6 +1,5 @@
 import os
 import platform
-import readline
 import shlex
 import socket
 import subprocess
@@ -198,7 +197,7 @@ if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            sock.connect(("0.0.0.0", socket_port))
+            sock.connect(("127.0.0.1", socket_port))
             if len(sock.recv(2048).decode()) == 0:
                 raise ConnectionError("Not refused, but failed")
         except (ConnectionError, ConnectionRefusedError) as e:
