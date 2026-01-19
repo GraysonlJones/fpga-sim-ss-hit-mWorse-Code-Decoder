@@ -92,20 +92,27 @@ def live_sim(sock: socket.socket):
         in_pipe.flush()
 
         output_string = out_pipe.readline().strip()
-        if output_string != "":
-            output_dict: dict[str, int] = ast.literal_eval(output_string)
-            new_segment = list(reversed(int_to_bool_list(output_dict["Segment"], 7, invert=True))) # FPGA is G-A
-            new_dp = int_to_bool_list(output_dict["DP"], 1, invert=True)
-            new_anode = int_to_bool_list(output_dict["Anode"], 4, invert=True)
-            new_lights = int_to_bool_list(output_dict["Lights"], 16)
+        is_system_string = output_string.startswith("secretkey")
+        if is_system_string:
+            output_string = output_string[len("secretkey"):]
+            if output_string == "":
+                continue
+            else:
+                output_dict: dict[str, int] = ast.literal_eval(output_string)
+                new_segment = list(reversed(int_to_bool_list(output_dict["Segment"], 7, invert=True))) # FPGA is G-A
+                new_dp = int_to_bool_list(output_dict["DP"], 1, invert=True)
+                new_anode = int_to_bool_list(output_dict["Anode"], 4, invert=True)
+                new_lights = int_to_bool_list(output_dict["Lights"], 16)
 
-            output_state = WholeOutputState(
-                lights=OutputState.Lights(*new_lights),
-                anode=OutputState.Anode(*new_anode),
-                cathode=OutputState.Cathode(*(new_segment + new_dp)),
-            )
-            # print(f"Shell: Sending {output_state}")x
-            send_message(serialize_dataclass(output_state), conn)
+                output_state = WholeOutputState(
+                    lights=OutputState.Lights(*new_lights),
+                    anode=OutputState.Anode(*new_anode),
+                    cathode=OutputState.Cathode(*(new_segment + new_dp)),
+                )
+                # print(f"Shell: Sending {output_state}")x
+                send_message(serialize_dataclass(output_state), conn)
+        elif not i_am_a_docker: # TODO: get to user if in docker!
+            print(output_string)
     # TODO: properly close process. Writing "exit\n" and calling process.wait() hangs forever...
 
 def try_make(files: list[NamedFile]):

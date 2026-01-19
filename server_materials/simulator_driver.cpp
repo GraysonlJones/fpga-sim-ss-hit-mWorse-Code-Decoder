@@ -329,11 +329,11 @@ int main(int argc, char** argv) {
         }
 
         if(need_to_send) {
-            std::cout << map_to_py_string(output_map) << std::endl; // flush necessary for Python subprocess pipe
+            std::cout << "secretkey" << map_to_py_string(output_map) << std::endl; // flush necessary for Python subprocess pipe
            // std::cerr << "sending " << map_to_py_string(output_map) << std::endl;
         }
         else {
-           std::cout << "" << std::endl;
+           std::cout << "secretkey" << std::endl;
         }
 
     }
