@@ -54,12 +54,14 @@ is running.**
     down.
 
     The build process this launches takes quite a while.
-    I don't have a "clean start" time estimate, but the longest step, building
-    Verilator from source, takes about 6 minutes on my fast MacBook Pro.
+    On my fairly fast Mac and Windows laptops, it took about 8 to 9 minutes
+    to do the full process with most parts uncached. On a less powerful
+    computer I am sure it can take much longer; I intend to look into
+    distributing prebuilt Docker images when this is more stable.
 
     Docker has a great caching system so, if the server code needs to be updated
     and the image rebuilt, all steps before copying that file will be skipped,
-    for a much shorter total build time (in my experience under 10 seconds).
+    for a much shorter total build time (in my experience, under 5 seconds).
 
 3. Run the program from the terminal, in `fpga-sim`:
 
