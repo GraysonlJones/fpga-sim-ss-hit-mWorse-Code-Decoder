@@ -131,8 +131,8 @@ def try_make(files: list[NamedFile]):
         file.to_disk(Path("./user_inputs"))
 
     # List is passed in as an environment variable
-    filenames_str = " ".join([f"./user_inputs/{name}" for name in names])
-    # Must append to existing environment or Verilator fails
+    # Server passes -I./user_inputs so it can find these files by name
+    filenames_str = " ".join(names)
     envvars = environ.copy() | {"COMPILE_FILES": filenames_str, "CXXFLAGS": "-fdiagnostics-color"}
 
     # This and the CXXFLAGS make it so that errors' colors are preserved; the
@@ -169,7 +169,7 @@ def try_waveform_run(name: str, files: list[NamedFile]):
     for file in files:
         file.to_disk(Path("./user_inputs"))
 
-    filenames_str = " ".join([f"./user_inputs/{name}" for name in names])
+    filenames_str = " ".join(names)
     envvars = environ.copy() | {"COMPILE_FILES": filenames_str, "CXXFLAGS": "-fdiagnostics-color"}
     proc = subprocess.run(["/bin/bash", "./Waveform_Run.sh"], stderr=subprocess.PIPE, env=envvars)
 

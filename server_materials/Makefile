@@ -34,12 +34,10 @@ VERILATOR_FLAGS += -Wall
 VERILATOR_FLAGS += --assert
 # Generate coverage analysis
 VERILATOR_FLAGS += --coverage
-# BUILD ( MY IDEA !)
+# Build it
 VERILATOR_FLAGS += --build
-# Run Verilator in debug mode
-#VERILATOR_FLAGS += --debug
-# Add this trace to get a backtrace in gdb
-#VERILATOR_FLAGS += --gdbbt
+# Make it look in ./user_inputs
+VERILATOR_FLAGS += -I./user_inputs
 
 # Input files for Verilator
 VERILATOR_INPUT = $(COMPILE_FILES) simulator_driver.cpp
