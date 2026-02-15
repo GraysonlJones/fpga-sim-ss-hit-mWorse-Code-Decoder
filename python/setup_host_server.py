@@ -18,7 +18,7 @@ except IndexError:
     host_folder = top_folder.joinpath("host_server")
     custom_path = False
 
-for char in str(host_folder):
+for char in str(host_folder.resolve()):
     if char.isspace():
         if custom_path:
             print("Target path contains a space. GNU make, used by Verilator, does not support running in paths with spaces.")
@@ -46,3 +46,5 @@ to_copy = [
 
 for file in to_copy:
     shutil.copy(file, host_folder)
+
+host_folder.joinpath("user_inputs").mkdir()
