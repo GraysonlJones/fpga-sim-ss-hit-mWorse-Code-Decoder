@@ -234,7 +234,7 @@ class SevenSegmentLight:
         self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
         self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
         self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.DP = CircleLightDisplay(on_color=c.Colors.Segment.radio_on, off_color=c.Colors.Segment.off, fade_time=c.segment_off_time, off_time=c.segment_off_time)
+        self.DP = CircleLightDisplay(on_color=c.Colors.Segment.radio_on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
 
         self.layout.addWidget(self.CA, 0, 1) # horizontal bits
         self.layout.addWidget(self.CG, 2, 1)
