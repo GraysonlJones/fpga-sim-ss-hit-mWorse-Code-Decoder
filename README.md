@@ -94,11 +94,11 @@ see specific help. List of commands:
     * If a live simulation build has succeeded during this session,
     this will start it. It will open up a window where you can interact
     with the program as if it were a real FPGA.
-    * The window **MUST** be closed with the quit button at the bottom, rather
-    than by quitting its app or with the window's X button. Otherwise, the
-    session will crash and you will need to start the server and client again.
-        * Preventing bad closures is a TODO. Graying out the X button should be
-        easy, but preventing quitting might not be possible.
+    * The window **MUST** be closed with the quit button at the bottom, or with
+    Ctrl+W (CMD+W on Mac). Quitting in any other way (e.g. CMD+Q or the built-in
+    menu bar quit item on Mac) will crash the program.
+        * The window's X button is set to be grayed out, but preventing other
+        ways of closing improperly is harder.
     * To allow running programs closer to what you can run on a real board,
     the plus-shaped buttons will stay pressed if you are holding shift when you
     release the mouse.

@@ -10,7 +10,8 @@ from statistics import mean
 
 from gui__qt_util import BoardComponents, EmptyWindow, make_app
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
-from PySide6.QtCore import QTimer, Signal, Slot
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton
 from shared__util import (
     big_receive,
@@ -73,6 +74,17 @@ class MainWindow(EmptyWindow):
         self.last_time = time.time()
         self.fps_counter = QLabel("__.__/60 FPS")
         self.main_layout.addWidget(self.fps_counter)
+
+        # Disable close button
+        self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
+        self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
+        self.show()
+
+        # Add [ctrl|cmd]+w shortcut to close properly
+        self.quit_action = QAction("Close GUI", self)
+        self.quit_action.setShortcut(QKeySequence("CTRL+W"))
+        self.quit_action.triggered.connect(self.quit_button.click)
+        self.addAction(self.quit_action)
 
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
