@@ -9,8 +9,8 @@ specifics on OS support. This was developed on a Mac, and for now, with
 autocomplete currently unavailable on Windows, the experience is best on
 Mac/Linux.
 
-Attribution: The client runs on Python 3.13 with PySide6, with
-another Python 3.13 program invoking Verilator on the server. The server
+Attribution: The client runs on Python 3.14 with PySide6, with
+another Python program invoking Verilator on the server. The server
 runs in an Ubuntu container.
 
 Note for Linux users: Qt support varies by distribution and window manager;
@@ -154,11 +154,12 @@ Using this mode:
     installed.
 
 2. Open the server's folder in a new terminal. The only dependencies for the
-    server are included with Python, so just use the `python3.13` alias that uv
-    automatically created when setting up the fpga-sim folder's environment:
+    server are included with Python, so uv is unnecessary here. Just run it
+    with the `python3.14` alias that uv automatically created when setting up
+    the client venv:
 
     ```
-    python3.13 server__manager.py
+    python3.14 server__manager.py
     ```
 
     The server will print the port number it is running at.
