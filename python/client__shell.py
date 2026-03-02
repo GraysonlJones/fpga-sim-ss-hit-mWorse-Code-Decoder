@@ -3,11 +3,12 @@ import platform
 import shlex
 import socket
 import subprocess
+import sys
+import time
 from argparse import ArgumentParser
 from enum import Enum, auto
 from pathlib import Path
 from sys import argv
-import time
 from typing import IO
 
 from client__parsers import (
@@ -17,7 +18,7 @@ from client__parsers import (
     start_parser,
     wavef_parser,
 )
-from client__paths import live_sim_folder, testbench_folder, waveforms_folder
+from client__paths import live_sim_folder, testbench_folder, waveforms_folder, top_folder
 from gui__main import run_app
 from shared__util import (
     AckMessage,
@@ -177,6 +178,16 @@ def get_latest_container_port():
             raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
 
 if __name__ == "__main__":
+    if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
+        print("It appears this is being run without using the right uv environment; exiting.")
+        if Path(os.getcwd()) != top_folder: # if in the wrong folder give command to get there, too
+            print(f"To get to the proper folder run:\n\tcd {shlex.quote(str(top_folder))}")
+            print(f"Then launch the program with:\n\tuv run ./python/client__shell.py")
+        else:
+            print("Instead run it from here with:\n\tuv run ./python/client__shell.py")
+        print("For more info, view the README: https://github.com/TheHarmonicRealm/fpga-sim#Graphical-FPGA-Simulator")
+        # TODO: include exported HTML version of README for offline usage?
+        exit(1)
     try:
         socket_port = int(argv[1])
         docker_mode = False
