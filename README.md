@@ -21,29 +21,66 @@ should be able to run this without difficulty
 
 
 ## Required software
+> [!IMPORTANT]  
+> uv and git are trustworthy, but do generally do not download random things via the terminal. The internet is a scary place!
 
-* **git** to download this repository
-    * [git installation instructions](https://git-scm.com/install/windows)
-* **uv** to set up the Python environment
-    * [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/)
+* **git** to download this repository. Check if already installed with
+`git --version`.
+    * Windows: [git install instructions for Windows](https://git-scm.com/install/windows).
+        * If you are unsure if your CPU is x64 (aka x86-64 or AMD64):
+        run `[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture` in PowerShell. This will print out either "Arm64" or "X64".
+        Select the corresponding standalone installer option from the linked
+        page.
+    * Mac: use `xcode-select --install`. This gets you various tools including git. Note that you may need to run `sudo xcodebuild -license accept`
+    (which will prompt for your password) sometimes when your computer updates
+    in order to re-accept Apple's TOS and use git.
+    * Linux: [git install instructions for Linux](https://git-scm.com/install/linux)
+    (lists various package manager commands) 
+
+<!-- TODO: maybe cut out git and make a release on GitHub that people just download? -->
+
+* **uv** to set up the Python environment. Check if already installed (unlikely)
+with `uv --version`.
+    * All platforms: [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/)
+        * First try `pip install uv` (try `pip3 install uv` if that doesn't work)
+        which installs it via Python's built-in package manager.
+            * If that doesn't work, [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer) will work. Follow
+            the instructions there
+
+
 * **Docker Desktop** to run the server-side code. Not needed if running in [native mode](#native-mode).
-    * [Docker installation page](https://www.docker.com/products/docker-desktop/).
-    This may take a while (I think it took 5-10 minutes for me on Windows on
+    * All platforms: [Docker installation page](https://www.docker.com/products/docker-desktop/).
+    Same architecture situation as git, using the name AMD64 here instead of X64.
+    This may take a while (took 5-10 minutes for me on Windows on
     fast internet).
-* **Visual Studio Code** (or another IDE)
-    * [Visual Studio Code download page](https://code.visualstudio.com/Download)
+* **Visual Studio Code** (or another IDE, and a VCD waveform viewer)
+    * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
         * I am using [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
         and [this VCD waveform viewer extension](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview)
 
 ## Installation and usage
 
-1. Clone this git repository and open the folder in your IDE.
-Open Docker Desktop.
+1. Download code and open Docker:
 
-* **Docker must be open when building the image and every time the program
-is running.**
+* Clone this git repository:
 
-2. Build Docker image. From the `fpga-sim` directory:
+`git clone https://github.com/TheHarmonicRealm/fpga-sim.git`
+* Open the folder in your IDE. For VSCode you can do:
+
+`code ./fpga-sim`
+
+
+* Open Docker Desktop. Wait for the start screen, which says something like
+"loading Docker Engine", to finish. You might be prompted to sign in and make
+an account the first time (TODO: check if true).
+
+> [!NOTE]  
+> Docker must be open when building the image and when running the simulator
+program. They will visibly fail if it is not.
+
+2. Build Docker image. From the `fpga-sim` directory
+(the IDE's integrated terminal is convenient and will start in the right place;
+open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
     ```
     docker build -t fpga-sim-server:v1 .
     ````
@@ -70,11 +107,12 @@ is running.**
     ```
 
     This will take a little bit the first time, as uv must
-    set up a virtual environment. After this, the command should not have any
+    set up a virtual environment, which involves downloading packages and possibly a new Python version. After the first time,
+    the program is still run with this command and should not have any
     unusual startup delay.
 
     **You cannot run the script with a different command**, as the Python
-    version must be correct and PySide6 must be available.
+    version must be correct and the packages must be available.
 
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
