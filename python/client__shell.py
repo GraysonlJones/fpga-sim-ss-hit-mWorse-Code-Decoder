@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from enum import Enum, auto
 from pathlib import Path
 from sys import argv
+import time
 from typing import IO
 
 from client__parsers import (
@@ -54,15 +55,17 @@ def waveform_sim(output_filename: str, input_files: list[NamedFile], overwrite: 
         return
 
     command = WaveformSimCommand(output_filename, input_files)
+    t1 = time.time()
     send_command(command)
 
     result = receive_error_or_ack(sock)
+    t2 = time.time()
     match result:
         case ErrorMessage(content):
             print(f"Sent files to server, but it returned an error message: {content}")
             return
         case AckMessage():
-            print(f"Successfully ran testbench simulation. See output at waveforms/{output_filename}")
+            print(f"Successfully ran testbench simulation in {round((t2 - t1), 3)}s. See output at waveforms/{output_filename}")
     file_message = big_receive(sock).decode()
     output_file = deserialize_dataclass(file_message, NamedFile)
     output_file.to_disk(waveforms_folder)
@@ -72,14 +75,16 @@ def build_live_sim(input_files: list[NamedFile]):
     global sock
 
     command = BuildLiveCommand(input_files)
+    t1 = time.time()
     send_command(command)
 
     result = receive_error_or_ack(sock)
+    t2 = time.time()
     match result:
         case ErrorMessage(content):
             print(f"Server returned error message: {content}")
         case AckMessage():
-            print(f"Successfully built live simulation. Run with {start_parser.prog}.")
+            print(f"Successfully built live simulation in {round((t2 - t1), 3)}s. Run with {start_parser.prog}.")
 
 def start_live_sim():
     global app
@@ -179,6 +184,7 @@ if __name__ == "__main__":
         docker_mode = True
         print("Launching Docker container.")
         # Launch docker:
+        # process = subprocess.Popen("docker run --cpus=.25 -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         # wait until first print-out
         out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
