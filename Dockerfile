@@ -1,17 +1,15 @@
 # syntax=docker/dockerfile:1
 
-# Build image from this file's directory above python/server_materials with:
-    #### Normal build that doesn't use cache or anything. Speedy if you have built at least once on this machine and not cleared cache.
-    # docker build -t fpga-sim-server:v1 .
-    
-    #### Build image from cache for local use
-    # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache -t fpga-sim-server:v1 . 
-
-    #### Generate cache for both x86 and ARM to distribute:
+# Run from the fpga-sim directory:
+    #### Generate cache for both x86 and ARM to distribute (took an hour on my Mac!):
     # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache --platform linux/amd64,linux/arm64 -t fpga-sim-server-universal:v1 .
 
-# Start container running server program with:
-    # docker run -p 0:9834 fpga-sim-server:v1
+    #### Build image from that cache for local use (on another computer with docker_cache copied in):
+    # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache -t fpga-sim-server:v1 . 
+
+    #### Normal build (equivalent to the above command after first time, as the cache will be copied into the main cache)
+    # docker buildx build -t fpga-sim-server:v1 .
+
 FROM ubuntu:22.04@sha256:fed6ddb82c61194e1814e93b59cfcb6759e5aa33c4e41bb3782313c2386ed6df
 WORKDIR /usr/bin/
 

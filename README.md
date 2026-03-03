@@ -86,11 +86,18 @@ program. They will visibly fail if it is not.
 (the IDE's integrated terminal is convenient and will start in the right place;
 open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
     ```
-    docker buildx build --cache-to type=local,dest=./docker_images/cache --cache-from type=local,src=./docker_images/cache -t fpga-sim-server:v1 . 
-    ````
+    docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache -t fpga-sim-server:v1 . 
+    ```
 
     This step uses Docker's caching feature to create an image from the
     downloaded materials. It requires an internet connection.
+    The `docker_cache` folder is unnecessary after this step, so you
+    can delete it. Later, if the server code is ever changed, you can
+    rebuild it with this command:
+
+    ```
+    docker buildx build -t fpga-sim-server:v1 .
+    ```
 
     On my computer, I ran another command to create Docker images for both
     x86 and ARM — which would take ~10 minutes to do directly on my fast 
