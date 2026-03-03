@@ -60,15 +60,19 @@ with `uv --version`.
 
 ## Installation and usage
 
-1. Download code and open Docker:
+1. Download materials and set up Docker:
 
 * Clone this git repository:
 
 `git clone https://github.com/TheHarmonicRealm/fpga-sim.git`
-* Open the folder in your IDE. For VSCode you can do:
+* Open the folder it makes in your IDE. For VSCode you can do:
 
 `code ./fpga-sim`
 
+* Download `docker_cache.zip` from Canvas.
+TODO: host somewhere public too!!
+Unzip it and copy the `docker_cache` folder to `fpga-sim`. That folder
+should directly contain two folders and two files.
 
 * Open Docker Desktop. Wait for the start screen, which says something like
 "loading Docker Engine", to finish. You might be prompted to sign in and make
@@ -82,23 +86,18 @@ program. They will visibly fail if it is not.
 (the IDE's integrated terminal is convenient and will start in the right place;
 open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
     ```
-    docker build -t fpga-sim-server:v1 .
+    docker buildx build --cache-to type=local,dest=./docker_images/cache --cache-from type=local,src=./docker_images/cache -t fpga-sim-server:v1 . 
     ````
 
-    This step requires internet, as it is downloading the base Docker Ubuntu
-    image and then within the VM it is creating running commands to download
-    software. Make sure you are on a decent connection, or it will be slowed
-    down.
+    This step uses Docker's caching feature to create an image from the
+    downloaded materials. It requires an internet connection.
 
-    The build process this launches takes quite a while.
-    On my fairly fast Mac and Windows laptops, it took about 8 to 9 minutes
-    to do the full process with most parts uncached. On a less powerful
-    computer I am sure it can take much longer; I intend to look into
-    distributing prebuilt Docker images when this is more stable.
-
-    Docker has a great caching system so, if the server code needs to be updated
-    and the image rebuilt, all steps before copying that file will be skipped,
-    for a much shorter total build time (in my experience, under 5 seconds).
+    On my computer, I ran another command to create Docker images for both
+    x86 and ARM — which would take ~10 minutes to do directly on my fast 
+    computers, and much longer on a slow one — and this is the cache generated.
+    The point of this is to, if the code changes and the Docker images need to
+    be rebuilt, allow you to run this same command and skip the long steps
+    that run before copying the code over.
 
 3. Run the program from the terminal, in `fpga-sim`:
 
