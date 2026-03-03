@@ -1,9 +1,11 @@
 import os
 import platform
+import re
 import shlex
 import socket
 import subprocess
 import sys
+import textwrap
 import time
 from argparse import ArgumentParser
 from enum import Enum, auto
@@ -18,7 +20,13 @@ from client__parsers import (
     start_parser,
     wavef_parser,
 )
-from client__paths import live_sim_folder, testbench_folder, waveforms_folder, top_folder
+from client__paths import (
+    live_sim_folder,
+    testbench_folder,
+    top_folder,
+    waveforms_folder,
+)
+from colorama import Fore, Style
 from gui__main import run_app
 from shared__util import (
     AckMessage,
@@ -63,7 +71,9 @@ def waveform_sim(output_filename: str, input_files: list[NamedFile], overwrite: 
     t2 = time.time()
     match result:
         case ErrorMessage(content):
-            print(f"Sent files to server, but it returned an error message: {content}")
+            print(f"Server returned error message:\n{textwrap.indent(colorize(content), "   ")}")
+            if (man_url := get_url(content)) is not None:
+                print(f"See manual at {man_url}")
             return
         case AckMessage():
             print(f"Successfully ran testbench simulation in {round((t2 - t1), 3)}s. See output at waveforms/{output_filename}")
@@ -83,7 +93,9 @@ def build_live_sim(input_files: list[NamedFile]):
     t2 = time.time()
     match result:
         case ErrorMessage(content):
-            print(f"Server returned error message: {content}")
+            print(f"Server returned error message:\n{textwrap.indent(colorize(content), "  ")}")
+            if (man_url := get_url(content)) is not None:
+                print(f"See manual at {man_url}")
         case AckMessage():
             print(f"Successfully built live simulation in {round((t2 - t1), 3)}s. Run with {start_parser.prog}.")
 
@@ -176,6 +188,33 @@ def get_latest_container_port():
                 raise RuntimeError(f"No container for the server was found running; make sure that you started one, and that it was built with the exact command specified in the instructions.")
         case _:
             raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
+
+def colorize(err: str, folder: str | None = None):
+    # TODO: this would make the listed filenames match the host's paths and
+        # clickable and awesome
+        # however bc argparse is used this need annoying refactor
+    if folder is not None:
+        err = re.sub(r"user_inputs/", folder, err)
+    # put last line with total error info at top, and cut off the make error if there is one
+    err = re.sub(r"\n*(?P<otherstuff>(\n|.)*)%Error: (?P<lasterr>Exiting due to.*)\n.*", f"{Style.BRIGHT}{Fore.MAGENTA}\\g<lasterr>:\n{Style.RESET_ALL}\\g<otherstuff>", err, flags=re.MULTILINE)
+    # indent all lines after first
+    lines = err.splitlines()
+    err = lines[0] + "\n" + textwrap.indent("\n".join(lines[1:]), "  ")
+    # remove lines that tell you to use a command e.g. ': ... Suggest see manual; fix the duplicates, or use --top-module to select top.'
+    err = re.sub(r"( {8} *:.*use --(\w*)+(-\w*)* to.*\n)*", "", err, flags=re.MULTILINE)
+    # remove Verilator manual line
+    err = re.sub(r"^.*See the manual.*$\n", "", err, flags=re.MULTILINE)
+    # color the individual error/warning lines and replace % with a space
+    err = re.sub(r"%(?P<title>\w*(-\w*)?): (?P<content>.*\n( {8} *:.*\n)*)", f"{Fore.RED}{Style.BRIGHT} \\g<title>:{Style.RESET_ALL} {Fore.RED}{r"\g<content>"}{Style.RESET_ALL}", err)
+    # color the line markers and the subsequent number-less pipe lines
+    err = re.sub(r"(?P<front1>(\d| )*\|)(?P<content>.*)\n(?P<front2>(\d| )*\|)(?P<content2>.*)", f"{Fore.CYAN}{r"\g<front1>"}{Style.RESET_ALL}{r"\g<content>"}\n{Fore.CYAN}{r"\g<front2>"}{Style.BRIGHT}{Fore.MAGENTA}{r"\g<content2>"}{Style.RESET_ALL}", err)
+    return err.rstrip()
+
+def get_url(err: str):
+    attempt = re.search(r"manual at (https://[^ ]*)", err)
+    if attempt is not None:
+        return attempt.group(1)
+    return None
 
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
