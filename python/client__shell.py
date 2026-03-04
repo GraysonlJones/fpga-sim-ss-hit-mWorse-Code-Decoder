@@ -54,7 +54,7 @@ def send_command(command: AnyCommand):
     sock.send(type(command).CODE.encode())
     send_message(str_command, sock)
 
-def waveform_sim(output_filename: str, input_files: list[NamedFile], overwrite: bool):
+def waveform_sim(input_files: list[NamedFile], output_filename: str, overwrite: bool):
     waveforms_folder.mkdir(exist_ok=True)
     
     output_path = Path(waveforms_folder, output_filename)
