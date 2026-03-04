@@ -151,9 +151,9 @@ def commands_completer(text: str, state: int):
         match shlexd:
             case [build_parser.prog, *_] if current_word == 1:
                 suggest_mode = SuggestMode.LIVE
-            case [wavef_parser.prog, arg1, arg2, *_] if is_overwrite(arg1) or is_overwrite(arg2) and current_word == 3:
+            case [wavef_parser.prog, *_] if current_word == 1:
                 suggest_mode = SuggestMode.TB
-            case [wavef_parser.prog, arg1, *_] if not is_overwrite(arg1) and current_word == 2:
+            case [wavef_parser.prog, arg1, *_] if is_overwrite(arg1) and current_word == 2:
                 suggest_mode = SuggestMode.TB
 
         try:

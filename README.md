@@ -147,7 +147,7 @@ see specific help. List of commands:
     the plus-shaped buttons will stay pressed if you are holding shift when you
     release the mouse.
 
-* `waveform_sim [-ov] <output_filename.vcd> <input_directory>`
+* `waveform_sim [-ov] <input_directory> <output_filename.vcd>`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
     testbench module must similiarly be `tb` module/file.
     * The output will go to the provided file in `./waveforms/`. If

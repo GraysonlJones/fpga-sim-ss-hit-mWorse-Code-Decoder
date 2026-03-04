@@ -82,6 +82,6 @@ start_parser = argparse.ArgumentParser("start_live_sim", exit_on_error=False, de
 #       NO CHECK FOR IF IT EXISTS! Must happen after because it depends on -ov!!!
 #   * Whether the VCD can be overwritten
 wavef_parser = ArgumentParser("waveform_sim", exit_on_error=False, description="Sends all Verilog files found in the given directory to the server and attempts to run them as a testbench, outputting the waveform result to the provided file.")
-wavef_parser.add_argument("output_filename", help="Name of a .vcd file to be created in the waveforms file, where the output of the simulation will be stored.", type=check_vcd_name)
 wavef_parser.add_argument("input_directory", help="Name of a directory within verilog/testbench/ containing .v files for a single testbench design. The top simulation module must be named tb. Press tab to list available folders (Mac/Linux-only).", type=partial(crawl_input_directory, "tb.v", testbench_folder))
+wavef_parser.add_argument("output_filename", help="Name of a .vcd file to be created in the waveforms file, where the output of the simulation will be stored.", type=check_vcd_name)
 wavef_parser.add_argument("-ov", "--overwrite", action="store_true", help="Allow overwriting the passed VCD file with the new run's output if it already exists.")
