@@ -138,7 +138,7 @@ def try_make(files: list[NamedFile]):
     # This and the CXXFLAGS make it so that errors' colors are preserved; the
     #   commands otherwise know they are not in a terminal and strip them
     #   Not sure why the env var is also needed (in real terminal it isn't)
-    proc = subprocess.run(["/bin/bash", "-c", "'make'"], stderr=subprocess.PIPE, env=envvars)
+    proc = subprocess.run(["make"], stderr=subprocess.PIPE, env=envvars)
 
     match proc.returncode:
         case 0:
