@@ -122,8 +122,7 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
 
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
-and `help` to get formal help. Each command can also be run as `command -h` to
-see specific help. List of commands:
+and `help` to list the commands:
 
 * `build_live_sim <input_directory>`
     * Directory name is appended to `verilog/live_sim` then searched.
@@ -147,15 +146,19 @@ see specific help. List of commands:
     the plus-shaped buttons will stay pressed if you are holding shift when you
     release the mouse.
 
-* `waveform_sim [-ov] <input_directory> <output_filename.vcd>`
+* `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
-    testbench module must similiarly be `tb` module/file.
+    testbench module must similiarly be named `tb` both with the module/file.
     * The output will go to the provided file in `./waveforms/`. If
     it already exists, it will not run the command, to prevent an accidental
     overwrite.
-        * `ex_tb` is a provided example.
-    * If `-ov` flag is present, the output file can be overwritten. Otherwise
-    an error will be printed if it already exists, to avoid accidents.
+        * `ex_tb` is a provided example. Note the required lines
+        `$dumpfile("$DUMP_FILENAME");` and `$dumpvars(0, tb);` which must
+        be unmodified.
+    * If `-overwrite`, or any shortening of it (`-o` or longer),
+    is provided as the third argument, the output file will be overwritten if
+    it already exists. Otherwise, an error is printed if it already exists,
+    to avoid accidents.
 * Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history

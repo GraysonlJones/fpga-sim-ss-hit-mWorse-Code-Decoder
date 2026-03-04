@@ -13,13 +13,6 @@ from pathlib import Path
 from sys import argv
 from typing import IO
 
-from client__parsers import (
-    ContinueException,
-    attempt_parse_and_run,
-    build_parser,
-    start_parser,
-    wavef_parser,
-)
 from client__paths import (
     live_sim_folder,
     testbench_folder,
@@ -54,16 +47,10 @@ def send_command(command: AnyCommand):
     sock.send(type(command).CODE.encode())
     send_message(str_command, sock)
 
-def waveform_sim(input_files: list[NamedFile], output_filename: str, overwrite: bool):
-    waveforms_folder.mkdir(exist_ok=True)
-    
-    output_path = Path(waveforms_folder, output_filename)
+def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: str):
+    global sock
 
-    if (not overwrite) and output_path.is_file():
-        print(f'Cannot overwrite existing file "{output_path}"; pass -ov option if you wish to allow overwriting.')
-        return
-
-    command = WaveformSimCommand(output_filename, input_files)
+    command = WaveformSimCommand(output_path.name, input_files)
     t1 = time.time()
     send_command(command)
 
@@ -71,18 +58,20 @@ def waveform_sim(input_files: list[NamedFile], output_filename: str, overwrite: 
     t2 = time.time()
     match result:
         case ErrorMessage(content):
-            print(f"Server returned error message:\n{textwrap.indent(colorize(content), "   ")}")
-            if (man_url := get_url(content)) is not None:
-                print(f"See manual at {man_url}")
-            return
+            if content.strip().startswith("SRVRSEZ:"):
+                print(f"{Fore.RED}{content.strip()[len("SRVERSEZ"):]}{Style.RESET_ALL}")
+            else:
+                print(f"Server returned error message:\n{textwrap.indent(colorize(content, f"verilog/live_sim/{folder_name}"), "  ")}")
+                if (man_url := get_url(content)) is not None:
+                    print(f"See Verilator's manual at {man_url}")
         case AckMessage():
-            print(f"Successfully ran testbench simulation in {round((t2 - t1), 3)}s. See output at waveforms/{output_filename}")
-    file_message = big_receive(sock).decode()
-    output_file = deserialize_dataclass(file_message, NamedFile)
-    output_file.to_disk(waveforms_folder)
+            print(f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s. See output at {clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
+            file_message = big_receive(sock).decode()
+            output_file = deserialize_dataclass(file_message, NamedFile)
+            output_file.to_disk(waveforms_folder)
     
 
-def build_live_sim(input_files: list[NamedFile]):
+def build_live_sim(input_files: list[NamedFile], folder_name: str):
     global sock
 
     command = BuildLiveCommand(input_files)
@@ -93,11 +82,11 @@ def build_live_sim(input_files: list[NamedFile]):
     t2 = time.time()
     match result:
         case ErrorMessage(content):
-            print(f"Server returned error message:\n{textwrap.indent(colorize(content), "  ")}")
+            print(f"Server returned error message:\n{textwrap.indent(colorize(content, f"verilog/live_sim/{folder_name}"), "  ")}")
             if (man_url := get_url(content)) is not None:
-                print(f"See manual at {man_url}")
+                print(f"See Verilator's manual at {man_url}")
         case AckMessage():
-            print(f"Successfully built live simulation in {round((t2 - t1), 3)}s. Run with {start_parser.prog}.")
+            print(f"{Fore.GREEN}Successfully built live simulation in {round((t2 - t1), 3)}s. Run with start_live_sim{Style.RESET_ALL}")
 
 def start_live_sim():
     global app
@@ -107,8 +96,8 @@ def start_live_sim():
 
     result = receive_error_or_ack(sock)
     match result:
-        case ErrorMessage(content):
-            print(f"Server returned error message: {content}")
+        case ErrorMessage(content): # known to be plain text hardcoded message
+            print(f"{Fore.RED}{content}{Style.RESET_ALL}")
         case AckMessage():
             print(f"Server started simulation. Launching GUI now.")
             app = run_app(sock, app)
@@ -119,7 +108,7 @@ class SuggestMode(Enum):
     LIVE = auto()
 
 def is_overwrite(text: str):
-    return "-overwrite".startswith(text) and len(text) <= len("-overwrite")
+    return len(text) >= 2 and "-overwrite".startswith(text) and len(text) <= len("-overwrite")
 
 def suggest_folders(path: Path):
     return [thing for thing in os.listdir(path) if path.joinpath(thing).is_dir()]
@@ -130,7 +119,7 @@ def filter_start(li: list[str], text: str):
 def commands_completer(text: str, state: int):
     '''Matches signature expected'''
     # if help and/or exit are included, output is spaced super wonky.
-    options: list[str] = [build_parser.prog, start_parser.prog, wavef_parser.prog]
+    options: list[str] = ["build_live_sim", "waveform_sim", "start_live_sim"]
 
     full_line = readline.get_line_buffer().lstrip()
 
@@ -149,12 +138,11 @@ def commands_completer(text: str, state: int):
     else:
         suggest_mode = SuggestMode.NONE
         match shlexd:
-            case [build_parser.prog, *_] if current_word == 1:
+            case ["build_live_sim", *_] if current_word == 1:
                 suggest_mode = SuggestMode.LIVE
-            case [wavef_parser.prog, *_] if current_word == 1:
+            case ["waveform_sim", *_] if current_word == 1:
                 suggest_mode = SuggestMode.TB
-            case [wavef_parser.prog, arg1, *_] if is_overwrite(arg1) and current_word == 2:
-                suggest_mode = SuggestMode.TB
+                # adding -overwrite suggestion at end wasn't working, TODO: fix
 
         try:
             last_term = shlexd[current_word]
@@ -194,7 +182,7 @@ def colorize(err: str, folder: str | None = None):
         # clickable and awesome
         # however bc argparse is used this need annoying refactor
     if folder is not None:
-        err = re.sub(r"user_inputs/", folder, err)
+        err = re.sub(r"user_inputs/", folder + "/", err)
     # put last line with total error info at top, and cut off the make error if there is one
     err = re.sub(r"\n*(?P<otherstuff>(\n|.)*)%Error: (?P<lasterr>Exiting due to.*)\n.*", f"{Style.BRIGHT}{Fore.MAGENTA}\\g<lasterr>:\n{Style.RESET_ALL}\\g<otherstuff>", err, flags=re.MULTILINE)
     # indent all lines after first
@@ -203,7 +191,7 @@ def colorize(err: str, folder: str | None = None):
     # remove lines that tell you to use a command e.g. ': ... Suggest see manual; fix the duplicates, or use --top-module to select top.'
     err = re.sub(r"( {8} *:.*use --(\w*)+(-\w*)* to.*\n)*", "", err, flags=re.MULTILINE)
     # remove Verilator manual line
-    err = re.sub(r"^.*See the manual.*$\n", "", err, flags=re.MULTILINE)
+    err = re.sub(r"^.*the manual at.*$\n", "", err, flags=re.MULTILINE)
     # color the individual error/warning lines and replace % with a space
     err = re.sub(r"%(?P<title>\w*(-\w*)?): (?P<content>.*\n( {8} *:.*\n)*)", f"{Fore.RED}{Style.BRIGHT} \\g<title>:{Style.RESET_ALL} {Fore.RED}{r"\g<content>"}{Style.RESET_ALL}", err)
     # color the line markers and the subsequent number-less pipe lines
@@ -215,6 +203,49 @@ def get_url(err: str):
     if attempt is not None:
         return attempt.group(1)
     return None
+
+class CommandSetupError(Exception):
+    pass
+
+class ContinueException(Exception):
+    pass
+
+def check_vcd_name(filename: str):
+    if filename.split(".")[-1] != "vcd":
+        raise ContinueException(f"{filename} should end with .vcd")
+    if filename != Path(filename).name:
+        # will ultimately save directly to a defined output folder
+        raise ContinueException(f'{filename} is a path, not a pure name (e.g. "wave.vcd")')
+def is_verilog(filename: str):
+    extension = filename.split(".")[-1]
+    return extension == "v"# or extension == "sv"
+
+def crawl_input_directory(front_target: str, containing_folder: Path, folder_name: str):
+    folder = Path(*containing_folder.joinpath(folder_name).parts[-3:])
+    try:
+        all_filenames = os.listdir(folder)
+    except FileNotFoundError:
+        raise ContinueException(f"./{folder} does not exist")
+    except NotADirectoryError:
+        raise ContinueException(f"./{folder} is a file, not a folder")
+
+    v_filenames = [name for name in all_filenames if is_verilog(name)]
+
+    if len(v_filenames) == 0:
+        raise ContinueException(f"./{folder} contains no Verilog (.v) files")
+    else:
+        try:
+            v_filenames.remove(front_target)
+        except ValueError:
+            raise ContinueException(f"./{folder} lacks a {front_target} file.")
+        v_filenames.insert(0, front_target) # put at front to indicate top to Verilator
+        
+    file_paths = [Path(folder, name) for name in v_filenames]
+
+    return [NamedFile.from_fp(open(file_path, "r"), close_after=True) for file_path in file_paths]
+
+def clickable_filepath(filepath: Path, depth: int):
+    return f"./{Path(*filepath.parts[-depth:])}"
 
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
@@ -301,18 +332,48 @@ if __name__ == "__main__":
 
             try:
                 match command:
-                    case wavef_parser.prog:
-                        attempt_parse_and_run(wavef_parser, args, waveform_sim)
-                    case build_parser.prog:
-                        attempt_parse_and_run(build_parser, args, build_live_sim)
-                    case start_parser.prog:
-                        attempt_parse_and_run(start_parser, args, start_live_sim)
+                    case "waveform_sim":
+                        match args:
+                            case [folder, filename, *_]:
+                                waveforms_folder.mkdir(exist_ok=True)
+                                check_vcd_name(filename)
+                                output_path = waveforms_folder.joinpath(filename)
+
+                                overwrite = False
+
+                                if(len(args) == 3):
+                                    if(is_overwrite(args[2])):
+                                        overwrite = True
+                                    else:
+                                        raise ContinueException(f'Last arg should be -overwrite or a clipping of that.')
+                                elif len(args) > 3:
+                                    raise ContinueException(f'Only 2 or 3 args expected.')
+                                
+                                if (not overwrite) and output_path.is_file():
+                                    raise ContinueException(f'Cannot overwrite existing file {clickable_filepath(output_path, 1)}; pass -ov option if you wish to allow overwriting.')
+
+                                files = crawl_input_directory("tb.v", testbench_folder, folder)
+                                waveform_sim(files, output_path, folder)
+                            case _:
+                                raise ContinueException("Args: <folder> <filename.vcd> [-ov]")
+                    case "build_live_sim":
+                        match args:
+                            case [folder]:
+                                files = crawl_input_directory("top.v", live_sim_folder, folder)
+                                build_live_sim(files, folder)
+                            case _:
+                                raise ContinueException("Args: <folder>")
+                    case "start_live_sim":
+                        if len(args) != 0:
+                            raise ContinueException("No args")
+                        start_live_sim()
                     case "exit" | "quit":
                         exit()
                     case "help" | "?" | "-h":
-                        print("Available commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* exit")
+                        print("Available commands: \n* build_live_sim <folder>\n* waveform_sim <folder> <filename.vcd> [-overwrite]\n* start_live_sim\n* exit")
                     case _:
                         print(f"Unrecognized command: {command}"
                         "\n\nAvailable commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* help")
-            except ContinueException:
+            except ContinueException as e:
+                print(f"{Fore.RED}{e}{Style.RESET_ALL}")
                 continue # when help is called or a bad argument is passed

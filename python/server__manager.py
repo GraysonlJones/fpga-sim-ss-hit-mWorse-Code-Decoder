@@ -151,7 +151,7 @@ def try_waveform_run(name: str, files: list[NamedFile]):
     try:
         names.remove("tb.v")
     except ValueError:
-        return None, ErrorMessage(f"Lacking a tb.v (Client should have caught this)")
+        return None, ErrorMessage(f"SRVRSEZ:Lacking a tb.v (Client should have caught this)")
     names.insert(0, "tb.v") # put at front to indicate top to Verilator
 
     for file in files:
@@ -159,7 +159,9 @@ def try_waveform_run(name: str, files: list[NamedFile]):
             break
     tb_file = file
     if tb_file.content.find("$DUMP_FILENAME") == -1:
-        return None, ErrorMessage("Testbench did not include wildcard $DUMP_FILENAME")
+        return None, ErrorMessage("SRVRSEZ:Testbench did not include wildcard "
+        "$DUMP_FILENAME; should have lines $dumpfile(\"$DUMP_FILENAME\"); "
+        "and $dumpvars(0, tb);")
     else:
         tb_file.content = Template(tb_file.content).safe_substitute(DUMP_FILENAME=name)
 
@@ -178,10 +180,10 @@ def try_waveform_run(name: str, files: list[NamedFile]):
             try:
                 output_file = NamedFile.from_fp(open(name, "r"), close_after=True)
             except FileNotFoundError:
-                return None, ErrorMessage("Testbench ran successfully but did not "
-                f"output to file {name}; should have lines $dumpfile(\"{name}\");\n$dumpvars(0, tb);")
+                return None, ErrorMessage("SRVRSEZ:Testbench ran successfully but did not "
+                f"output to file {name}; should have lines $dumpfile(\"$DUMP_FILENAME\"); and $dumpvars(0, tb);")
             return output_file, AckMessage()
-        case other:
+        case _:
             return None, ErrorMessage(f"\n\n{proc.stderr.decode()}")
 
 def waveform_sim(sock: socket.socket, name: str, files: list[NamedFile]):
