@@ -368,7 +368,7 @@ if __name__ == "__main__":
                             raise ContinueException("Should be given no args")
                         start_live_sim()
                     case "exit" | "quit":
-                        exit()
+                        exit(0)
                     case "help" | "?" | "-h":
                         print("Available commands: \n* build_live_sim <folder>\n* waveform_sim <folder> <filename.vcd> [-overwrite]\n* start_live_sim\n* exit")
                     case _:
