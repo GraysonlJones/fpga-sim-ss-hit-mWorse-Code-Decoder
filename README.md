@@ -122,7 +122,10 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
 
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
-and `help` to list the commands:
+and `help` to list the commands. **Please do not use ctrl-C to quit the client**;
+currently, if this is done after starting and stopping a live simulation, this
+will not work properly and a Python process will be left dangling in the
+background until you close the terminal (e.g. with the trash button in VSCode).
 
 * `build_live_sim <input_directory>`
     * Directory name is appended to `verilog/live_sim` then searched.
