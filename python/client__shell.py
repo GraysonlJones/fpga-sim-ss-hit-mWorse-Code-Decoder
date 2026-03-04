@@ -365,7 +365,7 @@ if __name__ == "__main__":
                                 raise ContinueException("Args: <folder>")
                     case "start_live_sim":
                         if len(args) != 0:
-                            raise ContinueException("No args")
+                            raise ContinueException("Should be given no args")
                         start_live_sim()
                     case "exit" | "quit":
                         exit()
