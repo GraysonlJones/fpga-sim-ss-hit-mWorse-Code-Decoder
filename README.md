@@ -123,7 +123,7 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
 and `help` to list the commands. The standard ctrl-C exit shortcut is ignored
-as it caused problems if done after launching the Qt window.
+for technical reasons (certainly fixable but a little complicated).
 
 * `build_live_sim <input_directory>`
     * Directory name is appended to `verilog/live_sim` then searched.
@@ -138,14 +138,11 @@ as it caused problems if done after launching the Qt window.
     * If a live simulation build has succeeded during this session,
     this will start it. It will open up a window where you can interact
     with the program as if it were a real FPGA.
-    * The window **MUST** be closed with the quit button at the bottom, or with
-    Ctrl+W (CMD+W on Mac). Quitting in any other way (e.g. CMD+Q or the built-in
-    menu bar quit item on Mac) will crash the program.
-        * The window's X button is set to be grayed out, but preventing other
-        ways of closing improperly is harder.
     * To allow running programs closer to what you can run on a real board,
     the plus-shaped buttons will stay pressed if you are holding shift when you
     release the mouse.
+    * This window can be quit normally with the window's X button or Mac's
+    <kbd>⌘</kbd>+<kbd>Q</kbd>. It can be paused and unpaused with <kbd>P</kbd>.
 
 * `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
     * Like `build_live_sim` but using `verilog/testbench`. The driving

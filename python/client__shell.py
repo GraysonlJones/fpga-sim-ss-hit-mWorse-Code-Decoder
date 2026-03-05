@@ -21,7 +21,6 @@ from client__paths import (
     waveforms_folder,
 )
 from colorama import Fore, Style
-from gui__main import run_app
 from shared__util import (
     AckMessage,
     AnyCommand,
@@ -101,7 +100,9 @@ def start_live_sim():
             print(f"{Fore.RED}{content}{Style.RESET_ALL}")
         case AckMessage():
             print(f"Server started simulation. Launching GUI now.")
-            app = run_app(sock, app)
+            # Run gui in a subprocess (fork). Given file descriptor of the
+            #   socket, which it reconstructs
+            subprocess.run(f"uv run ./python/gui__main.py {sock.fileno()}", shell=True, close_fds=False)
 
 class SuggestMode(Enum):
     NONE = auto()
@@ -285,6 +286,7 @@ if __name__ == "__main__":
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.set_inheritable(True)
         try:
             sock.connect(("127.0.0.1", socket_port))
             if len(sock.recv(2048).decode()) == 0:

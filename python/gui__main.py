@@ -1,9 +1,10 @@
 '''
-Start with run_app call
+Launched as subprocess from client__shell.py
 '''
 
 import dataclasses as dc
 import socket
+import sys
 import threading
 import time
 from statistics import mean
@@ -42,11 +43,6 @@ class MainWindow(EmptyWindow):
         self.main_layout.addWidget(self.lights_line)
         self.main_layout.addWidget(self.switches_line)
 
-        self.quit_button = QPushButton("Quit!")
-        self.quit_button.pressed.connect(self.ready_quit)
-
-        self.main_layout.addWidget(self.quit_button)
-
         self.paused = False
 
         self.pause_play_button = QPushButton("Pause")
@@ -75,16 +71,13 @@ class MainWindow(EmptyWindow):
         self.fps_counter = QLabel("__.__/60 FPS")
         self.main_layout.addWidget(self.fps_counter)
 
-        # Disable close button
-        self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
-        self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
-        self.show()
-
-        # Add [ctrl|cmd]+w shortcut to close properly
-        self.quit_action = QAction("Close GUI", self)
-        self.quit_action.setShortcut(QKeySequence("CTRL+W"))
-        self.quit_action.triggered.connect(self.quit_button.click)
-        self.addAction(self.quit_action)
+        # Pause/play with P.
+        #   Spacebar is more obvious, but it makes tabbed navigation not work
+        self.pause_play_action = QAction("Pause/play", self)
+        self.pause_play_action.setShortcut(QKeySequence("P"))
+        self.pause_play_action.setAutoRepeat(False)
+        self.pause_play_action.triggered.connect(self.pause_play_button.click)
+        self.addAction(self.pause_play_action)
 
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
@@ -118,27 +111,23 @@ class MainWindow(EmptyWindow):
         # print("Closed app")
 
     def update_server(self):
-        if not self.should_quit:
-            if not self.paused:
-                if self.latest is not None:
-                    send_message(serialize_dataclass(self.latest), self.sock)
-                    self.latest = None
-                else:
-                    send_message("", self.sock)
-                new_time = time.time()
-
-                self.last_few_fps.append(1/(new_time - self.last_time))
-                if len(self.last_few_fps) == 10:
-                    self.fps_counter.setText(f"<code>{mean(self.last_few_fps):.2f}/60</code> FPS")
-                    self.last_few_fps.clear()
-                self.last_time = new_time
+        if not self.paused:
+            if self.latest is not None:
+                send_message(serialize_dataclass(self.latest), self.sock)
+                self.latest = None
             else:
-                self.fps_counter.setText(f"<code>__.__/60</code> FPS (paused)")
-                self.last_few_fps.clear() # While paused, times are meaningless
-                self.last_time = time.time()
+                send_message("", self.sock)
+            new_time = time.time()
+
+            self.last_few_fps.append(1/(new_time - self.last_time))
+            if len(self.last_few_fps) == 10:
+                self.fps_counter.setText(f"<code>{mean(self.last_few_fps):.2f}/60</code> FPS")
+                self.last_few_fps.clear()
+            self.last_time = new_time
         else:
-            self.update_timer.stop()
-            send_message("exit", self.sock)
+            self.fps_counter.setText(f"<code>__.__/60</code> FPS (paused)")
+            self.last_few_fps.clear() # While paused, times are meaningless
+            self.last_time = time.time()
 
 
     def update_latest(self, new_latest: WholeInputState):
@@ -153,28 +142,45 @@ class MainWindow(EmptyWindow):
 
 
 def listen(window: MainWindow):
+    global listener_done
+    global have_quit
     sock = window.sock
     while True:
         response = big_receive(sock).decode()
 
+        # quitting app sends an exit signal then server replies with exit
         if response == "exit":
-            # print(f"{response}: time to exit")
+            listener_done.set()
             break
-        else:
-            # print(f"received: {response}")
+        else: 
             output_state = deserialize_dataclass(response, WholeOutputState)
-            # TODO: add some kind of like, blinking indicator every time we get a new state to indicate that things aren't frozen?
-            window.output_changed.emit(output_state)
-    # print("Telling app to close")
-    window.close_signal.emit()
+            if not have_quit.is_set(): # make sure to not do Qt stuff if app has quit. (Not sure if necessary)
+                window.output_changed.emit(output_state)
 
 def run_app(sock: socket.socket, app: QApplication | None):
     if app is None:
         app = make_app()
-        # print("Spawned a new QApplication")
-    # else:
-        # print("Reusing app")
     window = MainWindow(sock)
     window.raise_() # Put window on front. Necessary when reusing app
     app.exec()
     return app
+
+if __name__ == "__main__":
+    listener_done = threading.Event()
+    have_quit = threading.Event()
+    # reconstruct socket from file descriptor
+    try:
+        sock_fd = int(sys.argv[1])
+        sock = socket.fromfd(sock_fd, socket.AF_INET, socket.SOCK_STREAM)
+    except OSError, IndexError:
+        # TODO: make names more logical
+        print("Don't run gui__main directly!! Run client__shell")
+
+    run_app(sock, None)
+
+    # app has been quit. tell server we are quitting then wait for
+    #   listener to get ACK back. Necessary to have a "clean" socket on exit
+    #   for main program to continue with as normal
+    have_quit.set()
+    send_message("exit", sock)
+    listener_done.wait()
