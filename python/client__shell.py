@@ -2,6 +2,7 @@ import os
 import platform
 import re
 import shlex
+import signal
 import socket
 import subprocess
 import sys
@@ -265,8 +266,8 @@ if __name__ == "__main__":
         docker_mode = True
         print("Launching Docker container.")
         # Launch docker:
-        # process = subprocess.Popen("docker run --cpus=.25 -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        #   preexec_fn is part of ignoring ctrl-C
+        process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
         # wait until first print-out
         out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
         out_pipe.readline()
@@ -316,12 +317,10 @@ if __name__ == "__main__":
 
         app = None
 
+        signal.signal(signal.SIGINT, signal.SIG_IGN) # ignore ctrl-C
+
         while True:
-            try:
-                command_string = input("> ").strip()
-            except KeyboardInterrupt:
-                print("exit (Ctrl+C)")
-                exit(0)
+            command_string = input("> ").strip()
 
             words = shlex.split(command_string)
             if len(words) == 0:
