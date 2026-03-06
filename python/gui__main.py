@@ -175,6 +175,7 @@ if __name__ == "__main__":
     except OSError, IndexError:
         # TODO: make names more logical
         print("Don't run gui__main directly!! Run client__shell")
+        exit(1)
 
     run_app(sock, None)
 
