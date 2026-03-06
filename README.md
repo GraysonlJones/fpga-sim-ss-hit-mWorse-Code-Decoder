@@ -123,7 +123,7 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
 and `help` to list the commands.
-Do not press <kbd>ctrl</kbd>-<kbd>C</kbd> (normally quit for terminal apps);
+Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps);
 on Mac/Linux, it is intentionally ignored to avoid an improper exit,
 while on Windows it closes the program with errors.
 
@@ -143,8 +143,10 @@ while on Windows it closes the program with errors.
     * To allow running programs closer to what you can run on a real board,
     the plus-shaped buttons will stay pressed if you are holding shift when you
     release the mouse.
-    * This window can be quit normally with the window's X button or Mac's
-    <kbd>⌘</kbd>+<kbd>Q</kbd>. It can be paused and unpaused with <kbd>P</kbd>.
+    * This window can be quit normally with the window's X button or with
+    <kbd>ctrl</kbd>+<kbd>W</kbd>
+    (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
+    It can be paused and unpaused with <kbd>P</kbd>.
 
 * `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
