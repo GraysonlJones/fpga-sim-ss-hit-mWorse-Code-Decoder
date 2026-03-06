@@ -122,8 +122,10 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
 
 4. The client gives you a command-line interface (CLI). You can run three
 specific commands here, along with `exit` to quit the client and server,
-and `help` to list the commands. The standard ctrl-C exit shortcut is ignored
-for technical reasons (certainly fixable but a little complicated).
+and `help` to list the commands.
+Do not press <kbd>ctrl</kbd>-<kbd>C</kbd> (normally quit for terminal apps);
+on Mac/Linux, it is intentionally ignored to avoid an improper exit,
+while on Windows it closes the program with errors.
 
 * `build_live_sim <input_directory>`
     * Directory name is appended to `verilog/live_sim` then searched.

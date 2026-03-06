@@ -2,7 +2,9 @@
 Launched as subprocess from client__shell.py
 '''
 
+import base64
 import dataclasses as dc
+import platform
 import socket
 import sys
 import threading
@@ -78,6 +80,12 @@ class MainWindow(EmptyWindow):
         self.pause_play_action.setAutoRepeat(False)
         self.pause_play_action.triggered.connect(self.pause_play_button.click)
         self.addAction(self.pause_play_action)
+
+        self.ctrl_w_quit = QAction("Quit simulation", self)
+        self.ctrl_w_quit.setShortcut(QKeySequence("Ctrl+W"))
+        self.ctrl_w_quit.setAutoRepeat(False)
+        self.ctrl_w_quit.triggered.connect(QApplication.quit)
+        self.addAction(self.ctrl_w_quit)
 
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
@@ -168,14 +176,18 @@ def run_app(sock: socket.socket, app: QApplication | None):
 if __name__ == "__main__":
     listener_done = threading.Event()
     have_quit = threading.Event()
-    # reconstruct socket from file descriptor
-    try:
-        sock_fd = int(sys.argv[1])
-        sock = socket.fromfd(sock_fd, socket.AF_INET, socket.SOCK_STREAM)
-    except OSError, IndexError:
-        # TODO: make names more logical
-        print("Don't run gui__main directly!! Run client__shell")
-        exit(1)
+    if platform.system() != "Windows":
+        # reconstruct socket from regular file descriptor
+        try:
+            sock_fd = int(sys.argv[1])
+            sock = socket.fromfd(sock_fd, socket.AF_INET, socket.SOCK_STREAM)
+        except OSError, IndexError:
+            # TODO: make names more logical
+            print("Don't run gui__main directly!! Run client__shell")
+            exit(1)
+    else: # make socket from received output of socket.share()
+        windows_socket = base64.b64decode(sys.stdin.buffer.read())
+        sock = socket.fromshare(windows_socket)
 
     run_app(sock, None)
 

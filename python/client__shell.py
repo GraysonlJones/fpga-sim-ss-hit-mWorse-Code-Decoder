@@ -1,3 +1,4 @@
+import base64
 import os
 import platform
 import re
@@ -99,10 +100,17 @@ def start_live_sim():
         case ErrorMessage(content): # known to be plain text hardcoded message
             print(f"{Fore.RED}{content}{Style.RESET_ALL}")
         case AckMessage():
-            print(f"Server started simulation. Launching GUI now.")
-            # Run gui in a subprocess (fork). Given file descriptor of the
-            #   socket, which it reconstructs
-            subprocess.run(f"uv run ./python/gui__main.py {sock.fileno()}", shell=True, close_fds=False)
+            print("Server started simulation. Launching GUI now.")
+            # Run gui in a subprocess (fork) and give it the socket we already have
+            if not is_windows:
+                subprocess.run(f"uv run ./python/gui__main.py {sock.fileno()}", shell=True, close_fds=False)
+            else: # Windows requires fancy code; must use Popen because child must receive input after its creation
+                live_sim_process = subprocess.Popen("uv run ./python/gui__main.py", stdin=subprocess.PIPE, shell=True, close_fds=False)
+                child_pipe: IO[bytes] = live_sim_process.stdin # pyright: ignore[reportAssignmentType]
+                shareable_socket = sock.share(live_sim_process.pid)
+                child_pipe.write(base64.b64encode(shareable_socket))
+                child_pipe.close() # send EOF before wait
+                live_sim_process.wait()
 
 class SuggestMode(Enum):
     NONE = auto()
@@ -250,11 +258,15 @@ def clickable_filepath(filepath: Path, depth: int):
     return f"./{Path(*filepath.parts[-depth:])}"
 
 if __name__ == "__main__":
+    is_mac = (platform.system() == "Darwin")
+    is_linux = (platform.system() == "Linux")
+    is_windows = (platform.system() == "Windows")
+
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
         print("It appears this is being run without using the right uv environment; exiting.")
         if Path(os.getcwd()) != top_folder: # if in the wrong folder give command to get there, too
             print(f"To get to the proper folder run:\n\tcd {shlex.quote(str(top_folder))}")
-            print(f"Then launch the program with:\n\tuv run ./python/client__shell.py")
+            print("Then launch the program with:\n\tuv run ./python/client__shell.py")
         else:
             print("Instead run it from here with:\n\tuv run ./python/client__shell.py")
         print("For more info, view the README: https://github.com/TheHarmonicRealm/fpga-sim#Graphical-FPGA-Simulator")
@@ -268,7 +280,10 @@ if __name__ == "__main__":
         print("Launching Docker container.")
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
-        process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
+        if not is_windows:
+            process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
+        else: # unavailable on Windows. TODO: figure out equivalent code to ignore on Windows
+            process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         # wait until first print-out
         out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
         out_pipe.readline()
@@ -304,9 +319,6 @@ if __name__ == "__main__":
             print(f"Connected to automatically-started Docker container running at port {socket_port}")
         else:
             print(f"Connected to native server running at port {socket_port}")
-
-        is_mac = (platform.system() == "Darwin")
-        is_linux = (platform.system() == "Linux")
 
         if is_mac or is_linux: # no readline on Windows, unfortunately!
             import readline
