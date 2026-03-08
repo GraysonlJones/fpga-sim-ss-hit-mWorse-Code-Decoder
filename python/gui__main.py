@@ -166,17 +166,20 @@ def listen(window: MainWindow):
                 window.output_changed.emit(output_state)
 
 def run_app(sock: socket.socket, app: QApplication | None):
-    if app is None:
-        app = make_app()
+    global is_windows
+    if app is None: # force light mode on Windows. Currently quite hard to see
+        app = make_app(["-platform", "windows:darkmode=0"] if is_windows else [])
     window = MainWindow(sock)
     window.raise_() # Put window on front. Necessary when reusing app
     app.exec()
     return app
 
 if __name__ == "__main__":
+    is_windows = platform.system() == "Windows"
     listener_done = threading.Event()
     have_quit = threading.Event()
-    if platform.system() != "Windows":
+
+    if not is_windows:
         # reconstruct socket from regular file descriptor
         try:
             sock_fd = int(sys.argv[1])
