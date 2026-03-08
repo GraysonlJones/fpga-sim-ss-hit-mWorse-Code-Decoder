@@ -214,9 +214,6 @@ def has_template_mismatch_error(err: str):
     #   ANSI color codes
     return bool(re.search(r"Vtop[^$]* has no member named", err, flags=re.MULTILINE))
 
-class CommandSetupError(Exception):
-    pass
-
 class ContinueException(Exception):
     pass
 
