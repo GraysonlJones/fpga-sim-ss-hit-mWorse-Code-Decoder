@@ -1,13 +1,16 @@
 # Graphical FPGA Simulator
 
-***Note:** Assumes some terminal familiarity. Instructions for students would be
+**Note:** Assumes some terminal familiarity. Instructions for students would be
 much more detailed.
 
-Supports MacOS 13+, Windows 10/11, and Linux.
+Supports MacOS 13+, Linux, and Windows 10/11.
 See [Qt's docs](https://doc.qt.io/qt-6/supported-platforms.html) for some
 specifics on OS support. This was developed on a Mac, and for now, with
 autocomplete currently unavailable on Windows, the experience is best on
-Mac/Linux.
+Mac/Linux. Otherwise there should be no feature differences, aside from lack
+of dark mode on Windows because it is quite low-contrast there. It does not
+have much Linux testing but compatibility for the Python APIs used is very
+high with Mac.
 
 Attribution: The client runs on Python 3.14 with PySide6, with
 another Python program invoking Verilator on the server. The server
@@ -20,17 +23,36 @@ should be able to run this without difficulty
 (Linux Mint and of course Debian being the most prominent of those).
 
 
+> [!NOTE]  
+> **Identifying your processor's architecture**
+> Every computer's CPU has a specific instruction set architecture (ISA).
+Some of the required software needs you to select the correct version.
+These mostly support two architectures, one of which almost
+any personal computer is running on. I know the naming conventions are
+confusing but it's just something you need to get used to:
+>   - **x86-64**, a.k.a. AMD64, x64, x86, x86_64, or Intel.
+>   - **AArch64**, a.k.a. ARM64, ARM, or (Mac-only) Apple Silicon.
+>
+> How to identify, by OS:
+>   - Mac: any Mac from the M1 on, released late 2020, is ARM, while older Macs
+>   (back to 2006) are Intel.
+>       - Run `arch` in Terminal to check.
+>   - Windows: the vast majority of Windows PCs are x86. Some laptops are ARM,
+>   almost all of which have Snapdragon chips.
+>       - Run `[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture`
+>       in PowerShell to check.
+>   - Linux: I am sure that, if you are on Linux, you know your architecture.
+>       - If you don't: run `uname -m` in your terminal.
+
+
 ## Required software
-> [!IMPORTANT]  
-> uv and git are trustworthy, but do generally do not download random things via the terminal. The internet is a scary place!
+> [!CAUTION]  
+> uv and git are trustworthy, but please generally do not download random
+things via the terminal. The internet is a scary place!
 
 * **git** to download this repository. Check if already installed with
 `git --version`.
     * Windows: [git install instructions for Windows](https://git-scm.com/install/windows).
-        * If you are unsure if your CPU is x64 (aka x86-64 or AMD64):
-        run `[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture` in PowerShell. This will print out either "Arm64" or "X64".
-        Select the corresponding standalone installer option from the linked
-        page.
     * Mac: use `xcode-select --install`. This gets you various tools including git. Note that you may need to run `sudo xcodebuild -license accept`
     (which will prompt for your password) sometimes when your computer updates
     in order to re-accept Apple's TOS and use git.
