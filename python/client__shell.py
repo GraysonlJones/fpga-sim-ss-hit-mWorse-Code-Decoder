@@ -62,9 +62,7 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
             if content.strip().startswith("SRVRSEZ:"):
                 print(f"{Fore.RED}{content.strip()[len("SRVERSEZ"):]}{Style.RESET_ALL}")
             else:
-                print(f"Server returned error message:\n{textwrap.indent(colorize(content, f"verilog/live_sim/{folder_name}"), "  ")}")
-                if (man_url := get_url(content)) is not None:
-                    print(f"See Verilator's manual at {man_url}")
+                print(colorize(content, f"verilog/testbench/{folder_name}"))
         case AckMessage():
             print(f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s. See output at {clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
             file_message = big_receive(sock).decode()
@@ -83,9 +81,14 @@ def build_live_sim(input_files: list[NamedFile], folder_name: str):
     t2 = time.time()
     match result:
         case ErrorMessage(content):
-            print(f"Server returned error message:\n{textwrap.indent(colorize(content, f"verilog/live_sim/{folder_name}"), "  ")}")
-            if (man_url := get_url(content)) is not None:
-                print(f"See Verilator's manual at {man_url}")
+            if has_template_mismatch_error(content):
+                print(f"{Fore.RED}Your top module's inputs and outputs do not"
+                      " seem to match the required form."
+                      " See verilog/live_sim/ex_live/top.v for a"
+                      f" template/example!{Style.RESET_ALL}")
+            else:
+                print("Server returned error message:")
+                print(colorize(content, f"verilog/live_sim/{folder_name}"))
         case AckMessage():
             print(f"{Fore.GREEN}Successfully built live simulation in {round((t2 - t1), 3)}s. Run with start_live_sim{Style.RESET_ALL}")
 
@@ -188,31 +191,28 @@ def get_latest_container_port():
             raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
 
 def colorize(err: str, folder: str | None = None):
-    # TODO: this would make the listed filenames match the host's paths and
-        # clickable and awesome
-        # however bc argparse is used this need annoying refactor
+    err = err.lstrip()
     if folder is not None:
         err = re.sub(r"user_inputs/", folder + "/", err)
-    # put last line with total error info at top, and cut off the make error if there is one
-    err = re.sub(r"\n*(?P<otherstuff>(\n|.)*)%Error: (?P<lasterr>Exiting due to.*)\n.*", f"{Style.BRIGHT}{Fore.MAGENTA}\\g<lasterr>:\n{Style.RESET_ALL}\\g<otherstuff>", err, flags=re.MULTILINE)
-    # indent all lines after first
-    lines = err.splitlines()
-    err = lines[0] + "\n" + textwrap.indent("\n".join(lines[1:]), "  ")
+    # cut off "Error: Exiting due to 1 error(s)"-type lines, we know the idea!
+    err = re.sub(r"^.*Error: Exiting due to.*$", "", err, flags=re.MULTILINE)
+    # cut off makefile build error line
+    err = re.sub(r"^.*Makefile.*$", "", err, flags=re.MULTILINE)
+    err = textwrap.indent(err, "  ")
     # remove lines that tell you to use a command e.g. ': ... Suggest see manual; fix the duplicates, or use --top-module to select top.'
     err = re.sub(r"( {8} *:.*use --(\w*)+(-\w*)* to.*\n)*", "", err, flags=re.MULTILINE)
-    # remove Verilator manual line
+    # remove Verilator manual line, Verilator specifics not likely relevant
     err = re.sub(r"^.*the manual at.*$\n", "", err, flags=re.MULTILINE)
     # color the individual error/warning lines and replace % with a space
     err = re.sub(r"%(?P<title>\w*(-\w*)?): (?P<content>.*\n( {8} *:.*\n)*)", f"{Fore.RED}{Style.BRIGHT} \\g<title>:{Style.RESET_ALL} {Fore.RED}{r"\g<content>"}{Style.RESET_ALL}", err)
     # color the line markers and the subsequent number-less pipe lines
-    err = re.sub(r"(?P<front1>(\d| )*\|)(?P<content>.*)\n(?P<front2>(\d| )*\|)(?P<content2>.*)", f"{Fore.CYAN}{r"\g<front1>"}{Style.RESET_ALL}{r"\g<content>"}\n{Fore.CYAN}{r"\g<front2>"}{Style.BRIGHT}{Fore.MAGENTA}{r"\g<content2>"}{Style.RESET_ALL}", err)
+    err = re.sub(r"(?P<front1>(\d| )*\|)(?P<content>.*)\n(?P<front2>(\d| )*\|)(?P<content2>.*)", f"{Fore.YELLOW}{r"\g<front1>"}{Style.RESET_ALL}{r"\g<content>"}\n{Fore.YELLOW}{r"\g<front2>"}{Style.RESET_ALL}{Style.BRIGHT}{Fore.RED}{r"\g<content2>"}{Style.RESET_ALL}", err)
     return err.rstrip()
 
-def get_url(err: str):
-    attempt = re.search(r"manual at (https://[^ ]*)", err)
-    if attempt is not None:
-        return attempt.group(1)
-    return None
+def has_template_mismatch_error(err: str):
+    # can't just use `‘class Vtop’ has no member named in string` due to
+    #   ANSI color codes
+    return bool(re.search(r"Vtop[^$]* has no member named", err, flags=re.MULTILINE))
 
 class CommandSetupError(Exception):
     pass
