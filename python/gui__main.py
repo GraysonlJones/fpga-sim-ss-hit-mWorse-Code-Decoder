@@ -11,7 +11,13 @@ import threading
 import time
 from statistics import mean
 
-from gui__qt_util import BoardComponents, EmptyWindow, make_app
+from gui__qt_util import (
+    BoardComponents,
+    EmptyWindow,
+    hbox_factory,
+    make_app,
+    vbox_factory,
+)
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
 from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QAction, QKeySequence
@@ -42,8 +48,7 @@ class MainWindow(EmptyWindow):
 
         self.main_layout.addWidget(self.plus_buttons)
         self.main_layout.addWidget(self.four_digits)
-        self.main_layout.addWidget(self.lights_line)
-        self.main_layout.addWidget(self.switches_line)
+        self.main_layout.addLayout(vbox_factory(self.lights_line, self.switches_line))
 
         self.paused = False
 
@@ -169,7 +174,7 @@ def run_app(sock: socket.socket, app: QApplication | None):
     if app is None: # force light mode on Windows. Currently quite hard to see
         app = make_app(["-platform", "windows:darkmode=0"] if sys.platform != 'win32' else [])
     window = MainWindow(sock)
-    window.raise_() # Put window on front. Necessary when reusing app
+     # TODO: make it go to front. window.raise_() doesn't work (at least on Mac)
     app.exec()
     return app
 

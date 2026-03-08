@@ -107,6 +107,25 @@ def make_checkbox():
     checkbox.setFixedSize(c.Sizes.light)
     return checkbox
 
+def make_switch_checkbox():
+    checkbox = QCheckBox()
+    checkbox.setFixedSize(c.Sizes.switch)
+    checkbox.setStyleSheet(
+        '''
+        QCheckBox::indicator {
+            width: 12px;
+            height: 42px;
+        }
+        QCheckBox::indicator:unchecked {
+            image: url(./python/switch_off.svg);
+        }
+
+        QCheckBox::indicator:checked {
+            image: url(./python/switch_on.svg);
+        }'''
+    )
+    return checkbox
+
 def make_push_button():
     push_button = QPushButton()
     push_button.setFixedSize(c.Sizes.light)
@@ -293,7 +312,7 @@ class BoardComponents:
         state_changed = Signal(InputState.Switches)
         def __init__(self):
             super().__init__()
-            self.checkboxes = [make_checkbox() for _ in range(0, 16)]
+            self.checkboxes = [make_switch_checkbox() for _ in range(0, 16)]
             layout_hook = hbox_factory(*self.checkboxes, no_margins=True)
 
             layout_hook.addItem(QSpacerItem(10, 0, QSizePolicy.Policy.Expanding))

@@ -1,0 +1,6 @@
+<svg width="14" height="28" version="1.1" viewBox="0 0 14 28" xmlns="http://www.w3.org/2000/svg">
+ <g stroke-linecap="round" stroke-linejoin="round">
+  <rect x=".5" y=".5" width="13" height="27" rx="1" ry="1" fill="#333333" stroke="#000000" style="paint-order:markers stroke fill"/>
+  <rect x="2.5" y="16.5" width="9" height="9" rx="1" ry="1" fill="#e5b7b7" stroke="#ffffff" style="paint-order:markers stroke fill"/>
+ </g>
+</svg>
