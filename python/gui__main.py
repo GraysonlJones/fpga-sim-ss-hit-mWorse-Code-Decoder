@@ -166,20 +166,18 @@ def listen(window: MainWindow):
                 window.output_changed.emit(output_state)
 
 def run_app(sock: socket.socket, app: QApplication | None):
-    global is_windows
     if app is None: # force light mode on Windows. Currently quite hard to see
-        app = make_app(["-platform", "windows:darkmode=0"] if is_windows else [])
+        app = make_app(["-platform", "windows:darkmode=0"] if sys.platform != 'win32' else [])
     window = MainWindow(sock)
     window.raise_() # Put window on front. Necessary when reusing app
     app.exec()
     return app
 
 if __name__ == "__main__":
-    is_windows = platform.system() == "Windows"
     listener_done = threading.Event()
     have_quit = threading.Event()
 
-    if not is_windows:
+    if sys.platform != 'win32':
         # reconstruct socket from regular file descriptor
         try:
             sock_fd = int(sys.argv[1])
@@ -200,3 +198,4 @@ if __name__ == "__main__":
     have_quit.set()
     send_message("exit", sock)
     listener_done.wait()
+    print("Exited live sim!")

@@ -105,7 +105,7 @@ def start_live_sim():
         case AckMessage():
             print("Server started simulation. Launching GUI now.")
             # Run gui in a subprocess (fork) and give it the socket we already have
-            if not is_windows:
+            if sys.platform != 'win32':
                 subprocess.run(f"uv run ./python/gui__main.py {sock.fileno()}", shell=True, close_fds=False)
             else: # Windows requires fancy code; must use Popen because child must receive input after its creation
                 live_sim_process = subprocess.Popen("uv run ./python/gui__main.py", stdin=subprocess.PIPE, shell=True, close_fds=False)
@@ -255,10 +255,6 @@ def clickable_filepath(filepath: Path, depth: int):
     return f"./{Path(*filepath.parts[-depth:])}"
 
 if __name__ == "__main__":
-    is_mac = (platform.system() == "Darwin")
-    is_linux = (platform.system() == "Linux")
-    is_windows = (platform.system() == "Windows")
-
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
         print("It appears this is being run without using the right uv environment; exiting.")
         if Path(os.getcwd()) != top_folder: # if in the wrong folder give command to get there, too
@@ -277,7 +273,7 @@ if __name__ == "__main__":
         print("Launching Docker container.")
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
-        if not is_windows:
+        if sys.platform != 'win32':
             process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
         else: # unavailable on Windows. TODO: figure out equivalent code to ignore on Windows
             process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
@@ -317,14 +313,16 @@ if __name__ == "__main__":
         else:
             print(f"Connected to native server running at port {socket_port}")
 
-        if is_mac or is_linux: # no readline on Windows, unfortunately!
+        if sys.platform != 'win32': # no readline on Windows, unfortunately!
             import readline
             readline.set_completer(commands_completer)
-            readline.parse_and_bind("bind ^I rl_complete" if is_mac else "tab: complete")
+            if sys.platform == 'darwin':
+                readline.parse_and_bind("bind ^I rl_complete")
+            else:
+                readline.parse_and_bind("tab: complete")
             print("Suggestions and autocomplete are available with tab!")
         else:
             print("Run help or ? to see available commands!")
-            
 
         app = None
 
