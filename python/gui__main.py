@@ -4,7 +4,6 @@ Launched as subprocess from client__shell.py
 
 import base64
 import dataclasses as dc
-import platform
 import socket
 import sys
 import threading
@@ -19,7 +18,7 @@ from gui__qt_util import (
     vbox_factory,
 )
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
-from PySide6.QtCore import Qt, QTimer, Signal, Slot
+from PySide6.QtCore import QTimer, Signal, Slot
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton
 from shared__util import (
@@ -171,10 +170,9 @@ def listen(window: MainWindow):
                 window.output_changed.emit(output_state)
 
 def run_app(sock: socket.socket, app: QApplication | None):
-    if app is None: # force light mode on Windows. Currently quite hard to see
-        app = make_app(["-platform", "windows:darkmode=0"] if sys.platform != 'win32' else [])
+    app = make_app()
     window = MainWindow(sock)
-     # TODO: make it go to front. window.raise_() doesn't work (at least on Mac)
+    # TODO: make it go to front. Tried window.raise_() but it doesn't work on Mac
     app.exec()
     return app
 
