@@ -4,8 +4,16 @@ from typing import Literal, overload, override
 
 import gui__constants as c
 from gui__states import InputState, OutputState
-from PySide6.QtCore import QSize, Qt, QTimer, Signal, Slot
-from PySide6.QtGui import QColor, QKeyEvent, QPalette
+from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal, Slot
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QGuiApplication,
+    QKeyEvent,
+    QPainter,
+    QPalette,
+    QPen,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -13,10 +21,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLayout,
     QMainWindow,
+    QProxyStyle,
     QPushButton,
     QRadioButton,
     QSizePolicy,
     QSpacerItem,
+    QStyle,
+    QStyleOption,
     QVBoxLayout,
     QWidget,
 )
@@ -107,29 +118,66 @@ def make_checkbox():
     checkbox.setFixedSize(c.Sizes.light)
     return checkbox
 
-def make_switch_checkbox():
+def make_switch_checkbox(style: QStyle):
     checkbox = QCheckBox()
     checkbox.setFixedSize(c.Sizes.switch)
-    checkbox.setStyleSheet(
-        '''
-        QCheckBox::indicator {
-            width: 12px;
-            height: 42px;
-        }
-        QCheckBox::indicator:unchecked {
-            image: url(./python/switch_off.svg);
-        }
-
-        QCheckBox::indicator:checked {
-            image: url(./python/switch_on.svg);
-        }'''
-    )
+    checkbox.setStyle(style)
     return checkbox
 
 def make_push_button():
     push_button = QPushButton()
     push_button.setFixedSize(c.Sizes.light)
     return push_button
+
+class AppStyle(QProxyStyle):
+    '''Applied to checkboxes in `make_switch_checkbox()` to make them look like
+    vertical binary switches.'''
+    def __init__(self) -> None:
+        super().__init__("fusion")
+
+    @override
+    def pixelMetric(self, metric, option=None, widget=None):
+        match metric: # modify size of checkboxes
+            case QStyle.PixelMetric.PM_IndicatorWidth:
+                return c.Sizes.switch.width()
+            case QStyle.PixelMetric.PM_IndicatorHeight:
+                return c.Sizes.switch.height()
+
+        return super().pixelMetric(metric, option, widget)
+
+    @override
+    def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOption, painter: QPainter, widget: QWidget | None = None):
+        match element:
+            case QStyle.PrimitiveElement.PE_IndicatorCheckBox:
+                # to vary for dark mode use this to check:
+                # if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
+
+                back_brush = QBrush("#111")
+                on_brush = QBrush("#3D3")
+                off_brush = QBrush("#D33")
+
+                pen = QPen("#fff")
+                pen.setWidthF(.5)
+                painter.setPen(pen)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+                bg_rect = QRect(1, 1, c.Sizes.switch.width() - 2, c.Sizes.switch.height() - 2)
+
+                # move top box up or down and color depending on state
+                if option.state & QStyle.StateFlag.State_On: # state seems to be missing from type hints
+                    indicator_rect = QRect(3, 3, c.Sizes.switch.width() - 6, c.Sizes.switch.width() - 6)
+                    front_brush = on_brush
+                else:
+                    indicator_rect = QRect(3, 3 + c.Sizes.switch.height() - c.Sizes.switch.width(), c.Sizes.switch.width() - 6, c.Sizes.switch.width() - 6)
+                    front_brush = off_brush
+
+                painter.setBrush(back_brush)
+                painter.drawRoundedRect(bg_rect, 1, 1)
+                painter.setBrush(front_brush)
+                painter.drawRoundedRect(indicator_rect, 1, 1)
+
+            case _:
+                super().drawPrimitive(element, option, painter, widget)
 
 def make_app(argv: list[str] = []):
     app = QApplication(argv)
@@ -312,7 +360,8 @@ class BoardComponents:
         state_changed = Signal(InputState.Switches)
         def __init__(self):
             super().__init__()
-            self.checkboxes = [make_switch_checkbox() for _ in range(0, 16)]
+            style = AppStyle() # TODO: put initialization somewhere else to avoid duplication; currently fine when only switches are modified but not great
+            self.checkboxes = [make_switch_checkbox(style) for _ in range(0, 16)]
             layout_hook = hbox_factory(*self.checkboxes, no_margins=True)
 
             layout_hook.addItem(QSpacerItem(10, 0, QSizePolicy.Policy.Expanding))
