@@ -4,7 +4,17 @@ from typing import Literal, overload, override
 
 import gui__constants as c
 from gui__states import InputState, OutputState
-from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal, Slot
+from PySide6.QtCore import (
+    Property,
+    QPropertyAnimation,
+    QRect,
+    QSequentialAnimationGroup,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
+    Slot,
+)
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -217,33 +227,65 @@ class LightDisplay(QPushButton):
                 on_color: QColor | str = c.Colors.Light.on,
                 off_color: QColor | str = c.Colors.Light.off,
                 off_time: int = c.light_off_time,
-                fade_time: int = c.light_fade_time):
+                fade_delay_time: int = c.light_fade_delay_time,
+                fade_on: bool = True):
         super().__init__()
-        self.light_on = False
-        self.setDisabled(True)
 
         self.on_color = QColor(on_color)
         self.off_color = QColor(off_color)
+        self.light_on = False
+        self.setDisabled(True)
         set_color(self, self.off_color)
         
         if size is not None:
             self.setFixedSize(size)
 
-        self.off_timer = QTimer(interval=off_time, singleShot=True)
-        self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
-        self.fade_timer = QTimer(interval=fade_time, singleShot=True)
-        self.fade_timer.timeout.connect(lambda: set_color(self, mix_colors(self.on_color, self.off_color)))
+        self._bg_color = self.on_color
+
+        # TODO: maybe dynamically modify animations so start value matches
+        # current value. But this is really not a big deal!!
+        self.off_animation = QSequentialAnimationGroup()
+        self.off_animation.insertPause(0, fade_delay_time)
+        off_fade = QPropertyAnimation(self, b"bg_color")
+        off_fade.setStartValue(self.on_color)
+        off_fade.setEndValue(self.off_color)
+        off_fade.setDuration(off_time - fade_delay_time)
+        self.off_animation.addAnimation(off_fade)
+
+        self.fade_on = fade_on
+
+        if fade_on:
+            # no fade delay
+            self.on_animation = QPropertyAnimation(self, b"bg_color")
+            self.on_animation.setStartValue(self.off_color)
+            self.on_animation.setEndValue(self.on_color)
+            self.on_animation.setDuration(off_time//2)
 
     def set_light(self, light_on: bool):
         if self.light_on != light_on: # Avoid redundant color setting
             self.light_on = light_on
             if self.light_on:
-                self.fade_timer.stop()
-                self.off_timer.stop()
-                set_color(self, self.on_color)
+                self.off_animation.stop()
+                if self.fade_on:
+                    self.on_animation.start()
+                else:
+                    set_color(self, self.on_color)
             else:
-                self.fade_timer.start()
-                self.off_timer.start()
+                if self.fade_on:
+                    self.on_animation.stop()
+                self.off_animation.start()
+
+    @Property(QColor)
+    def bg_color(self):
+        return self._bg_color
+    
+    @bg_color.setter
+    def bg_color(self, val: QColor):
+        self._bg_color = val
+        
+        palette = self.palette() # Copy original palette to modify
+        palette.setColor(QPalette.ColorRole.Button, val) # Modify palette copy
+        self.setPalette(palette) # Apply modified palette
 
 # TODO: much redundancy. Probably some way to make a subclass of
 #  QAbstractButton both of these classes multiple-inherit from?
@@ -252,8 +294,8 @@ class CircleLightDisplay(QRadioButton):
     def __init__(self, *,
                 on_color: QColor | str = c.Colors.Light.on,
                 off_color: QColor | str = c.Colors.Light.off,
-                off_time: int = c.light_off_time,
-                fade_time: int = c.light_fade_time):
+                off_time: int = c.segment_off_time,
+                fade_delay_time: int = c.segment_fade_delay_time):
         super().__init__()
         self.light_on = False
         self.setDisabled(True)
@@ -264,7 +306,7 @@ class CircleLightDisplay(QRadioButton):
 
         self.off_timer = QTimer(interval=off_time, singleShot=True)
         self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
-        self.fade_timer = QTimer(interval=fade_time, singleShot=True)
+        self.fade_timer = QTimer(interval=fade_delay_time, singleShot=True)
         self.fade_timer.timeout.connect(lambda: set_color(self, mix_colors(self.on_color, self.off_color)))
 
         # Intentionally lacks size parameter. Radio buttons just crop if given
@@ -294,14 +336,15 @@ class SevenSegmentLight:
         super().__init__()
         self.layout = QGridLayout()
 
-        self.CA = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.CB = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.CC = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.CD = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
-        self.DP = CircleLightDisplay(on_color=c.Colors.Segment.radio_on, off_color=c.Colors.Segment.off, fade_time=c.segment_fade_time, off_time=c.segment_off_time)
+        self.CA = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CB = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CC = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CD = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        # TODO: temporarily replaced with square to get matching fade effect.
+        self.DP = LightDisplay(size=c.Sizes.light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
 
         self.layout.addWidget(self.CA, 0, 1) # horizontal bits
         self.layout.addWidget(self.CG, 2, 1)
