@@ -1,8 +1,8 @@
 import base64
 import os
-import platform
 import re
 import shlex
+import shutil
 import signal
 import socket
 import subprocess
@@ -49,7 +49,7 @@ def send_command(command: AnyCommand):
     send_message(str_command, sock)
 
 def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: str):
-    global sock
+    global sock, preferred_vcd_viewer
 
     command = WaveformSimCommand(output_path.name, input_files)
     t1 = time.time()
@@ -64,7 +64,20 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
             else:
                 print(colorize(content, f"verilog/testbench/{folder_name}"))
         case AckMessage():
-            print(f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s. See output at {clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
+
+            result_start = f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s.{Style.RESET_ALL}"
+
+            match preferred_vcd_viewer:
+                case "vaporview":
+                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in VaporView.{Style.RESET_ALL}")
+                    subprocess.run(["code", output_path])
+                case "gtkwave":
+                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in GTKWave.{Style.RESET_ALL}")
+                    # gtkwave launches in background. the startup text is stderr
+                    subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                case _: # really None
+                    print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}.{Style.RESET_ALL}")
+
             file_message = big_receive(sock).decode()
             output_file = deserialize_dataclass(file_message, NamedFile)
             output_file.to_disk(waveforms_folder)
@@ -270,7 +283,7 @@ if __name__ == "__main__":
         docker_mode = False
     except IndexError: # No argument passed
         docker_mode = True
-        print("Launching Docker container.")
+        # print("Launching Docker container.")
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
         if sys.platform != 'win32':
@@ -281,7 +294,7 @@ if __name__ == "__main__":
         out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
         out_pipe.readline()
 
-        print("Docker container started successfully. Launching client.")
+        # print("Docker container started successfully. Launching client.")
         try:
             socket_port = int(get_latest_container_port())
         except RuntimeError as e:
@@ -291,6 +304,37 @@ if __name__ == "__main__":
         print(f"Could not convert {argv[1]} to a port number. Exiting.")
         exit(1)
 
+    # TODO: support option to not automatically open in viewer.
+    #   Could just be an envvar? Adding to command parser isn't super easy
+    #   Also: VSCode says VaporView exists if installed but *disabled*
+    in_vscode = os.environ["TERM_PROGRAM"] == "vscode"
+    preferred_vcd_viewer = "gtkwave" if shutil.which("gtkwave") is not None else None
+
+    # check for VaporView iff in VSCode
+    if in_vscode:
+        list_extensions_proc = subprocess.run("code --list-extensions", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        if "lramseyer.vaporview" in list_extensions_proc.stdout.decode():
+            preferred_vcd_viewer = "vaporview"
+        
+    match preferred_vcd_viewer:
+        case "vaporview":
+            print("Detected you are using VSCode's integrated terminal and "
+                "have VaporView.\nOutputs of waveform simulations "
+                "will automatically open in it in there.")
+        case "gtkwave":
+            if in_vscode:
+                print("Waveform simulations will automatically open in GTKWave.\n"
+                "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
+                "is recommended for a more friendly viewer built into VSCode.")
+            else:
+                print("Waveform simulations will automatically open in GTKWave.\n"
+                "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
+                "is recommended for a more friendly viewer (requires VSCode).")
+        case _: # really None
+            print("No software detected for waveform simulations.\n"
+            "VaporView (activates if using VSCode's integrated terminal) "
+            "or GTKWave is highly recommended.")
+    print() # print a new line
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -309,7 +353,8 @@ if __name__ == "__main__":
             exit(1)
 
         if docker_mode:
-            print(f"Connected to automatically-started Docker container running at port {socket_port}")
+            pass
+            # print(f"Connected to automatically-started Docker container running at port {socket_port}")
         else:
             print(f"Connected to native server running at port {socket_port}")
 

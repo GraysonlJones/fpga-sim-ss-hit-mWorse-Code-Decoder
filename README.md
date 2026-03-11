@@ -47,8 +47,9 @@ confusing but it's just something you need to get used to:
 
 ## Required software
 > [!CAUTION]  
-> uv and git are trustworthy, but please generally do not download random
-things via the terminal. The internet is a scary place!
+> The recommended programs are trustworthy†, but please do not download random
+things via the terminal without thinking about it.
+The internet is a scary place!
 
 * **git** to download this repository. Check if already installed with
 `git --version`.
@@ -75,10 +76,16 @@ with `uv --version`.
     Same architecture situation as git, using the name AMD64 here instead of X64.
     This may take a while (took 5-10 minutes for me on Windows on
     fast internet).
-* **Visual Studio Code** (or another IDE, and a VCD waveform viewer)
+* **Visual Studio Code** (or another IDE)
     * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
         * I am using [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
-        and [this VCD waveform viewer extension](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview)
+* **VaporView** or **GTKWave** (or waveform viewer supporting VCDs)
+    * Highly recommended, and integrated into VSCode: [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview).
+    * GTKWave (less pretty, without IDE integration, though it has the benefits
+    of launching its own window):
+        * [GTKWave for Linux](https://gtkwave.github.io/gtkwave/install/unix_linux.html)
+        * [GTKWave for Mac](https://gtkwave.github.io/gtkwave/install/mac.html)
+        * [GTKWave for Windows](https://gtkwave.github.io/gtkwave/install/win.html)
 
 ## Installation and usage
 
@@ -183,6 +190,12 @@ while on Windows it closes the program with errors.
     is provided as the third argument, the output file will be overwritten if
     it already exists. Otherwise, an error is printed if it already exists,
     to avoid accidents.
+    * If the program is run in VSCode's terminal and VaporView is installed,
+    the waveform will open in that automatically. If it is not installed, or
+    it is run outside of VSCode, the program will look for GTKWave as a backup.
+        * VSCode only reports whether the extension is installed, so the
+        program will still try to use VaporView if it is disabled.
+            * Options to override the opening behavior don't exist yet.
 * Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
@@ -242,3 +255,5 @@ Using this mode:
 
     The script should operate the same, except that when the server is stopped
     the last-built live sim persists rather than being lost on closing it.
+
+†No warranty given by developer, etc.
