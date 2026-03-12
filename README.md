@@ -1,30 +1,24 @@
 # Graphical FPGA Simulator
 
-**Note:** Assumes some terminal familiarity. Instructions for students would be
-much more detailed.
+This is a program for students learning Verilog to run interactive simulations
+and testbenches using [Verilator](https://verilator.org/),
+It uses Python, PySide6 (Qt), and Docker to run Verilator (in an Ubuntu VM).
 
-Supports MacOS 13+, Linux, and Windows 10/11.
-See [Qt's docs](https://doc.qt.io/qt-6/supported-platforms.html) for some
-specifics on OS support. This was developed on a Mac, and for now, with
-autocomplete currently unavailable on Windows, the experience is best on
-Mac/Linux. Otherwise there should be no feature differences, aside from lack
-of dark mode on Windows because it is quite low-contrast there. It does not
-have much Linux testing but compatibility for the Python APIs used is very
-high with Mac.
-
-Attribution: The client runs on Python 3.14 with PySide6, with
-another Python program invoking Verilator on the server. The server
-runs in an Ubuntu container.
-
-Note for Linux users: Qt support varies by distribution and window manager;
-Ubuntu 22.04 with no intentional major changes to the configuration is the only
-one I have tested on, but I think that any Debian or Ubuntu-based distribution
-should be able to run this without difficulty
-(Linux Mint and of course Debian being the most prominent of those).
+It supports MacOS 13+, Linux, and Windows 10/11 (see
+[Qt's documentation](https://doc.qt.io/qt-6/supported-platforms.html) for more
+information on OS support).
+Primary development is on a Mac, with significant testing on Windows.
+Features should be identical across platforms aside from
+Windows lacking tab autocompletion. 
+> [!Important]  
+> Students: please read [the student-targeted instructions](STUDENT_INSTRUCTIONS.md) before continuing.
 
 
-> [!NOTE]  
+## Required software
+
+> [!Note]  
 > **Identifying your processor's architecture**
+>
 > Every computer's CPU has a specific instruction set architecture (ISA).
 Some of the required software needs you to select the correct version.
 These mostly support two architectures, one of which almost
@@ -44,9 +38,7 @@ confusing but it's just something you need to get used to:
 >   - Linux: I am sure that, if you are on Linux, you know your architecture.
 >       - If you don't: run `uname -m` in your terminal.
 
-
-## Required software
-> [!CAUTION]  
+> [!Caution]
 > The recommended programs are trustworthy†, but please do not download random
 things via the terminal without thinking about it.
 The internet is a scary place!
@@ -78,14 +70,13 @@ with `uv --version`.
     fast internet).
 * **Visual Studio Code** (or another IDE)
     * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
-        * I am using [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
-* **VaporView** or **GTKWave** (or waveform viewer supporting VCDs)
+        * I use [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
+        (there may be better ones out there but I have not tried them)
+* **VaporView** or **GTKWave** (or another waveform viewer supporting VCDs)
     * Highly recommended, and integrated into VSCode: [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview).
-    * GTKWave (less pretty, without IDE integration, though it has the benefits
-    of launching its own window):
-        * [GTKWave for Linux](https://gtkwave.github.io/gtkwave/install/unix_linux.html)
-        * [GTKWave for Mac](https://gtkwave.github.io/gtkwave/install/mac.html)
-        * [GTKWave for Windows](https://gtkwave.github.io/gtkwave/install/win.html)
+    * [GTKWave](https://gtkwave.github.io/gtkwave/index.html) is less pretty,
+    without IDE integration, though it has the benefits of launching its own
+    window. It may be annoying to get running on Windows.
 
 ## Installation and usage
 
@@ -202,6 +193,8 @@ while on Windows it closes the program with errors.
         * VSCode only reports whether the extension is installed, so the
         program will still try to use VaporView if it is disabled.
             * Options to override the opening behavior don't exist yet.
+            If using GTKWave, the program must be added to your path under
+            the name `gtkwave` (no variation in capitalization).
 * Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
@@ -262,4 +255,5 @@ Using this mode:
     The script should operate the same, except that when the server is stopped
     the last-built live sim persists rather than being lost on closing it.
 
+---
 †No warranty given by developer, etc.
