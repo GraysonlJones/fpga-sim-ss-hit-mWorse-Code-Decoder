@@ -2,9 +2,17 @@
 
 # Run from the fpga-sim directory:
     #### Generate cache for both x86 and ARM to distribute (took an hour on my Mac!):
-    # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache --platform linux/amd64,linux/arm64 -t fpga-sim-server-universal:v1 .
+    # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
 
-    #### Build image from that cache for local use (on another computer with docker_cache copied in):
+    #### Export images in ARM and x86 format after building
+    # docker image save --output fpga_sim_image_x86.tar fpga-sim-server --platform linux/amd64
+    # docker image save --output fpga_sim_image_ARM.tar fpga-sim-server --platform linux/arm64
+    
+    #### Load the output of last command onto user machine
+    # docker load < fpga_sim_image_x86.tar
+    # docker load < fpga_sim_image_ARM.tar
+
+    #### Build image from the docker_cache folder for local use. Could be used if server code is very volatile to let users rebuild quickly, but just distributing tar is easier:
     # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache -t fpga-sim-server:v1 . 
 
     #### Normal build (equivalent to the above command after first time, as the cache will be copied into the main cache)

@@ -98,42 +98,48 @@ with `uv --version`.
 
 `code ./fpga-sim`
 
-* Download `docker_cache.zip` from Canvas.
-TODO: host somewhere public too!!
-Unzip it and copy the `docker_cache` folder to `fpga-sim`. That folder
-should directly contain two folders and two files.
+* Download the appropriate docker image (ARM or x86) from Canvas.
+Put it in the `fpga-sim` folder.
 
 * Open Docker Desktop. Wait for the start screen, which says something like
 "loading Docker Engine", to finish. You might be prompted to sign in and make
 an account the first time (TODO: check if true).
 
-> [!NOTE]  
+> [!Note]  
 > Docker must be open when building the image and when running the simulator
 program. They will visibly fail if it is not.
 
-2. Build Docker image. From the `fpga-sim` directory
+2. Load Docker image. From the `fpga-sim` directory
 (the IDE's integrated terminal is convenient and will start in the right place;
-open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode):
+open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     ```
-    docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache -t fpga-sim-server:v1 . 
+    docker load < fpga_sim_image_ARM.tar
+    ```
+    or 
+    ```
+    docker load < fpga_sim_image_x86.tar
     ```
 
-    This step uses Docker's caching feature to create an image from the
-    downloaded materials. It requires an internet connection.
-    The `docker_cache` folder is unnecessary after this step, so you
-    can delete it. Later, if the server code is ever changed, you can
-    rebuild it with this command:
+    If you do not have access to my Docker images, you can build it yourself,
+    though it will take a while (~10 minutes on my nice Mac and Windows laptops):
 
     ```
     docker buildx build -t fpga-sim-server:v1 .
     ```
 
-    On my computer, I ran another command to create Docker images for both
-    x86 and ARM — which would take ~10 minutes to do directly on my fast 
-    computers, and much longer on a slow one — and this is the cache generated.
-    The point of this is to, if the code changes and the Docker images need to
-    be rebuilt, allow you to run this same command and skip the long steps
-    that run before copying the code over.
+    * If you are an instructor who wants to use this, you can recreate the x86
+    and ARM images yourself with this command, which builds both at once
+    using emulation (I have only run this on ARM Mac):
+
+        ```
+        docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
+        ```
+
+        This took quite a long time when both ran at once from a clean slate.
+        It may go faster if you first build it for just your platform using the
+        regular build command so the cache will be reused, rather than running
+        both in parallel and having them starve each other for RAM.
+
 
 3. Run the program from the terminal, in `fpga-sim`:
 
