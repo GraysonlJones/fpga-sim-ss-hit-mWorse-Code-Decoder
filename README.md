@@ -1,7 +1,7 @@
 # Graphical FPGA Simulator
 
 This is a program for students learning Verilog to run interactive simulations
-and testbenches using [Verilator](https://verilator.org/),
+and testbenches using [Verilator](https://verilator.org/).
 It uses Python, PySide6 (Qt), and Docker to run Verilator (in an Ubuntu VM).
 
 It supports MacOS 13+, Linux, and Windows 10/11 (see
