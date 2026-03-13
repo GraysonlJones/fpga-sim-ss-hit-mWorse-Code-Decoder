@@ -155,7 +155,7 @@ while on Windows it closes the program with errors.
 
 * `build_live_sim <input_directory>`
     * Directory name is appended to `verilog/live_sim` then searched.
-    All `.v` files there (subfolders ignored).
+    All `.v` files there (subfolders ignored)
     will be sent to the server to try to build for live simulation.
     * The top module must be called `top`. All filenames must match their
     module names (i.e. `top` ↔︎ `top.v`, etc).
@@ -164,15 +164,18 @@ while on Windows it closes the program with errors.
 
 * `start_live_sim`
     * If a live simulation build has succeeded during this session,
-    this will start it. It will open up a window where you can interact
-    with the program as if it were a real FPGA.
-    * To allow running programs closer to what you can run on a real board,
-    the plus-shaped buttons will stay pressed if you are holding shift when you
-    release the mouse.
-    * This window can be quit normally with the window's X button or with
-    <kbd>ctrl</kbd>+<kbd>W</kbd>
-    (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
-    It can be paused and unpaused with <kbd>P</kbd>.
+    this will start it. It will open up a window where you can interact with the
+    program in real-time as you would with a real FPGA development board.
+        * On some platforms, this window might not automatically go the front,
+        so if you don't see anything after a couple seconds check your window
+        switcher.
+        * To allow running programs closer to what you can run on a real board,
+        the plus-shaped buttons will stay pressed if you are holding shift when
+        you release the mouse.
+        * This window can be quit normally with the window's X button or with
+        <kbd>ctrl</kbd>+<kbd>W</kbd>
+        (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
+        It can be paused and unpaused with <kbd>P</kbd>.
 
 * `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
