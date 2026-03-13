@@ -76,7 +76,7 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
                     # gtkwave launches in background. the startup text is stderr
                     subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 case _: # really None
-                    print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}.{Style.RESET_ALL}")
+                    print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
 
             file_message = big_receive(sock).decode()
             output_file = deserialize_dataclass(file_message, NamedFile)
@@ -305,35 +305,43 @@ if __name__ == "__main__":
         exit(1)
 
     # TODO: support option to not automatically open in viewer.
-    #   Could just be an envvar? Adding to command parser isn't super easy
-    #   Also: VSCode says VaporView exists if installed but *disabled*
+    #   Probably use a .toml config file (excessive for this but allows room
+    #   for more features)?
+    # Also try to fix: VSCode says VaporView exists if installed but *disabled*
+    #   Option in code command to narrow to a specific profile might fix
     in_vscode = os.environ["TERM_PROGRAM"] == "vscode"
-    preferred_vcd_viewer = "gtkwave" if shutil.which("gtkwave") is not None else None
 
-    # check for VaporView iff in VSCode
-    if in_vscode:
-        list_extensions_proc = subprocess.run("code --list-extensions", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        if "lramseyer.vaporview" in list_extensions_proc.stdout.decode():
-            preferred_vcd_viewer = "vaporview"
-        
-    match preferred_vcd_viewer:
-        case "vaporview":
-            print("Detected you are using VSCode's integrated terminal and "
-                "have VaporView.\nOutputs of waveform simulations "
-                "will automatically open in it in there.")
-        case "gtkwave":
-            if in_vscode:
-                print("Waveform simulations will automatically open in GTKWave.\n"
-                "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
-                "is recommended for a more friendly viewer built into VSCode.")
-            else:
-                print("Waveform simulations will automatically open in GTKWave.\n"
-                "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
-                "is recommended for a more friendly viewer (requires VSCode).")
-        case _: # really None
-            print("No software detected for waveform simulations.\n"
-            "VaporView (activates if using VSCode's integrated terminal) "
-            "or GTKWave is highly recommended.")
+    if sys.platform == "darwin":
+        preferred_vcd_viewer = "gtkwave" if shutil.which("gtkwave") is not None else None
+
+        # check for VaporView iff in VSCode
+        if in_vscode:
+            list_extensions_proc = subprocess.run("code --list-extensions", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            if "lramseyer.vaporview" in list_extensions_proc.stdout.decode():
+                preferred_vcd_viewer = "vaporview"
+        # info print only useful on Mac for now
+        match preferred_vcd_viewer:
+            case "vaporview":
+                print("Detected you are using VSCode's integrated terminal and "
+                    "have VaporView.\nOutputs of waveform simulations "
+                    "will automatically open in it in there.")
+            case "gtkwave":
+                if in_vscode:
+                    print("Waveform simulations will automatically open in GTKWave.\n"
+                    "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
+                    "is recommended for a more friendly viewer built into VSCode.")
+                else:
+                    print("Waveform simulations will automatically open in GTKWave.\n"
+                    "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
+                    "is recommended for a more friendly viewer (requires VSCode).")
+            case _: # really None
+                print("No software detected for waveform simulations.\n"
+                "VaporView (activates if using VSCode's integrated terminal) "
+                "or GTKWave is highly recommended.")
+    else: # Mac-only for now because code command is broken in an integrated-terminal subprocess for now
+        # will support others with manual settings, automatic maybe can work eventually
+        preferred_vcd_viewer = None
+
     print() # print a new line
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
