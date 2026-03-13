@@ -176,6 +176,8 @@ while on Windows it closes the program with errors.
         <kbd>ctrl</kbd>+<kbd>W</kbd>
         (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
         It can be paused and unpaused with <kbd>P</kbd>.
+    * Do not include $display statements in your code. These will break the
+    simulator (planning to fix).
 
 * `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
@@ -186,6 +188,9 @@ while on Windows it closes the program with errors.
         * `ex_tb` is a provided example. Note the required lines
         `$dumpfile("$DUMP_FILENAME");` and `$dumpvars(0, tb);` which must
         be unmodified.
+        * $display statements will not be forwarded back to the user.
+        * End your testbench with $stop, like the example; $finish, or no
+        ending command, will both not work (planning to fix).
     * If `-overwrite`, or any shortening of it (`-o` or longer),
     is provided as the third argument, the output file will be overwritten if
     it already exists. Otherwise, an error is printed if it already exists,
