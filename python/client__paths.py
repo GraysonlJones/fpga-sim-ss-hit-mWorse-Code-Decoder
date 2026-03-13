@@ -1,6 +1,7 @@
 from pathlib import Path
 
 top_folder = Path(__file__).resolve().parent.parent  # i.e. fpga-sim/
+python_folder = top_folder.joinpath("python")
 waveforms_folder = top_folder.joinpath("waveforms")  # fpga-sim/waveforms/
 verilog_folder = top_folder.joinpath("verilog")  # fpga-sim/verilog/
 live_sim_folder = verilog_folder.joinpath("live_sim")

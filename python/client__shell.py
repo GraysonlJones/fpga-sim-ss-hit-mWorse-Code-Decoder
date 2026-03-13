@@ -2,21 +2,23 @@ import base64
 import os
 import re
 import shlex
-import shutil
 import signal
 import socket
 import subprocess
 import sys
 import textwrap
 import time
+import tomllib
 from argparse import ArgumentParser
 from enum import Enum, auto
+from inspect import cleandoc
 from pathlib import Path
 from sys import argv
 from typing import IO
 
 from client__paths import (
     live_sim_folder,
+    python_folder,
     testbench_folder,
     top_folder,
     waveforms_folder,
@@ -49,7 +51,7 @@ def send_command(command: AnyCommand):
     send_message(str_command, sock)
 
 def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: str):
-    global sock, preferred_vcd_viewer
+    global sock, vcd_viewer
 
     command = WaveformSimCommand(output_path.name, input_files)
     t1 = time.time()
@@ -67,7 +69,7 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
 
             result_start = f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s.{Style.RESET_ALL}"
 
-            match preferred_vcd_viewer:
+            match vcd_viewer:
                 case "vaporview":
                     print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in VaporView.{Style.RESET_ALL}")
                     subprocess.run(["code", output_path])
@@ -75,7 +77,7 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
                     print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in GTKWave.{Style.RESET_ALL}")
                     # gtkwave launches in background. the startup text is stderr
                     subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                case _: # really None
+                case None:
                     print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
 
             file_message = big_receive(sock).decode()
@@ -267,6 +269,19 @@ def crawl_input_directory(front_target: str, containing_folder: Path, folder_nam
 def clickable_filepath(filepath: Path, depth: int):
     return f"./{Path(*filepath.parts[-depth:])}"
 
+def initialize_settings_toml():
+    default_settings = r'''
+    delete_this_line = true # delete this line after writing settings the first time to confirm you did it intentionally!
+
+    # what program to open waveforms in:
+    # * "vaporview": opens in VSCode (with the command `code filename`)
+    #   This will technically use whatever your default VCD viewer in VSCode is.
+    # * "gtkwave": opens in GTKWave (with the command `gtkwave filename`)
+    # * "NONE": don't open waveforms automatically
+    vcd_viewer = "vaporview"
+    ''' 
+    settings_filepath.write_text(cleandoc(default_settings))
+
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
         print("It appears this is being run without using the right uv environment; exiting.")
@@ -278,6 +293,40 @@ if __name__ == "__main__":
         print("For more info, view the README: https://github.com/TheHarmonicRealm/fpga-sim#Graphical-FPGA-Simulator")
         # TODO: include exported HTML version of README for offline usage?
         exit(1)
+
+    # TODO: replace config file creation process with a tiny Wizard
+    settings_filepath = python_folder.joinpath("client_settings.toml")
+
+    if not settings_filepath.exists():
+        initialize_settings_toml()
+        print("Please open ./python/client_settings.toml and enter appropriate settings, then run this program again")
+        exit(1)
+    else:
+        try:
+            client_settings = tomllib.loads(settings_filepath.read_text())
+            vcd_viewer = client_settings["vcd_viewer"]
+        except tomllib.TOMLDecodeError, KeyError:
+            print("./python/client_settings.toml is malformed. Enter yes if you want to recreate it:")
+            if input() == "yes":
+                initialize_settings_toml()
+            print("Please open ./python/client_settings.toml and enter appropriate settings, then run this program again")
+            exit(1)
+
+
+    if "delete_this_line" in client_settings:
+        print("./python/client_settings.toml: top line was not deleted. Please check your settings and fix this, then run this program again")
+        exit(1)
+
+    match vcd_viewer:
+        case "vaporview" | "gtkwave":
+            pass # okay and no transformation needed
+        case "NONE":
+            vcd_viewer = None
+        case _:
+            print(f"./python/client_settings.toml has invalid vcd_viewer value: {vcd_viewer}.")
+            print("Please fix it then run this program again!")
+            exit(1)
+
     try:
         socket_port = int(argv[1])
         docker_mode = False
@@ -303,46 +352,6 @@ if __name__ == "__main__":
     except ValueError:
         print(f"Could not convert {argv[1]} to a port number. Exiting.")
         exit(1)
-
-    # TODO: support option to not automatically open in viewer.
-    #   Probably use a .toml config file (excessive for this but allows room
-    #   for more features)?
-    # Also try to fix: VSCode says VaporView exists if installed but *disabled*
-    #   Option in code command to narrow to a specific profile might fix
-    in_vscode = os.environ["TERM_PROGRAM"] == "vscode"
-
-    if sys.platform == "darwin":
-        preferred_vcd_viewer = "gtkwave" if shutil.which("gtkwave") is not None else None
-
-        # check for VaporView iff in VSCode
-        if in_vscode:
-            list_extensions_proc = subprocess.run("code --list-extensions", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            if "lramseyer.vaporview" in list_extensions_proc.stdout.decode():
-                preferred_vcd_viewer = "vaporview"
-        # info print only useful on Mac for now
-        match preferred_vcd_viewer:
-            case "vaporview":
-                print("Detected you are using VSCode's integrated terminal and "
-                    "have VaporView.\nOutputs of waveform simulations "
-                    "will automatically open in it in there.")
-            case "gtkwave":
-                if in_vscode:
-                    print("Waveform simulations will automatically open in GTKWave.\n"
-                    "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
-                    "is recommended for a more friendly viewer built into VSCode.")
-                else:
-                    print("Waveform simulations will automatically open in GTKWave.\n"
-                    "VaporView (https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) "
-                    "is recommended for a more friendly viewer (requires VSCode).")
-            case _: # really None
-                print("No software detected for waveform simulations.\n"
-                "VaporView (activates if using VSCode's integrated terminal) "
-                "or GTKWave is highly recommended.")
-    else: # Mac-only for now because code command is broken in an integrated-terminal subprocess for now
-        # will support others with manual settings, automatic maybe can work eventually
-        preferred_vcd_viewer = None
-
-    print() # print a new line
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

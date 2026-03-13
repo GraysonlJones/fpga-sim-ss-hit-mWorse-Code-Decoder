@@ -187,16 +187,8 @@ while on Windows it closes the program with errors.
     is provided as the third argument, the output file will be overwritten if
     it already exists. Otherwise, an error is printed if it already exists,
     to avoid accidents.
-    * **Mac-only (for now)**: if the program is run in
-    VSCode's terminal and VaporView is installed, the waveform will open in it
-    automatically. If it is not installed, or it is run outside of VSCode, the
-    program will look for GTKWave in your path, under the precise name
-    `gtkwave`, as a backup. VSCode only reports whether the extension is
-    installed, so the program will still try to use VaporView if it
-    is installed but disabled.
-        * Options to manually set the opening program are to come. For now,
-        Windows and Linux will not attempt to open a program at all because
-        the automatic detection feature does not work on Windows.
+    * Initial setup will have you choose whether to automatically open waveforms
+    in VaporView or GTKWave, or to not open them.
 * Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
