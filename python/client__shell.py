@@ -336,9 +336,9 @@ if __name__ == "__main__":
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
         if sys.platform != 'win32':
-            process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
-        else: # unavailable on Windows. TODO: figure out equivalent code to ignore on Windows
-            process = subprocess.Popen("docker run -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+            process = subprocess.Popen("docker run --rm -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
+        else: # setpgrp unavailable on Windows. TODO: figure out equivalent code to ignore on Windows
+            process = subprocess.Popen("docker run --rm -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         # wait until first print-out
         out_pipe: IO[str] = process.stdout # pyright: ignore[reportAssignmentType]
         out_pipe.readline()
