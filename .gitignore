@@ -3,6 +3,7 @@ __pycache__/
 .vscode
 host_server/
 docker_cache/
+python/client_settings.toml
 
 # Allow examples in these
 waveforms/*
