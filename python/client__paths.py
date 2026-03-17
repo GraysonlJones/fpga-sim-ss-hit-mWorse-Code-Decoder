@@ -6,3 +6,4 @@ waveforms_folder = top_folder.joinpath("waveforms")  # fpga-sim/waveforms/
 verilog_folder = top_folder.joinpath("verilog")  # fpga-sim/verilog/
 live_sim_folder = verilog_folder.joinpath("live_sim")
 testbench_folder = verilog_folder.joinpath("testbench")
+settings_filepath = python_folder.joinpath("waveform_viewer_choice.txt")

@@ -3,7 +3,7 @@ __pycache__/
 .vscode
 host_server/
 docker_cache/
-python/client_settings.toml
+python/waveform_viewer_choice.txt
 
 # Allow examples in these
 waveforms/*

@@ -8,17 +8,15 @@ import subprocess
 import sys
 import textwrap
 import time
-import tomllib
 from argparse import ArgumentParser
 from enum import Enum, auto
-from inspect import cleandoc
 from pathlib import Path
 from sys import argv
 from typing import IO
 
 from client__paths import (
     live_sim_folder,
-    python_folder,
+    settings_filepath,
     testbench_folder,
     top_folder,
     waveforms_folder,
@@ -269,18 +267,24 @@ def crawl_input_directory(front_target: str, containing_folder: Path, folder_nam
 def clickable_filepath(filepath: Path, depth: int):
     return f"./{Path(*filepath.parts[-depth:])}"
 
-def initialize_settings_toml():
-    default_settings = r'''
-    delete_this_line = true # delete this line after writing settings the first time to confirm you did it intentionally!
+def waveform_viewer_wizard():
+    print("Type vaporview or gtkwave to choose one of those. Reply with anything else to choose nothing")
+    viewer_choice = input("-> ").lower()
 
-    # what program to open waveforms in:
-    # * "vaporview": opens in VSCode (with the command `code filename`)
-    #   This will technically use whatever your default VCD viewer in VSCode is.
-    # * "gtkwave": opens in GTKWave (with the command `gtkwave filename`)
-    # * "NONE": don't open waveforms automatically
-    vcd_viewer = "vaporview"
-    ''' 
-    settings_filepath.write_text(cleandoc(default_settings))
+    match viewer_choice:
+        case "vaporview":
+            print("VSCode/VaporView selected")
+        case "gtkwave":
+            print("GTKWave selected.")
+        case _:
+            viewer_choice = "NO_VIEWER"
+            print("No viewer chosen. Waveforms will not be automatically opened.")
+
+    settings_filepath.write_text(viewer_choice)
+
+    print("Choice has been saved to ./python/waveform_viewer_choice.txt")
+
+    return viewer_choice
 
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
@@ -294,38 +298,33 @@ if __name__ == "__main__":
         # TODO: include exported HTML version of README for offline usage?
         exit(1)
 
-    # TODO: replace config file creation process with a tiny Wizard
-    settings_filepath = python_folder.joinpath("client_settings.toml")
-
     if not settings_filepath.exists():
-        initialize_settings_toml()
-        print("Please open ./python/client_settings.toml and enter appropriate settings, then run this program again")
-        exit(1)
+        print("Waveform viewer is unset. Which viewer would you like to use?")
+        vcd_viewer = waveform_viewer_wizard()
     else:
-        try:
-            client_settings = tomllib.loads(settings_filepath.read_text())
-            vcd_viewer = client_settings["vcd_viewer"]
-        except tomllib.TOMLDecodeError, KeyError:
-            print("./python/client_settings.toml is malformed. Enter yes if you want to recreate it:")
-            if input() == "yes":
-                initialize_settings_toml()
-            print("Please open ./python/client_settings.toml and enter appropriate settings, then run this program again")
-            exit(1)
+        vcd_viewer = settings_filepath.read_text()
 
+        clear_message = "Delete/clear out ./python/waveform_viewer_choice.txt and run this again to change!"
 
-    if "delete_this_line" in client_settings:
-        print("./python/client_settings.toml: top line was not deleted. Please check your settings and fix this, then run this program again")
-        exit(1)
+        match vcd_viewer:
+            case "vaporview":
+                print("VSCode/VaporView is selected to automatically open waveforms.")
+                print(clear_message)
+            case "gtkwave":
+                print("GTKWave is selected to automatically open waveforms.")
+                print(clear_message)
+            case "NO_VIEWER":
+                print("No waveform viewer chosen. Waveforms will not be automatically opened.")
+                print(clear_message)
+            case _:
+                print(f"./python/waveform_viewer_choice.txt has errant value.")
+                print("Running selection wizard again.")
+                print("Which viewer would you like to use?")
+                vcd_viewer = waveform_viewer_wizard()
 
-    match vcd_viewer:
-        case "vaporview" | "gtkwave":
-            pass # okay and no transformation needed
-        case "NONE":
-            vcd_viewer = None
-        case _:
-            print(f"./python/client_settings.toml has invalid vcd_viewer value: {vcd_viewer}.")
-            print("Please fix it then run this program again!")
-            exit(1)
+    if vcd_viewer == "NO_VIEWER":
+        vcd_viewer = None
+
 
     try:
         socket_port = int(argv[1])
