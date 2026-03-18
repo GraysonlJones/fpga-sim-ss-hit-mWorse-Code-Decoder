@@ -40,8 +40,7 @@ confusing but it's just something you need to get used to:
 
 > [!Caution]
 > The recommended programs are trustworthy†, but please do not download random
-things via the terminal without thinking about it.
-The internet is a scary place!
+software without thinking about it. The internet is a scary place!
 
 * **git** to download this repository. Check if already installed with
 `git --version`.
