@@ -55,8 +55,8 @@ For example, if you have a command on your computer with this format:
 tell_time [-twentyfourhour] <place>
 ```
 
-You could run it like `tell_time 'Bismarck, SD"'` and get back
-`02:30:53 p.m.`, or run it as `tell_time -twentyfourhour 'Bismarck, SD'` to
+You could run it like `tell_time 'Bismarck, ND"'` and get back
+`02:30:53 p.m.`, or run it as `tell_time -twentyfourhour 'Bismarck, ND'` to
 get `14:30:53`.
 
 ### Basic terminal commands
