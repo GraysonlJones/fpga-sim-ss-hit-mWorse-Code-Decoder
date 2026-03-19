@@ -463,10 +463,10 @@ class BoardComponents:
                 button.sticky_release.connect(lambda: self.state_changed.emit(self.get_input_state()))
 
             layout_hook.addWidget(self.BTNU, 0, 1)
-            layout_hook.addWidget(self.BTND, 2, 1)
             layout_hook.addWidget(self.BTNL, 1, 0)
-            layout_hook.addWidget(self.BTNR, 1, 2)
             layout_hook.addWidget(self.BTNC, 1, 1)
+            layout_hook.addWidget(self.BTNR, 1, 2)
+            layout_hook.addWidget(self.BTND, 2, 1)
             layout_hook.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding), 0, 3)
 
         def get_input_state(self, button: StickyButton | None = None) :
