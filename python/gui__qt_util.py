@@ -123,22 +123,6 @@ def vbox_factory(*stuff: QLayout | QWidget, no_margins: bool = True) -> QVBoxLay
 def hbox_factory(*stuff: QLayout | QWidget, no_margins: bool = True) -> QHBoxLayout:
     return __box_factory(*stuff, vertical=False, no_margins=no_margins)
 
-def make_checkbox():
-    checkbox = QCheckBox()
-    checkbox.setFixedSize(c.Sizes.light)
-    return checkbox
-
-def make_switch_checkbox(style: QStyle):
-    checkbox = QCheckBox()
-    checkbox.setFixedSize(c.Sizes.switch)
-    checkbox.setStyle(style)
-    return checkbox
-
-def make_push_button():
-    push_button = QPushButton()
-    push_button.setFixedSize(c.Sizes.light)
-    return push_button
-
 class AppStyle(QProxyStyle):
     '''Applied to checkboxes in `make_switch_checkbox()` to make them look like
     vertical binary switches.'''
@@ -158,15 +142,21 @@ class AppStyle(QProxyStyle):
     @override
     def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOption, painter: QPainter, widget: QWidget | None = None):
         match element:
-            case QStyle.PrimitiveElement.PE_IndicatorCheckBox:
+            case QStyle.PrimitiveElement.PE_FrameFocusRect if isinstance(widget, SwitchCheckbox):
+                pass # don't dim checkboxes
+            case QStyle.PrimitiveElement.PE_IndicatorCheckBox if isinstance(widget, SwitchCheckbox):
                 # to vary for dark mode use this to check:
-                # if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
+                if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
+                    back_brush = QBrush("#eee")
+                    pen = QPen("#000")
+                    on_brush = QBrush("#cce")
+                    off_brush = QBrush("#aaa")
+                else:
+                    back_brush = QBrush("#111")
+                    pen = QPen("#fff")
+                    on_brush = QBrush("#99b")
+                    off_brush = QBrush("#333")
 
-                back_brush = QBrush("#111")
-                on_brush = QBrush("#3D3")
-                off_brush = QBrush("#D33")
-
-                pen = QPen("#fff")
                 pen.setWidthF(.5)
                 painter.setPen(pen)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -181,22 +171,82 @@ class AppStyle(QProxyStyle):
                     indicator_rect = QRect(3, 3 + c.Sizes.switch.height() - c.Sizes.switch.width(), c.Sizes.switch.width() - 6, c.Sizes.switch.width() - 6)
                     front_brush = off_brush
 
+                if option.state & QStyle.StateFlag.State_HasFocus:
+                    painter.setPen(QPen("#3ea0ec"))
+
                 painter.setBrush(back_brush)
                 painter.drawRoundedRect(bg_rect, 1, 1)
+                painter.setPen(pen)
                 painter.setBrush(front_brush)
                 painter.drawRoundedRect(indicator_rect, 1, 1)
-
             case _:
                 super().drawPrimitive(element, option, painter, widget)
+    
+    @override
+    def drawControl(self, element: QStyle.ControlElement, option: QStyleOption, painter: QPainter, /, widget: QWidget | None = ...) -> None:
+        match element:
+            case QStyle.ControlElement.CE_PushButton if isinstance(widget, StickyButton):
+                pen = QPen()
+                pen.setWidthF(.5)
+
+                # Light mode: black outline; bright when off; somewhat darker pale blue when on
+                if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
+                    pen.setColor("#000")
+                    on_brush = QBrush("#cce")
+                    off_brush = QBrush("#eee")
+                # Dark mode: white outline; dark when off; brighter pale blue when on
+                else:
+                    pen.setColor("#fff")
+                    on_brush = QBrush("#99b")
+                    off_brush = QBrush("#333")
+
+                # unlike natural Qt buttons, our buttons are down on click.
+                #   so draw using union of that and whether they are checked
+                is_pressed_in = widget.isDown() or (option.state & QStyle.StateFlag.State_On)
+
+                if is_pressed_in:
+                    brush_to_use = on_brush
+                else:
+                    brush_to_use = off_brush
+
+                # must draw focus indicator ourself — just make outline blue
+                if option.state & QStyle.StateFlag.State_HasFocus:
+                    if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
+                        pen.setColor("#3ea0ec")
+                    else: # brighter color for dark mode
+                        pen.setColor("#90cfff")
+                        if is_pressed_in: # very hard to see focus around blue buttons so make pen wider
+                            pen.setWidthF(1.1)
+
+                # bounding box is 14 x 14 but use 1 less on each side to do rounded square
+                bg_rect = QRect(1, 1, 12, 12)
+
+                painter.setPen(pen)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+                painter.setBrush(brush_to_use)
+                painter.drawRoundedRect(bg_rect, 1, 1)
+            case _:
+                super().drawControl(element, option, painter, widget)
 
 def make_app(argv: list[str] = []):
     app = QApplication(argv)
-    app.setStyle("fusion")
+    app.setStyle(AppStyle())
     return app
 
-# The below four classes are at least for now only used inside BoardComponents.
-#  I don't see much use for them in the chrome (except for maybe LightDisplay).
+# The below classes are used inside BoardComponents.
+
+class SwitchCheckbox(QCheckBox):
+    '''Checkbox that has the appearance of a vertical on/off switch, if
+    style is applied'''
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setFixedSize(c.Sizes.switch)
+
 class StickyButton(QPushButton):
+    '''Button with somewhat custom style that stays down if shift is held when
+    released. Style is overridden in AppStyle, mainly because the default's
+    state is quite hard to read in dark mode on both Mac and Windows 11.'''
     sticky_press = Signal()
     sticky_release = Signal()
     def __init__(self, shift_pressed: Event):
@@ -222,6 +272,7 @@ class StickyButton(QPushButton):
             self.setChecked(False)
 
 class LightDisplay(QPushButton):
+    '''Misused QPushButton used to emulate a light with a fade effect.'''
     def __init__(self, *,
                 size: QSize | None = c.Sizes.light,
                 on_color: QColor | str = c.Colors.Light.on,
@@ -291,6 +342,8 @@ class LightDisplay(QPushButton):
 #  QAbstractButton both of these classes multiple-inherit from?
 #  But ideally these will eventually not be button subclasses anyway.
 class CircleLightDisplay(QRadioButton):
+    '''Like LightDisplay but with a QRadioButton to be circular. Currently
+    just using squares for this purpose to  and might get rid of this.'''
     def __init__(self, *,
                 on_color: QColor | str = c.Colors.Light.on,
                 off_color: QColor | str = c.Colors.Light.off,
@@ -403,8 +456,7 @@ class BoardComponents:
         state_changed = Signal(InputState.Switches)
         def __init__(self):
             super().__init__()
-            style = AppStyle() # TODO: put initialization somewhere else to avoid duplication; currently fine when only switches are modified but not great
-            self.checkboxes = [make_switch_checkbox(style) for _ in range(0, 16)]
+            self.checkboxes = [SwitchCheckbox() for _ in range(0, 16)]
             layout_hook = hbox_factory(*self.checkboxes, no_margins=True)
 
             layout_hook.addItem(QSpacerItem(10, 0, QSizePolicy.Policy.Expanding))
