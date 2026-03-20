@@ -1,8 +1,12 @@
 # syntax=docker/dockerfile:1
 
 # Run from the fpga-sim directory:
-    #### Generate cache for both x86 and ARM to distribute (took an hour on my Mac!):
-    # docker buildx build --cache-to type=local,dest=./docker_cache --cache-from type=local,src=./docker_cache --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
+    #### Build for x86 and ARM:
+        # PRO TIP: run normal build command (last one listed) first
+        # If both must be fully built, they run in parallel. On my Mac this took
+        # over an hour, vs 18 minutes total when I built the native one, then
+        # ran this (which reuses the cache and thus skips the native one)
+    # docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
 
     #### Export images in ARM and x86 format after building
     # docker image save --output fpga_sim_image_x86.tar fpga-sim-server --platform linux/amd64
@@ -54,7 +58,8 @@ RUN unset VERILATOR_ROOT
 WORKDIR verilator
 RUN git pull
 RUN git tag
-RUN git checkout stable
+# Freeze version. Relies on prints being a certain way, etc. Bad to update unpredictably if rebuild is needed.
+RUN git checkout v5.046
 
 RUN autoconf
 RUN ./configure 
