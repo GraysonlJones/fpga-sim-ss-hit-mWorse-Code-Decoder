@@ -314,12 +314,16 @@ if __name__ == "__main__":
                 print("GTKWave is selected to automatically open waveforms.")
                 print(clear_message)
             case "NO_VIEWER":
-                print("No waveform viewer chosen. Waveforms will not be automatically opened.")
+                print("\"No viewer\" option was chosen. Waveforms will not be automatically opened.")
                 print(clear_message)
             case _:
-                print(f"./python/waveform_viewer_choice.txt has errant value.")
-                print("Running selection wizard again.")
-                print("Which viewer would you like to use?")
+                if vcd_viewer.strip() == "":
+                    # print message as if it were deleted if the file is just cleared
+                    print("Waveform viewer is unset. Which viewer would you like to use?")
+                else:
+                    print(f"./python/waveform_viewer_choice.txt has errant value.")
+                    print("Running selection wizard again.")
+                    print("Which viewer would you like to use?")
                 vcd_viewer = waveform_viewer_wizard()
 
     if vcd_viewer == "NO_VIEWER":
