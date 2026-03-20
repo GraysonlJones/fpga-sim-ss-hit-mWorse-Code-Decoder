@@ -102,12 +102,13 @@ program. They will visibly fail if it is not.
 2. Load Docker image. From the `fpga-sim` directory
 (the IDE's integrated terminal is convenient and will start in the right place;
 open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
+
     ```
-    docker load < fpga_sim_image_ARM.tar
+    docker load -i fpga_sim_image_x86.tar
     ```
     or 
     ```
-    docker load < fpga_sim_image_x86.tar
+    docker load -i fpga_sim_image_ARM.tar
     ```
 
     If you do not have access to my Docker images, you can build it yourself,
