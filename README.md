@@ -1,18 +1,21 @@
 # Graphical FPGA Simulator
 
-This is a program for students learning Verilog to run interactive simulations
-and testbenches using [Verilator](https://verilator.org/).
-It uses Python, PySide6 (Qt), and Docker to run Verilator (in an Ubuntu VM).
+This is a program for students learning Verilog, using [Verilator](https://verilator.org) as its
+backend. It provides a friendly command-line interface to run Verilog code, both in testbenches and
+to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to run Verilator in an Ubuntu VM).
+
+<img width="300" alt="GIF demonstrating live simulation" src="https://github.com/user-attachments/assets/ee5b1cd5-988f-49c9-b416-af660f26feb7" />
 
 It supports MacOS 13+, Linux, and Windows 10/11 (see
 [Qt's documentation](https://doc.qt.io/qt-6/supported-platforms.html) for more
 information on OS support).
-Primary development is on a Mac, with significant testing on Windows.
-Features should be identical across platforms aside from
-Windows lacking tab autocompletion. 
+
+Primary development is on Mac, with significant testing on Windows.
+It is essentially identical across platforms, except that Windows lacks tab autocompletion; there are no known major platform-specific issues aside from this, and it will run at full speed on most compatible computers.
+I recommend running this on a Mac if you have a choice.
+
 > [!Important]  
 > Students: please read [the student-targeted instructions](STUDENT_INSTRUCTIONS.md) before continuing.
-
 
 ## Required software
 
