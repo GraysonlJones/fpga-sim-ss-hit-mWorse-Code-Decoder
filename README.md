@@ -115,10 +115,15 @@ with `uv --version`.
 
 * Clone this git repository:
 
-`git clone https://github.com/TheHarmonicRealm/fpga-sim.git`
+```
+git clone https://github.com/TheHarmonicRealm/fpga-sim.git
+```
+
 * Open the folder it makes in your IDE. For VSCode you can do:
 
-`code ./fpga-sim`
+```
+code ./fpga-sim
+```
 
 * Download the appropriate docker image (ARM or x86) from Canvas.
 Put it in the `fpga-sim` folder.
