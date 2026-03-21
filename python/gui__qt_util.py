@@ -396,8 +396,8 @@ class SevenSegmentLight:
         self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
         self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
         self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        # TODO: temporarily replaced with square to get matching fade effect.
-        self.DP = LightDisplay(size=c.Sizes.light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        # At tiny size, rounded square is close enough to a dot
+        self.DP = LightDisplay(size=c.Sizes.dp, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
 
         self.layout.addWidget(self.CA, 0, 1) # horizontal bits
         self.layout.addWidget(self.CG, 2, 1)
@@ -407,6 +407,8 @@ class SevenSegmentLight:
         self.layout.addWidget(self.CB, 1, 2) # right edge
         self.layout.addWidget(self.CC, 3, 2)
         self.layout.addWidget(self.DP, 4, 3) # dot
+
+        self.layout.setSpacing(0)
 
         self.layout.addItem(QSpacerItem(10, 0, QSizePolicy.Policy.Fixed), 4, 4)
 
@@ -429,7 +431,10 @@ class BoardComponents:
             self.current_pattern = dc.replace(c.NumberStates.all_off)
 
             self.layout_hook = hbox_factory(*[digit.layout for digit in self.digits])
+            # make right edge have an expander so inter-digit distance is fixed with window resizing
             self.layout_hook.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding))
+            # reduce space between digits
+            self.layout_hook.setSpacing(0)
             self.setLayout(self.layout_hook)
 
         @Slot(OutputState.Anode)

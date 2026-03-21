@@ -16,11 +16,13 @@ class Colors:
 
 
 class Sizes:
-    # Until switches are reskinned, must be this size for checkbox alignment
     light = QSize(14, 14)
     switch = QSize(14, 28)
-    horz_light = QSize(42, 14)
-    vert_light = QSize(14, 42)
+
+    base_light_size = 10
+    dp = QSize(base_light_size, base_light_size)
+    horz_light = QSize(base_light_size * 3, base_light_size)
+    vert_light = QSize(base_light_size, base_light_size * 3)
 
 
 class NumberStates:
