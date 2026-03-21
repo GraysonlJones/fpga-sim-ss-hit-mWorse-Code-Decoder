@@ -2,6 +2,7 @@ import base64
 import os
 import re
 import shlex
+import shutil
 import signal
 import socket
 import subprocess
@@ -19,7 +20,7 @@ from client__paths import (
     settings_filepath,
     testbench_folder,
     top_folder,
-    waveforms_folder,
+    waveforms_folder
 )
 from colorama import Fore, Style
 from shared__util import (
@@ -67,21 +68,20 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
 
             result_start = f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s.{Style.RESET_ALL}"
 
-            match vcd_viewer:
-                case "vaporview":
-                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in VaporView.{Style.RESET_ALL}")
-                    subprocess.run(["code", output_path])
-                case "gtkwave":
-                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in GTKWave.{Style.RESET_ALL}")
-                    # gtkwave launches in background. the startup text is stderr
-                    subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                case None:
-                    print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
-
             file_message = big_receive(sock).decode()
             output_file = deserialize_dataclass(file_message, NamedFile)
             output_file.to_disk(waveforms_folder)
-    
+
+            match vcd_viewer:
+                case "vaporview":
+                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in VaporView.{Style.RESET_ALL}")
+                    subprocess.run(["code", output_path], shell=True) # shell necessary on Windows
+                case "gtkwave":
+                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in GTKWave.{Style.RESET_ALL}")
+                    # gtkwave launches in background. the startup text is stderr
+                    subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                case None:
+                    print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
 
 def build_live_sim(input_files: list[NamedFile], folder_name: str):
     global sock
@@ -304,14 +304,28 @@ if __name__ == "__main__":
     else:
         vcd_viewer = settings_filepath.read_text()
 
-        clear_message = "Delete/clear out ./python/waveform_viewer_choice.txt and run this again to change!"
+        clear_message = "Delete/clear out ./python/waveform_viewer_choice.txt and run again to change the setting!"
 
         match vcd_viewer:
             case "vaporview":
-                print("VSCode/VaporView is selected to automatically open waveforms.")
+                if shutil.which("code") is not None:
+                    print("VSCode/VaporView is selected to automatically open waveforms.")
+                else:
+                    print("VSCode does not seem to be installed. It may need to be added to your path (under the key 'code');")
+                    print(" if you do this, you must restart the terminal for it to work.")
+                    print("Waveforms will not be automatically opened for this session!")
+                    vcd_viewer = "NO_VIEWER"
+
                 print(clear_message)
             case "gtkwave":
-                print("GTKWave is selected to automatically open waveforms.")
+                if shutil.which("gtkwave") is not None:
+                    print("GTKWave is selected to automatically open waveforms.")
+                else:
+                    print("GTKWave does not seem to be installed. It may need to be added to your path (under the key 'gtkwave');")
+                    print(" if you do this, you must restart the terminal for it to work.")
+                    print(" Waveforms will not be automatically opened for this session!")
+                    vcd_viewer = "NO_VIEWER"
+
                 print(clear_message)
             case "NO_VIEWER":
                 print("\"No viewer\" option was chosen. Waveforms will not be automatically opened.")
