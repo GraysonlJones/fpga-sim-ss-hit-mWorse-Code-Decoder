@@ -171,7 +171,7 @@ def listen(window: MainWindow):
             if not have_quit.is_set(): # make sure to not do Qt stuff if app has quit. (Not sure if necessary)
                 window.output_changed.emit(output_state)
 
-def run_app(sock: socket.socket, app: QApplication | None):
+def run_app(sock: socket.socket):
     app = make_app()
     window = MainWindow(sock)
     # TODO: make it go to front. Tried window.raise_() but it doesn't work on Mac
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         windows_socket = base64.b64decode(sys.stdin.buffer.read())
         sock = socket.fromshare(windows_socket)
 
-    run_app(sock, None)
+    run_app(sock)
 
     # app has been quit. tell server we are quitting then wait for
     #   listener to get ACK back. Necessary to have a "clean" socket on exit
