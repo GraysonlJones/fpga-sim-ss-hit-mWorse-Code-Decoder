@@ -94,6 +94,8 @@ class MainWindow(EmptyWindow):
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
 
+        QTimer.singleShot(0, lambda: self.setFixedSize(self.size()))
+
     @Slot(WholeOutputState)
     def set_output_state(self, new_output_state: WholeOutputState):
         self.lights_line.set_output_state(new_output_state.lights)
