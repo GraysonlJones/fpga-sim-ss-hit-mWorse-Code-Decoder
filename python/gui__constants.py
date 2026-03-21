@@ -11,8 +11,8 @@ class Colors:
 
     class Segment:
         on = "#f00"
-        radio_on = "#f77"  # approx color of segment middle due to shading
-        off = "#f8fdfd"
+        off = "#fdfdfd"
+        background = "#ddd"
 
 
 class Sizes:

@@ -338,46 +338,6 @@ class LightDisplay(QPushButton):
         palette.setColor(QPalette.ColorRole.Button, val) # Modify palette copy
         self.setPalette(palette) # Apply modified palette
 
-# TODO: much redundancy. Probably some way to make a subclass of
-#  QAbstractButton both of these classes multiple-inherit from?
-#  But ideally these will eventually not be button subclasses anyway.
-class CircleLightDisplay(QRadioButton):
-    '''Like LightDisplay but with a QRadioButton to be circular. Currently
-    just using squares for this purpose to  and might get rid of this.'''
-    def __init__(self, *,
-                on_color: QColor | str = c.Colors.Light.on,
-                off_color: QColor | str = c.Colors.Light.off,
-                off_time: int = c.segment_off_time,
-                fade_delay_time: int = c.segment_fade_delay_time):
-        super().__init__()
-        self.light_on = False
-        self.setDisabled(True)
-
-        self.on_color = QColor(on_color)
-        self.off_color = QColor(off_color)
-        set_color(self, self.off_color)
-
-        self.off_timer = QTimer(interval=off_time, singleShot=True)
-        self.off_timer.timeout.connect(lambda: set_color(self, self.off_color))
-        self.fade_timer = QTimer(interval=fade_delay_time, singleShot=True)
-        self.fade_timer.timeout.connect(lambda: set_color(self, mix_colors(self.on_color, self.off_color)))
-
-        # Intentionally lacks size parameter. Radio buttons just crop if given
-        #  smaller size and do not expand with a larger one
-
-    def set_light(self, light_on: bool):
-        if self.light_on != light_on:
-            self.light_on = light_on
-            if self.light_on:
-                self.fade_timer.stop()
-                self.off_timer.stop()
-                set_color(self, self.on_color)
-            else:
-                self.fade_timer.start()
-                self.off_timer.start()
-
-
-
 #   AAAA
 #  F    B
 #   GGGG
@@ -410,14 +370,12 @@ class SevenSegmentLight:
 
         self.layout.setSpacing(0)
 
-        self.layout.addItem(QSpacerItem(10, 0, QSizePolicy.Policy.Fixed), 4, 4)
-
         self.light_on = False
         self.current_setting = dc.replace(c.NumberStates.all_off)
 
     def set_lights(self, new_lights: OutputState.Cathode):
         for target, setting in dc.asdict(new_lights).items():
-            light: LightDisplay | CircleLightDisplay = getattr(self, target)
+            light: LightDisplay = getattr(self, target)
             light.set_light(setting)
         self.current_setting = dc.replace(new_lights)
 
@@ -430,12 +388,16 @@ class BoardComponents:
             self.current_anodes = OutputState.Anode()
             self.current_pattern = dc.replace(c.NumberStates.all_off)
 
-            self.layout_hook = hbox_factory(*[digit.layout for digit in self.digits])
-            # make right edge have an expander so inter-digit distance is fixed with window resizing
-            self.layout_hook.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding))
-            # reduce space between digits
-            self.layout_hook.setSpacing(0)
+            self.layout_hook = hbox_factory(*[digit.layout for digit in self.digits], no_margins=True)
             self.setLayout(self.layout_hook)
+
+            self.setContentsMargins(10, 10, 10, 10)
+
+            # make background gray to make it less harsh on dark mode
+            pal = QPalette()
+            pal.setColor(QPalette.ColorRole.Window, c.Colors.Segment.background)
+            self.setPalette(pal)
+            self.setAutoFillBackground(True)
 
         @Slot(OutputState.Anode)
         def set_anodes(self, new_anodes: OutputState.Anode, *, refresh: bool): 
