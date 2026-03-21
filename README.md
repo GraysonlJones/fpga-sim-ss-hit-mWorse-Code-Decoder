@@ -33,8 +33,9 @@ confusing but it's just something you need to get used to:
 >       - Run `arch` in Terminal to check.
 >   - Windows: the vast majority of Windows PCs are x86. Some laptops are ARM,
 >   almost all of which have Snapdragon chips.
->       - Run `[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture`
->       in PowerShell to check.
+>        - Run the below command to check. Output will be `ARM 64-bit Processor`
+>        if on ARM, or `64-bit` if on x86.
+>           - `(Get-CimInstance Win32_operatingsystem).OSArchitecture`
 >   - Linux: I am sure that, if you are on Linux, you know your architecture.
 >       - If you don't: run `uname -m` in your terminal.
 
@@ -53,20 +54,25 @@ software without thinking about it. The internet is a scary place!
 
 <!-- TODO: maybe cut out git and make a release on GitHub that people just download? -->
 
-* **uv** to set up the Python environment. Check if already installed (unlikely)
+* **uv** to set up the Python environment. Check if it is already installed (unlikely)
 with `uv --version`.
-    * All platforms: [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/)
-        * First try `pip install uv` (try `pip3 install uv` if that doesn't work)
-        which installs it via Python's built-in package manager.
-            * If that doesn't work, [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer) will work. Follow
-            the instructions there
-
+    * All platforms:
+        * First try `python3 -m pip` (common on Mac or Linux),
+        `py -m pip` (Windows), or `python -m pip`, which would install it via
+        Python's built-in package manager.
+            * If none of those work, use
+            [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
 
 * **Docker Desktop** to run the server-side code. Not needed if running in [native mode](#native-mode).
     * All platforms: [Docker installation page](https://www.docker.com/products/docker-desktop/).
     Same architecture situation as git, using the name AMD64 here instead of X64.
     This may take a while (took 5-10 minutes for me on Windows on
     fast internet).
+        * **Notes for Windows users**:
+            * When installation is done, Docker will prompt you to restart.
+            * On first launch after installation, you will likely have to run
+            a command in the terminal to update Windows Subsystem for Linux
+            (WSL).
 * **Visual Studio Code** (or another IDE)
     * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
         * I use [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
