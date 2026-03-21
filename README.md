@@ -75,8 +75,8 @@ with `uv --version`.
             (WSL).
 * **Visual Studio Code** (or another IDE)
     * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
-        * I use [this Verilog syntax highlighting extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
-        (there may be better ones out there but I have not tried them)
+    * Also: install a syntax highlighter.
+    I use [this Verilog extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL), though there there may be better ones out there!
 * **VaporView** or **GTKWave** (or another waveform viewer supporting VCDs)
     * Highly recommended, and integrated into VSCode: [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview).
     * [GTKWave](https://gtkwave.github.io/gtkwave/index.html) is less pretty,
@@ -159,7 +159,13 @@ Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps);
 on Mac/Linux, it is intentionally ignored to avoid an improper exit,
 while on Windows it closes the program with errors.
 
+Note that where an argument is shown in angle brackets (<>), you are replace
+its value with your own, **without brackets.**
+For example, `print <name>` would be called as `print Goddard`,
+NOT `print <Goddard>`.
+
 * `build_live_sim <input_directory>`
+    * **Example call:** `build_live_sim ex_live`
     * Directory name is appended to `verilog/live_sim` then searched.
     All `.v` files there (subfolders ignored)
     will be sent to the server to try to build for live simulation.
@@ -186,6 +192,11 @@ while on Windows it closes the program with errors.
     simulator (planning to fix).
 
 * `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
+    * Optional final argument determines whether the program will silently
+    overwrite the output file if it already exists. It can be abbreviated to
+    `-ov`.
+    * **Example call:** `build_live_sim ex_tb wave.vcd`
+    * **Example call (overwriting output):** `build_live_sim ex_tb wave.vcd -ov`
     * Like `build_live_sim` but using `verilog/testbench`. The driving
     testbench module must similiarly be named `tb` both with the module/file.
     * The output will go to the provided file in `./waveforms/`. If
@@ -201,8 +212,9 @@ while on Windows it closes the program with errors.
     is provided as the third argument, the output file will be overwritten if
     it already exists. Otherwise, an error is printed if it already exists,
     to avoid accidents.
-    * Initial setup will have you choose whether to automatically open waveforms
-    in VaporView or GTKWave, or to not open them.
+    * The first time you run this, it will have you choose which waveform
+    viewer, if any, to automatically open waveforms in. Delete your setting
+    by deleting the file `python/waveform_viewer_choice.txt`.
 * Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
