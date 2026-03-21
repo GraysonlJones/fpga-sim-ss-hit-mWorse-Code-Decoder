@@ -20,6 +20,7 @@ class Sizes:
     switch = QSize(14, 28)
 
     base_light_size = 10
+    dp_margin = 8
     dp = QSize(base_light_size, base_light_size)
     horz_light = QSize(base_light_size * 3, base_light_size)
     vert_light = QSize(base_light_size, base_light_size * 3)

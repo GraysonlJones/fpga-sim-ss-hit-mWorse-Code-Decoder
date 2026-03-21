@@ -366,7 +366,9 @@ class SevenSegmentLight:
         self.layout.addWidget(self.CE, 3, 0)
         self.layout.addWidget(self.CB, 1, 2) # right edge
         self.layout.addWidget(self.CC, 3, 2)
-        self.layout.addWidget(self.DP, 4, 3) # dot
+        # spacing of outer digits layout is set equal to this so DP has that much on either side
+        self.layout.addItem(QSpacerItem(c.Sizes.dp_margin, 0, QSizePolicy.Policy.Fixed), 4, 3)
+        self.layout.addWidget(self.DP, 4, 4) # dot
 
         self.layout.setSpacing(0)
 
@@ -390,6 +392,8 @@ class BoardComponents:
 
             self.layout_hook = hbox_factory(*[digit.layout for digit in self.digits], no_margins=True)
             self.setLayout(self.layout_hook)
+
+            self.layout_hook.setSpacing(c.Sizes.dp_margin)
 
             self.setContentsMargins(10, 10, 10, 10)
 
