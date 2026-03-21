@@ -6,13 +6,33 @@ to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to r
 
 <img width="300" alt="GIF demonstrating live simulation" src="https://github.com/user-attachments/assets/ee5b1cd5-988f-49c9-b416-af660f26feb7" />
 
-It supports MacOS 13+, Linux, and Windows 10/11 (see
-[Qt's documentation](https://doc.qt.io/qt-6/supported-platforms.html) for more
-information on OS support).
-
 Primary development is on Mac, with significant testing on Windows.
 It is essentially identical across platforms, except that Windows lacks tab autocompletion; there are no known major platform-specific issues aside from this, and it will run at full speed on most compatible computers.
 I recommend running this on a Mac if you have a choice.
+
+## System requirements
+
+Updated March 21, 2026, based on [Qt's requirements](https://doc.qt.io/qt-6/supported-platforms.html)
+and Docker's. Docker is the bounding factor for all of these; if you obtain
+and older version, it may work on unsupported operating systems.
+[Native mode](#native-mode) does not require Docker, though it requires
+more advanced computer skills to set up.
+
+* **Mac**:
+    * MacOS 14 Sonoma, 15 Sequoia, or 26 Tahoe
+        * Docker supports the last two versions of Mac (see [Docker's Mac requirements](https://docs.docker.com/desktop/setup/install/mac-install/#system-requirements)).
+    * All models that can run Sonoma have at least 8GB of RAM, which is sufficient.
+
+* **Windows**:
+    * Windows 11 version 22H2 (build 22631) or higher
+        * Docker supports the currently-serviced versions of Windows 11 (see [Docker's Windows requirements](https://docs.docker.com/desktop/setup/install/windows-install/#system-requirements)).
+    * 8GB of RAM.
+
+* **Linux**:
+    * Minimum 4GB of RAM.
+    * See these two links for information about Linux support:
+        * [Docker Engine's supported distributions](https://docs.docker.com/desktop/setup/install/linux/#supported-platforms)
+        * [Docker Desktop's system requirements](https://docs.docker.com/desktop/setup/install/linux/#general-system-requirements) (which I assume extend to Docker Engine).
 
 > [!Important]  
 > Students: please read [the student-targeted instructions](STUDENT_INSTRUCTIONS.md) before continuing.
@@ -66,16 +86,19 @@ with `uv --version`.
             * If none of those work, use
             [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
 
-* **Docker Desktop** to run the server-side code. Not needed if running in [native mode](#native-mode).
-    * All platforms: [Docker installation page](https://www.docker.com/products/docker-desktop/).
+* **Docker** to run the server-side code. Not needed if running in [native mode](#native-mode).
+    * Windows and Mac: install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
     Same architecture situation as git, using the name AMD64 here instead of X64.
     This may take a while (took 5-10 minutes for me on Windows on
     fast internet).
-        * **Notes for Windows users**:
+        * **Windows note**:
             * When installation is done, Docker will prompt you to restart.
             * On first launch after installation, you will likely have to run
             a command in the terminal to update Windows Subsystem for Linux
             (WSL).
+    * Linux: install [Docker Engine](https://docs.docker.com/engine/install/);
+    Docker Desktop is unnecessary for this software, and the core "engine"
+    has support for more distributions.
 * **Visual Studio Code** (or another IDE)
     * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
     * Also: install a syntax highlighter.
@@ -229,14 +252,17 @@ browsing.
 
 While Ubuntu is the primary target for Verilator, it also compiles on
 Mac (both Clang and G++) and Windows, and some other systems;
-see [Verilator's install instructions](https://verilator.org/guide/latest/install.html#os-requirements) for more info.
+see [Verilator's install instructions](https://verilator.org/guide/latest/install.html#os-requirements)
+for information about compiling it.
 
 If Verilator is installed on your computer, this program has an alternative mode
 to run the server directly without Docker.
-This likely has better performance on computers with little RAM.
 
-I would not recommend this as the default method for students because installing
-Verilator is intimidating if you are new to terminals.
+**This mode is not recommended for students without previous terminal experience.**
+
+<details>
+
+<summary>Native mode instructions</summary>
 
 On Mac, using the built-in Clang to compile Verilog, this works smoothly, with
 the requirements I needed downloaded from brew, and I am sure it works well on
@@ -276,7 +302,9 @@ Using this mode:
     opened, rather than starting up a docker container.
 
     The script should operate the same, except that when the server is stopped
-    the last-built live sim persists rather than being lost on closing it.
+    the last-built live sim persists rather than being lost on closing.
+
+</details>
 
 ---
 †No warranty given by developer, etc.
