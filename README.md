@@ -79,12 +79,13 @@ software without thinking about it. The internet is a scary place!
 
 * **uv** to set up the Python environment. Check if it is already installed (unlikely)
 with `uv --version`.
-    * All platforms:
+    * Mac/Windows:
         * First try `python3 -m pip` (common on Mac or Linux),
         `py -m pip` (Windows), or `python -m pip`, which would install it via
         Python's built-in package manager.
             * If none of those work, use
             [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
+    * Linux: use [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
 
 * **Docker** to run the server-side code. Not needed if running in [native mode](#native-mode).
     * Windows and Mac: install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
@@ -98,7 +99,12 @@ with `uv --version`.
             (WSL).
     * Linux: install [Docker Engine](https://docs.docker.com/engine/install/);
     Docker Desktop is unnecessary for this software, and the core "engine"
-    has support for more distributions.
+    has support for more distributions. Setup with apt, as described on Docker's
+    site, was very easy for me on Ubuntu.
+        * You must follow the [post-install instructions](https://docs.docker.com/engine/install/linux-postinstall#manage-docker-as-a-non-root-user)
+        and make Docker usable as a non-root user for my software to be able to
+        access it. I had to restart in order for these to apply, though it seems
+        to vary for some systems.
 * **Visual Studio Code** (or another IDE)
     * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
     * Also: install a syntax highlighter.
@@ -251,6 +257,7 @@ NOT `print <Goddard>`.
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
 browsing.
+    * This does not work for me on Ubuntu. It may work on some Linux distros.
     * There is a third-party library for readline I want to eventually add
     so Windows has a better experience.
 
