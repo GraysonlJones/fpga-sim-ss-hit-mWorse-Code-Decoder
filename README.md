@@ -13,8 +13,8 @@ I recommend running this on a Mac if you have a choice.
 ## System requirements
 
 Updated March 21, 2026, based on [Qt's requirements](https://doc.qt.io/qt-6/supported-platforms.html)
-and Docker's. Docker is the bounding factor for all of these; if you obtain
-and older version, it may work on unsupported operating systems.
+and Docker's. Docker is the bounding dependency for all of these; if you obtain
+an older version, it may work on unsupported operating systems.
 [Native mode](#native-mode) does not require Docker, though it requires
 more advanced computer skills to set up.
 
