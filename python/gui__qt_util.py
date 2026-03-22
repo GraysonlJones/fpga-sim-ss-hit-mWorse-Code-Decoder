@@ -178,10 +178,10 @@ class AppStyle(QProxyStyle):
                     painter.setPen(QPen(focus))
 
                 painter.setBrush(back_brush)
-                painter.drawRect(bg_rect)
+                painter.drawRoundedRect(bg_rect, 1, 1)
                 painter.setPen(pen)
                 painter.setBrush(front_brush)
-                painter.drawRect(indicator_rect)
+                painter.drawRoundedRect(indicator_rect, 2, 2)
             case _:
                 super().drawPrimitive(element, option, painter, widget)
     
@@ -190,7 +190,7 @@ class AppStyle(QProxyStyle):
         match element:
             case QStyle.ControlElement.CE_PushButton if isinstance(widget, StickyButton):
                 pen = QPen()
-                pen.setWidthF(.5)
+                pen.setWidthF(.75)
 
                 # Light mode: black outline; bright when off; somewhat darker pale blue when on
                 if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
@@ -228,7 +228,7 @@ class AppStyle(QProxyStyle):
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 painter.setBrush(brush_to_use)
-                painter.drawRect(bg_rect)
+                painter.drawRoundedRect(bg_rect, 3, 3)
             case QStyle.ControlElement.CE_PushButton if isinstance(widget, LightDisplay):
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)

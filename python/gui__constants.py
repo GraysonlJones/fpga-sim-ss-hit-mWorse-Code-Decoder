@@ -33,7 +33,7 @@ class Colors:
             on_fill = "#cce"
             off_fill = "#aaa"
         class Dark:
-            bg_fill = "#111"
+            bg_fill = "#222"
             pen = "#fff"
             on_fill = "#99b"
             off_fill = "#333"
