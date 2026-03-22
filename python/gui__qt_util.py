@@ -148,15 +148,17 @@ class AppStyle(QProxyStyle):
             case QStyle.PrimitiveElement.PE_IndicatorCheckBox if isinstance(widget, SwitchCheckbox):
                 # to vary for dark mode use this to check:
                 if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
-                    back_brush = QBrush("#eee")
-                    pen = QPen("#000")
-                    on_brush = QBrush("#cce")
-                    off_brush = QBrush("#aaa")
+                    back_brush = QBrush(c.Colors.Switch.Light.bg_fill)
+                    pen = QPen(c.Colors.Switch.Light.pen)
+                    on_brush = QBrush(c.Colors.Switch.Light.on_fill)
+                    off_brush = QBrush(c.Colors.Switch.Light.off_fill)
+                    focus = c.Colors.Button.Light.focus
                 else:
-                    back_brush = QBrush("#111")
-                    pen = QPen("#fff")
-                    on_brush = QBrush("#99b")
-                    off_brush = QBrush("#333")
+                    back_brush = QBrush(c.Colors.Switch.Dark.bg_fill)
+                    pen = QPen(c.Colors.Switch.Dark.pen)
+                    on_brush = QBrush(c.Colors.Switch.Dark.on_fill)
+                    off_brush = QBrush(c.Colors.Switch.Dark.off_fill)
+                    focus = c.Colors.Button.Dark.focus
 
                 pen.setWidthF(.5)
                 painter.setPen(pen)
@@ -173,7 +175,7 @@ class AppStyle(QProxyStyle):
                     front_brush = off_brush
 
                 if option.state & QStyle.StateFlag.State_HasFocus:
-                    painter.setPen(QPen("#3ea0ec"))
+                    painter.setPen(QPen(focus))
 
                 painter.setBrush(back_brush)
                 painter.drawRect(bg_rect)
@@ -192,14 +194,14 @@ class AppStyle(QProxyStyle):
 
                 # Light mode: black outline; bright when off; somewhat darker pale blue when on
                 if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
-                    pen.setColor("#000")
-                    on_brush = QBrush("#aab")
-                    off_brush = QBrush("#eee")
+                    pen.setColor(c.Colors.Button.Light.pen)
+                    on_brush = QBrush(c.Colors.Button.Light.on_fill)
+                    off_brush = QBrush(c.Colors.Button.Light.off_fill)
                 # Dark mode: white outline; dark when off; brighter pale blue when on
                 else:
-                    pen.setColor("#fff")
-                    on_brush = QBrush("#112")
-                    off_brush = QBrush("#333")
+                    pen.setColor(c.Colors.Button.Dark.pen)
+                    on_brush = QBrush(c.Colors.Button.Dark.on_fill)
+                    off_brush = QBrush(c.Colors.Button.Dark.off_fill)
 
                 # unlike natural Qt buttons, our buttons are down on click.
                 #   so draw using union of that and whether they are checked
@@ -213,9 +215,9 @@ class AppStyle(QProxyStyle):
                 # must draw focus indicator ourself — just make outline blue
                 if option.state & QStyle.StateFlag.State_HasFocus:
                     if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
-                        pen.setColor("#3ea0ec")
+                        pen.setColor(c.Colors.Button.Light.focus)
                     else: # brighter color for dark mode
-                        pen.setColor("#90cfff")
+                        pen.setColor(c.Colors.Button.Dark.focus)
                         if is_pressed_in: # very hard to see focus around blue buttons so make pen wider
                             pen.setWidthF(1.1)
 
@@ -243,7 +245,7 @@ class AppStyle(QProxyStyle):
                 match widget.segment_type:
                     case SegmentType.DP:
                         x = QPoint(widget.size().width() // 2, widget.size().width() // 2)
-                        painter.drawEllipse(x, widget.size().width() // 2, widget.size().width() // 2)
+                        painter.drawEllipse(x, widget.size().width() // 2 - 1, widget.size().width() // 2 - 1)
                     case None:
                         painter.drawRect(rect)
                     case _:

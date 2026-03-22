@@ -14,6 +14,30 @@ class Colors:
         off = "#fff"
         background = "#ccc"
 
+    class Button:
+        class Light:
+            pen = "#000"
+            on_fill = "#aab"
+            off_fill = "#eee"
+            focus = "#3ea0ec"
+        class Dark:
+            pen ="#fff"
+            on_fill = "#112"
+            off_fill = "#333"
+            focus = "#90cfff"
+    
+    class Switch:
+        class Light:
+            bg_fill = "#eee"
+            pen = "#000"
+            on_fill = "#cce"
+            off_fill = "#aaa"
+        class Dark:
+            bg_fill = "#111"
+            pen = "#fff"
+            on_fill = "#99b"
+            off_fill = "#333"
+
 
 class Sizes:
     light = QSize(14, 14)
