@@ -19,7 +19,7 @@ class Colors:
             pen = "#000"
             on_fill = "#aab"
             off_fill = "#eee"
-            focus = "#3ea0ec"
+            focus = "#0082e6"
         class Dark:
             pen ="#fff"
             on_fill = "#112"
