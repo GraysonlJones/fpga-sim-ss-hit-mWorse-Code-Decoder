@@ -7,12 +7,12 @@ from PySide6.QtCore import QSize
 class Colors:
     class Light:
         on = "#6f3"
-        off = "#111"
+        off = "#888"
 
     class Segment:
-        on = "#f00"
-        off = "#fdfdfd"
-        background = "#ddd"
+        on = "#ff5f6d"
+        off = "#fff"
+        background = "#ccc"
 
 
 class Sizes:
@@ -43,5 +43,5 @@ class NumberStates:
 
 light_off_time = 100
 light_fade_delay_time = 0
-segment_off_time = 150
+segment_off_time = 200
 segment_fade_delay_time = 130

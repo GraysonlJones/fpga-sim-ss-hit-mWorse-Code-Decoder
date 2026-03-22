@@ -1,4 +1,5 @@
 import dataclasses as dc
+from enum import Enum, auto
 from threading import Event
 from typing import Literal, overload, override
 
@@ -6,12 +7,12 @@ import gui__constants as c
 from gui__states import InputState, OutputState
 from PySide6.QtCore import (
     Property,
+    QPoint,
     QPropertyAnimation,
     QRect,
     QSequentialAnimationGroup,
     QSize,
     Qt,
-    QTimer,
     Signal,
     Slot,
 )
@@ -175,10 +176,10 @@ class AppStyle(QProxyStyle):
                     painter.setPen(QPen("#3ea0ec"))
 
                 painter.setBrush(back_brush)
-                painter.drawRoundedRect(bg_rect, 1, 1)
+                painter.drawRect(bg_rect)
                 painter.setPen(pen)
                 painter.setBrush(front_brush)
-                painter.drawRoundedRect(indicator_rect, 1, 1)
+                painter.drawRect(indicator_rect)
             case _:
                 super().drawPrimitive(element, option, painter, widget)
     
@@ -225,7 +226,27 @@ class AppStyle(QProxyStyle):
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
                 painter.setBrush(brush_to_use)
-                painter.drawRoundedRect(bg_rect, 1, 1)
+                painter.drawRect(bg_rect)
+            case QStyle.ControlElement.CE_PushButton if isinstance(widget, LightDisplay):
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                painter.setBrush(widget.palette().color(QPalette.ColorRole.Button))
+
+                rect = QRect(QPoint(1, 1), widget.size() - QSize(2, 2))
+
+                # TODO: special drawing for each segment to make things look better
+                # for now just makes them not have shading and makes DP a circle
+                match widget.segment_type:
+                    case SegmentType.DP:
+                        x = QPoint(widget.size().width() // 2, widget.size().width() // 2)
+                        painter.drawEllipse(x, widget.size().width() // 2, widget.size().width() // 2)
+                    case None:
+                        pen = QPen("#333")
+                        pen.setWidthF(.5)
+                        painter.setPen(pen)
+                        painter.drawRect(rect)
+                    case _:
+                        painter.drawRoundedRect(rect, 1, 1)
             case _:
                 super().drawControl(element, option, painter, widget)
 
@@ -271,6 +292,16 @@ class StickyButton(QPushButton):
         if self.isChecked() and not self.shift_pressed.is_set():
             self.setChecked(False)
 
+class SegmentType(Enum):
+    TOP = auto()
+    BOTTOM = auto()
+    TOP_LEFT = auto()
+    MIDDLE = auto()
+    BOTTOM_LEFT = auto()
+    TOP_RIGHT = auto()
+    BOTTOM_RIGHT = auto()
+    DP = auto()
+
 class LightDisplay(QPushButton):
     '''Misused QPushButton used to emulate a light with a fade effect.'''
     def __init__(self, *,
@@ -279,7 +310,8 @@ class LightDisplay(QPushButton):
                 off_color: QColor | str = c.Colors.Light.off,
                 off_time: int = c.light_off_time,
                 fade_delay_time: int = c.light_fade_delay_time,
-                fade_on: bool = True):
+                fade_on: bool = True,
+                segment_type: SegmentType | None = None):
         super().__init__()
 
         self.on_color = QColor(on_color)
@@ -311,6 +343,8 @@ class LightDisplay(QPushButton):
             self.on_animation.setStartValue(self.off_color)
             self.on_animation.setEndValue(self.on_color)
             self.on_animation.setDuration(off_time//2)
+
+        self.segment_type = segment_type
 
     def set_light(self, light_on: bool):
         if self.light_on != light_on: # Avoid redundant color setting
@@ -349,15 +383,15 @@ class SevenSegmentLight:
         super().__init__()
         self.layout = QGridLayout()
 
-        self.CA = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        self.CB = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        self.CC = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        self.CD = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
-        self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.CA = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.TOP)
+        self.CB = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.TOP_RIGHT)
+        self.CC = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.BOTTOM_RIGHT)
+        self.CD = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.BOTTOM)
+        self.CE = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.BOTTOM_LEFT)
+        self.CF = LightDisplay(size=c.Sizes.vert_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.TOP_LEFT)
+        self.CG = LightDisplay(size=c.Sizes.horz_light, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.MIDDLE)
         # At tiny size, rounded square is close enough to a dot
-        self.DP = LightDisplay(size=c.Sizes.dp, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False)
+        self.DP = LightDisplay(size=c.Sizes.dp, on_color=c.Colors.Segment.on, off_color=c.Colors.Segment.off, fade_delay_time=c.segment_fade_delay_time, off_time=c.segment_off_time, fade_on=False, segment_type=SegmentType.DP)
 
         self.layout.addWidget(self.CA, 0, 1) # horizontal bits
         self.layout.addWidget(self.CG, 2, 1)
