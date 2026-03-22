@@ -20,7 +20,7 @@ more advanced computer skills to set up.
 
 * **Mac**:
     * MacOS 14 Sonoma, 15 Sequoia, or 26 Tahoe
-        * Docker supports the last two versions of Mac (see [Docker's Mac requirements](https://docs.docker.com/desktop/setup/install/mac-install/#system-requirements)).
+        * Docker supports the last two versions of MacOS (see [Docker's Mac requirements](https://docs.docker.com/desktop/setup/install/mac-install/#system-requirements)).
     * All models that can run Sonoma have at least 8GB of RAM, which is sufficient.
 
 * **Windows**:
@@ -125,7 +125,7 @@ git clone https://github.com/TheHarmonicRealm/fpga-sim.git
 code ./fpga-sim
 ```
 
-* Download the appropriate docker image (ARM or x86) from Canvas.
+* Download the appropriate docker image (i.e. choose ARM or x86) from Canvas.
 Put it in the `fpga-sim` folder.
 
 * Open Docker Desktop. Wait for the start screen, which says something like
@@ -176,7 +176,8 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     ```
 
     This will take a little bit the first time, as uv must
-    set up a virtual environment, which involves downloading packages and possibly a new Python version. After the first time,
+    set up a virtual environment, which involves downloading packages
+    and possibly a new Python version. After the first time,
     the program is still run with this command and should not have any
     unusual startup delay.
 
