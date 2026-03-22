@@ -16,11 +16,12 @@ from sys import argv
 from typing import IO
 
 from client__paths import (
+    docker_tag_filepath,
     live_sim_folder,
     settings_filepath,
     testbench_folder,
     top_folder,
-    waveforms_folder
+    waveforms_folder,
 )
 from colorama import Fore, Style
 from shared__util import (
@@ -38,6 +39,12 @@ from shared__util import (
     serialize_dataclass,
 )
 
+
+def error_title():
+    return f"{Fore.RED}{Style.BRIGHT}Error:{Style.RESET_ALL}"
+
+def success_title():
+    return f"{Fore.GREEN}{Style.BRIGHT}Success:{Style.RESET_ALL}"
 
 def print_parser_error(parser: ArgumentParser, message: str):
     print(parser.format_usage())
@@ -66,7 +73,7 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
                 print(colorize(content, f"verilog/testbench/{folder_name}"))
         case AckMessage():
 
-            result_start = f"{Fore.GREEN}Successfully ran testbench simulation in {round((t2 - t1), 3)}s.{Style.RESET_ALL}"
+            result_start = f"{success_title()} Ran testbench simulation in {round((t2 - t1), 3)}s."
 
             file_message = big_receive(sock).decode()
             output_file = deserialize_dataclass(file_message, NamedFile)
@@ -74,14 +81,14 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
 
             match vcd_viewer:
                 case "vaporview":
-                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in VaporView.{Style.RESET_ALL}")
+                    print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in VaporView.")
                     subprocess.run(["code", output_path], shell=True) # shell necessary on Windows
                 case "gtkwave":
-                    print(result_start, f"{Fore.GREEN}Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} {Fore.GREEN}in GTKWave.{Style.RESET_ALL}")
+                    print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in GTKWave.")
                     # gtkwave launches in background. the startup text is stderr
                     subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 case None:
-                    print(result_start, f"{Fore.GREEN}Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
+                    print(result_start, f"Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
 
 def build_live_sim(input_files: list[NamedFile], folder_name: str):
     global sock
@@ -95,7 +102,7 @@ def build_live_sim(input_files: list[NamedFile], folder_name: str):
     match result:
         case ErrorMessage(content):
             if has_template_mismatch_error(content):
-                print(f"{Fore.RED}Your top module's inputs and outputs do not"
+                print(f"{error_title()} Your top module's inputs and outputs do not"
                       " seem to match the required form."
                       " See verilog/live_sim/ex_live/top.v for a"
                       f" template/example!{Style.RESET_ALL}")
@@ -103,7 +110,7 @@ def build_live_sim(input_files: list[NamedFile], folder_name: str):
                 print("Server returned error message:")
                 print(colorize(content, f"verilog/live_sim/{folder_name}"))
         case AckMessage():
-            print(f"{Fore.GREEN}Successfully built live simulation in {round((t2 - t1), 3)}s. Run with start_live_sim{Style.RESET_ALL}")
+            print(f"{success_title()} Built live simulation in {round((t2 - t1), 3)}s. Run with start_live_sim.")
 
 def start_live_sim():
     global app
@@ -184,12 +191,24 @@ def commands_completer(text: str, state: int):
     except IndexError:
         return None
     
-def get_latest_container_port():
+def get_server_image_tag():
+    proc = subprocess.run('docker image ls fpga-sim-server --format "{{.Tag}}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    match proc.returncode:
+        case 0:
+            tag = proc.stdout.decode().strip()
+            if tag == "":
+                return None
+            else:
+                return tag
+        case _:
+            raise RuntimeError(f"docker image ls command failed; make sure that Docker Desktop is installed and is open.")
+    
+def get_latest_container_port(tag: str):
     '''Gets the port of the latest-started Docker server container.
     Error if there are no containers open or if Docker seems to be unopened.'''
     # Command prints string with 0 or more lines of this if successful:
     #   '{container hex id}|0.0.0.0:{port}->9834/tcp, [::]:{port}->9834/tcp'
-    proc = subprocess.run('docker ps --format "{{.ID}}|{{.Ports}}" --filter "ancestor=fpga-sim-server:v1"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    proc = subprocess.run(f'docker ps --format "{r"{{.ID}}|{{.Ports}}"}" --filter "ancestor=fpga-sim-server:{tag}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     match proc.returncode:
         case 0:
             output = proc.stdout.decode()
@@ -211,7 +230,6 @@ def colorize(err: str, folder: str | None = None):
     err = re.sub(r"^.*Error: Exiting due to.*$", "", err, flags=re.MULTILINE)
     # cut off makefile build error line
     err = re.sub(r"^.*Makefile.*$", "", err, flags=re.MULTILINE)
-    err = textwrap.indent(err, "  ")
     # remove lines that tell you to use a command e.g. ': ... Suggest see manual; fix the duplicates, or use --top-module to select top.'
     err = re.sub(r"( {8} *:.*use --(\w*)+(-\w*)* to.*\n)*", "", err, flags=re.MULTILINE)
     # remove Verilator manual line, Verilator specifics not likely relevant
@@ -232,10 +250,11 @@ class ContinueException(Exception):
 
 def check_vcd_name(filename: str):
     if filename.split(".")[-1] != "vcd":
-        raise ContinueException(f"{filename} should end with .vcd")
+        raise ContinueException(f'output argument "{filename}" must end with .vcd')
     if filename != Path(filename).name:
         # will ultimately save directly to a defined output folder
-        raise ContinueException(f'{filename} is a path, not a pure name (e.g. "wave.vcd")')
+        raise ContinueException(f'output argument "{filename}" is a path, not a pure name (e.g. "wave.vcd")')
+
 def is_verilog(filename: str):
     extension = filename.split(".")[-1]
     return extension == "v"# or extension == "sv"
@@ -350,10 +369,23 @@ if __name__ == "__main__":
     except IndexError: # No argument passed
         docker_mode = True
         # print("Launching Docker container.")
+
+        required_tag = docker_tag_filepath.read_text().strip()
+
+        available_tag = get_server_image_tag()
+
+        if available_tag is None:
+            print(f"{error_title()} Docker is running, but the necessary Docker image (fpga-sim-server:{required_tag}) is not available. Make sure you downloaded and then loaded it!")
+            exit(1)
+        elif available_tag != required_tag:
+            print(f"{error_title()} Docker is running, but you have the wrong version ({available_tag}) of the fpga-sim-server image loaded; requires {required_tag}")
+            print(f"* If the required version has a higher number, you should redownload from Canvas")
+            print(f"* If the required version has a lower number, you should run git pull in this terminal to update the software")
+            exit(1)
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
         if sys.platform != 'win32':
-            process = subprocess.Popen("docker run --rm -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
+            process = subprocess.Popen(f"docker run --rm -p 0:9834 fpga-sim-server:{required_tag}", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
         else: # setpgrp unavailable on Windows. TODO: figure out equivalent code to ignore on Windows
             process = subprocess.Popen("docker run --rm -p 0:9834 fpga-sim-server:v1", text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         # wait until first print-out
@@ -362,9 +394,9 @@ if __name__ == "__main__":
 
         # print("Docker container started successfully. Launching client.")
         try:
-            socket_port = int(get_latest_container_port())
+            socket_port = int(get_latest_container_port(required_tag))
         except RuntimeError as e:
-            print(e)
+            print(error_title(), e)
             exit(1)
     except ValueError:
         print(f"Could not convert {argv[1]} to a port number. Exiting.")
@@ -423,36 +455,39 @@ if __name__ == "__main__":
                         match args:
                             case [folder, filename, *_]:
                                 waveforms_folder.mkdir(exist_ok=True)
-                                check_vcd_name(filename)
                                 output_path = waveforms_folder.joinpath(filename)
 
                                 overwrite = False
 
-                                if(len(args) == 3):
+                                if len(args) > 3:
+                                    raise ContinueException(f"{command} expects only two or three args")
+
+                                elif(len(args) == 3):
                                     if(is_overwrite(args[2])):
                                         overwrite = True
                                     else:
-                                        raise ContinueException(f'Last arg should be -overwrite or a clipping of that.')
-                                elif len(args) > 3:
-                                    raise ContinueException(f'Only 2 or 3 args expected.')
+                                        raise ContinueException(f"{command} last arg should be -overwrite or a shortening of that.")
+
+                                # may raise ContinueException
+                                check_vcd_name(filename)
                                 
                                 if (not overwrite) and output_path.is_file():
-                                    raise ContinueException(f'Cannot overwrite existing file {clickable_filepath(output_path, 1)}; pass -ov option if you wish to allow overwriting.')
+                                    raise ContinueException(f"cannot overwrite existing file {clickable_filepath(output_path, 1)}; pass -ov option if you wish to allow overwriting.")
 
                                 files = crawl_input_directory("tb.v", testbench_folder, folder)
                                 waveform_sim(files, output_path, folder)
                             case _:
-                                raise ContinueException("Args: <folder> <filename.vcd> [-ov]")
+                                raise ContinueException(f"{command} args are <folder> <filename.vcd> [-ov]")
                     case "build_live_sim":
                         match args:
                             case [folder]:
                                 files = crawl_input_directory("top.v", live_sim_folder, folder)
                                 build_live_sim(files, folder)
                             case _:
-                                raise ContinueException("Args: <folder>")
+                                raise ContinueException(f"{command} needs folder argument")
                     case "start_live_sim":
                         if len(args) != 0:
-                            raise ContinueException("Should be given no args")
+                            raise ContinueException(f"{command} takes no args")
                         start_live_sim()
                     case "exit" | "quit":
                         exit(0)
@@ -462,5 +497,5 @@ if __name__ == "__main__":
                         print(f"Unrecognized command: {command}"
                         "\n\nAvailable commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* help")
             except ContinueException as e:
-                print(f"{Fore.RED}{e}{Style.RESET_ALL}")
+                print(f"{error_title()} {e}")
                 continue # when help is called or a bad argument is passed

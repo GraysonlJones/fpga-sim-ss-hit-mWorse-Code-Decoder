@@ -254,6 +254,21 @@ browsing.
     * There is a third-party library for readline I want to eventually add
     so Windows has a better experience.
 
+## Updating
+
+At some point I intend to create GitHub releases/tagged versions in order to
+more "properly" version the project. For now, use `git pull` to update the
+project. This will not modify your waveform viewer settings or delete your
+code. However, if you have modified any of the project's source files, you
+should revert your changes before pulling.
+
+The Docker image will change sometimes. When a change is made
+to the code that requires an update to the Docker image, I will change the code
+to check the image's version. The code will fail on startup and tell you they
+do not match if you update the code without loading a required new version
+of the image. The process to load a new version of the image is the same as
+to load the first time. **The current Docker image version is v1.**
+
 ### Native mode
 
 While Ubuntu is the primary target for Verilator, it also compiles on
