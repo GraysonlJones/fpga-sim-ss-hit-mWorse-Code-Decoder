@@ -193,12 +193,12 @@ class AppStyle(QProxyStyle):
                 # Light mode: black outline; bright when off; somewhat darker pale blue when on
                 if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Light:
                     pen.setColor("#000")
-                    on_brush = QBrush("#cce")
+                    on_brush = QBrush("#aab")
                     off_brush = QBrush("#eee")
                 # Dark mode: white outline; dark when off; brighter pale blue when on
                 else:
                     pen.setColor("#fff")
-                    on_brush = QBrush("#99b")
+                    on_brush = QBrush("#112")
                     off_brush = QBrush("#333")
 
                 # unlike natural Qt buttons, our buttons are down on click.
@@ -234,6 +234,10 @@ class AppStyle(QProxyStyle):
 
                 rect = QRect(QPoint(1, 1), widget.size() - QSize(2, 2))
 
+                pen = QPen("#333")
+                pen.setWidthF(.5)
+                painter.setPen(pen)
+
                 # TODO: special drawing for each segment to make things look better
                 # for now just makes them not have shading and makes DP a circle
                 match widget.segment_type:
@@ -241,12 +245,9 @@ class AppStyle(QProxyStyle):
                         x = QPoint(widget.size().width() // 2, widget.size().width() // 2)
                         painter.drawEllipse(x, widget.size().width() // 2, widget.size().width() // 2)
                     case None:
-                        pen = QPen("#333")
-                        pen.setWidthF(.5)
-                        painter.setPen(pen)
                         painter.drawRect(rect)
                     case _:
-                        painter.drawRoundedRect(rect, 1, 1)
+                        painter.drawRoundedRect(rect, 2, 2)
             case _:
                 super().drawControl(element, option, painter, widget)
 
