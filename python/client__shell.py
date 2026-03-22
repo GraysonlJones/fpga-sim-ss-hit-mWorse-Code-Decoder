@@ -82,11 +82,11 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
             match vcd_viewer:
                 case "vaporview":
                     print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in VaporView.")
-                    subprocess.run(["code", output_path], shell=True) # shell necessary on Windows
+                    subprocess.run(f"code --reuse-window {output_path}", shell=True) # shell necessary on Windows
                 case "gtkwave":
                     print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in GTKWave.")
                     # gtkwave launches in background. the startup text is stderr
-                    subprocess.Popen(["gtkwave", output_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                    subprocess.Popen(f"gtkwave {output_path}", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 case None:
                     print(result_start, f"Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
 
