@@ -18,9 +18,9 @@ from gui__qt_util import (
     vbox_factory,
 )
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
-from PySide6.QtCore import QTimer, Signal, Slot
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QCheckBox, QLabel, QPushButton
 from shared__util import (
     big_receive,
     deserialize_dataclass,
@@ -44,6 +44,13 @@ class MainWindow(EmptyWindow):
         self.four_digits = BoardComponents.FourDigits()
         self.lights_line = BoardComponents.Lights()
         self.switches_line = BoardComponents.Switches()
+
+        self.frameless_checkbox = QCheckBox("Frameless window")
+        self.frameless_checkbox.toggled.connect(self.set_frameless)
+
+        self.on_top_checkbox = QCheckBox("Stay on top")
+        self.on_top_checkbox.setChecked(True)
+        self.on_top_checkbox.toggled.connect(self.set_on_top)
 
         self.main_layout.addWidget(self.plus_buttons)
         self.main_layout.addWidget(self.four_digits)
@@ -75,7 +82,7 @@ class MainWindow(EmptyWindow):
         self.last_few_fps: list[float] = []
         self.last_time = time.time()
         self.fps_counter = QLabel("__.__/60 FPS")
-        self.main_layout.addWidget(self.fps_counter)
+        self.main_layout.addLayout(hbox_factory(self.fps_counter, self.frameless_checkbox, self.on_top_checkbox))
 
         # Pause/play with P.
         #   Spacebar is more obvious, but it makes tabbed navigation not work
@@ -95,6 +102,14 @@ class MainWindow(EmptyWindow):
         t.start()
 
         QTimer.singleShot(0, lambda: self.setFixedSize(self.size()))
+
+    def set_frameless(self, enable: bool):
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint, enable)
+        self.show()
+
+    def set_on_top(self, enable: bool):
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, enable)
+        self.show()
 
     @Slot(WholeOutputState)
     def set_output_state(self, new_output_state: WholeOutputState):
@@ -174,7 +189,10 @@ def listen(window: MainWindow):
 def run_app(sock: socket.socket):
     app = make_app()
     window = MainWindow(sock)
-    # TODO: make it go to front. Tried window.raise_() but it doesn't work on Mac
+    # hacky way to make sure it starts on top
+    # TODO: do it without needing to this
+    window.set_on_top(True)
+    window.show()
     app.exec()
     return app
 

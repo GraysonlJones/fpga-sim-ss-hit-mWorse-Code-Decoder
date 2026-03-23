@@ -21,6 +21,7 @@ from PySide6.QtGui import (
     QColor,
     QGuiApplication,
     QKeyEvent,
+    QMouseEvent,
     QPainter,
     QPalette,
     QPen,
@@ -85,8 +86,21 @@ class EmptyWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(self.main_layout)
         self.setCentralWidget(central_widget)
-        self.show()
         self.shift_pressed = Event()
+
+        self.old_pos = self.pos()
+
+    # Make window draggable from anywhere (https://stackoverflow.com/a/37718648)
+    # Added to allow moving while frameless
+    @override
+    def mousePressEvent(self, event: QMouseEvent):
+        self.old_pos = event.globalPos()
+
+    @override
+    def mouseMoveEvent(self, event: QMouseEvent):
+        delta = QPoint (event.globalPos() - self.old_pos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.old_pos = event.globalPos()
 
     @override
     def keyPressEvent(self, event: QKeyEvent):
@@ -133,12 +147,12 @@ class AppStyle(QProxyStyle):
     @override
     def pixelMetric(self, metric, option=None, widget=None):
         match metric: # modify size of checkboxes
-            case QStyle.PixelMetric.PM_IndicatorWidth:
+            case QStyle.PixelMetric.PM_IndicatorWidth if isinstance(widget, SwitchCheckbox):
                 return c.Sizes.switch.width()
-            case QStyle.PixelMetric.PM_IndicatorHeight:
+            case QStyle.PixelMetric.PM_IndicatorHeight if isinstance(widget, SwitchCheckbox):
                 return c.Sizes.switch.height()
-
-        return super().pixelMetric(metric, option, widget)
+            case _:
+                return super().pixelMetric(metric, option, widget)
 
     @override
     def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOption, painter: QPainter, widget: QWidget | None = None):
