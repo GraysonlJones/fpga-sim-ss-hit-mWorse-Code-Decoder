@@ -6,9 +6,12 @@ to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to r
 
 <img width="300" alt="GIF demonstrating live simulation" src="https://github.com/user-attachments/assets/ee5b1cd5-988f-49c9-b416-af660f26feb7" />
 
-Primary development is on Mac, with significant testing on Windows.
-It is essentially identical across platforms, except that Windows lacks tab autocompletion; there are no known major platform-specific issues aside from this, and it will run at full speed on most compatible computers.
-I recommend running this on a Mac if you have a choice.
+Primary development is on Mac, with significant testing on Windows, and some
+testing on a fresh Ubuntu installation.
+It is essentially identical across platforms, except that Windows lacks tab
+autocompletion; there are no known major platform-specific issues aside from
+this, and it will run at full speed on most compatible computers.
+I recommend running this on Mac or Linux over Windows if you have a choice.
 
 ## System requirements
 
@@ -131,7 +134,7 @@ git clone https://github.com/TheHarmonicRealm/fpga-sim.git
 code ./fpga-sim
 ```
 
-* Download the appropriate docker image (i.e. choose ARM or x86) from Canvas.
+* Download the appropriate Docker image (i.e. choose ARM or x86) from Canvas.
 Put it in the `fpga-sim` folder.
 
 * Open Docker Desktop. Wait for the start screen, which says something like
