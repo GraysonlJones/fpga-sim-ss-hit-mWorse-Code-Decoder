@@ -82,7 +82,7 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
             match vcd_viewer:
                 case "vaporview":
                     print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in VaporView.")
-                    subprocess.run(f"code --reuse-window {output_path}", shell=True) # shell necessary on Windows
+                    subprocess.run(f"code --reuse-window {output_path}", shell=True)
                 case "gtkwave":
                     print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in GTKWave.")
                     # gtkwave launches in background. the startup text is stderr
@@ -424,16 +424,30 @@ if __name__ == "__main__":
         else:
             print(f"Connected to native server running at port {socket_port}")
 
-        if sys.platform != 'win32': # no readline on Windows, unfortunately!
+        try:
             import readline
-            readline.set_completer(commands_completer)
-            if sys.platform == 'darwin':
-                readline.parse_and_bind("bind ^I rl_complete")
-            else:
-                readline.parse_and_bind("tab: complete")
-            print("Suggestions and autocomplete are available with tab!")
-        else:
+        except ImportError:
             print("Run help or ? to see available commands!")
+        else: # else means no exception was caught. weird syntax, don't love it
+            usable_readline = False
+            backend = readline.backend
+            match backend:
+                # Astral uses editline for Linux builds, unlike normal ones.
+                #   However, if .14 is already installed separately, I think
+                #   uv could load that. Or Astral could change their minds!
+                case "editline":
+                    readline.parse_and_bind("bind ^I rl_complete")
+                case "readline":
+                    readline.parse_and_bind("tab: complete")
+                case _: # 
+                    usable_readline = True
+
+            if usable_readline:
+                readline.set_completer(commands_completer)
+                print("Suggestions and autocomplete are available with tab!")
+            else: # this will never happen according to Python docs
+                print(f"Readline backend is unrecognized '{backend}'; this means you do not get tab suggestions and autocomplete")
+                print("Run help or ? to see available commands!")
 
         app = None
 

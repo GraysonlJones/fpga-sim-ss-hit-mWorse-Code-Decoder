@@ -257,7 +257,6 @@ NOT `print <Goddard>`.
 autocomplete for commands, and, in the ending position, folder names for
 `waveform_sim`/`build_live_sim`. The terminal also has up/down history
 browsing.
-    * This does not work for me on Ubuntu. It may work on some Linux distros.
     * There is a third-party library for readline I want to eventually add
     so Windows has a better experience.
 
