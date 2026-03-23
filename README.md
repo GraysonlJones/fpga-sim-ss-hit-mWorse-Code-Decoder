@@ -6,8 +6,7 @@ to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to r
 
 <img width="300" alt="GIF demonstrating live simulation" src="https://github.com/user-attachments/assets/ee5b1cd5-988f-49c9-b416-af660f26feb7" />
 
-Primary development is on Mac, with significant testing on Windows, and some
-testing on a fresh Ubuntu installation.
+Primary development is on Mac, with some testing on Windows and Ubuntu.
 It is essentially identical across platforms, except that Windows lacks tab
 autocompletion; there are no known major platform-specific issues aside from
 this, and it will run at full speed on most compatible computers.
