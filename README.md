@@ -182,71 +182,80 @@ its value with your own, **without brackets.**
 For example, `print <name>` would be called as `print Goddard`,
 NOT `print <Goddard>`.
 
-* `build_live_sim <input_directory>`
-    * **Example call:** `build_live_sim ex_live`
-    * Directory name is appended to `verilog/live_sim` then searched.
-    All `.v` files there (subfolders ignored)
-    will be sent to the server to try to build for live simulation.
-    * The top module must be called `top`. All filenames must match their
-    module names (i.e. `top` ↔︎ `top.v`, etc).
-        * An example is in `ex_live`.
-            * The inputs and outputs of the top module must match this exactly!
+The commands listed in the below sections are to be run within the CLI after
+starting it up.
 
-* `start_live_sim`
-    * If a live simulation build has succeeded during this session,
-    this will start it. It will open up a window where you can interact with the
-    program in real-time as you would with a real FPGA development board.
-        * On some platforms, this window might not automatically go the front,
-        so if you don't see anything after a couple seconds check your window
-        switcher.
-        * To allow running programs closer to what you can run on a real board,
-        the plus-shaped buttons will stay pressed if you are holding shift when
-        you release the mouse.
-        * This window can be quit normally with the window's X button or with
-        <kbd>ctrl</kbd>+<kbd>W</kbd>
-        (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
-        It can be paused and unpaused with <kbd>P</kbd>.
-    * Do not include $display statements in your code. These will break the
-    simulator (planning to fix).
+### Waveform testbench simulation
+Place your testbench and modules in a new folder within the `verilog/testbench`
+folder. The top testbench module must be called `tb`; see
+`verilog/testbench/ex_tb` for a barebones example you can use as a template.
+The folder and module names must contain only underscores and letters.
+There are a couple things to note about what your modules must look like:
 
-* `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`
-    * Optional final argument determines whether the program will silently
-    overwrite the output file if it already exists. It can be abbreviated to
-    `-ov`.
-    * **Example call:** `build_live_sim ex_tb wave.vcd`
-    * **Example call (overwriting output):** `build_live_sim ex_tb wave.vcd -ov`
-    * Like `build_live_sim` but using `verilog/testbench`. The driving
-    testbench module must similiarly be named `tb` both with the module/file.
-    * The output will go to the provided file in `./waveforms/`. If
-    it already exists, it will not run the command, to prevent an accidental
-    overwrite.
-        * `ex_tb` is a provided example. Note the required lines
-        `$dumpfile("$DUMP_FILENAME");` and `$dumpvars(0, tb);` which must
-        be unmodified.
-        * $display statements will not be forwarded back to the user.
-        * End your testbench with $stop, like the example; $finish, or no
-        ending command, will both not work (planning to fix).
-    * If `-overwrite`, or any shortening of it (`-o` or longer),
-    is provided as the third argument, the output file will be overwritten if
-    it already exists. Otherwise, an error is printed if it already exists,
-    to avoid accidents.
-    * The first time you run this, it will have you choose which waveform
-    viewer, if any, to automatically open waveforms in. Delete your setting
-    by deleting the file `python/waveform_viewer_choice.txt`.
-* Mac/Linux-only: in the CLI, if you press tab you can get suggestions and
-autocomplete for commands, and, in the ending position, folder names for
-`waveform_sim`/`build_live_sim`. The terminal also has up/down history
-browsing.
+* As in the provided example the lines
+`$dumpfile("$DUMP_FILENAME");` and `$dumpvars(0, tb);` must be the first
+things in your `initial begin` block.
+* `$display` statements will not be forwarded back to the user.
+* End your testbench with `$stop`, like the example; using `$finish`, or not
+having an ending command, will crash the simulator.
+
+All filenames must match their module names (i.e. `lights` ↔︎ `lights.v`, etc).
+This rule goes for live simulation, too.
+
+Run the testbench with `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`.
+This may take a few minutes.
+
+If `-overwrite`, or any shortening of it (`-o` or longer), is provided as the
+third argument, the output file will be overwritten if it already exists.
+Otherwise, an error is printed if it already exists, to avoid accidents.
+The first time you run this, it will have you choose which waveform viewer, if
+any, to automatically open waveforms in. You can later change your setting
+by deleting the file `python/waveform_viewer_choice.txt` and running the
+program again.
+
+* **Example call:** `build_live_sim ex_tb wave.vcd`
+* **Example call (allowing overwrite):** `build_live_sim ex_tb wave.vcd -ov`
+
+### Live simulation
+Place your modules in a new folder within the `verilog/live_sim` folder.
+The top module must be called `top`, and must have inputs and outputs matching
+the example in `verilog/live_sim/ex_live`. The folder and module names must
+contain only underscores and letters.
+
+Do not include `$display` statements anywhere in your code. These will crash
+the simulator. (There are probably other commands like this that can break it.)
+
+Build your simulation with: `build_live_sim <input_directory_name>`,
+for example calling as `build_live_sim ex_live` to build the provided example.
+This may take a few minutes.
+
+Run your simulation with `start_live_sim`. Note that, if you build a simulation,
+then close the app, the simulation must be built again in order to run it;
+compiled modules are not preserved between runs of the program. This will open
+a visual window running your model. Notes about it:
+
+* On some platforms, this window might not automatically go the front,
+so if you don't see anything after a couple seconds check your window
+switcher.
+* The plus-shaped buttons will stay pressed if you are holding shift when
+you release the mouse.
+* This window can be quit normally with the window's X button or with
+<kbd>ctrl</kbd>+<kbd>W</kbd>
+(Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
+It can be paused and unpaused with <kbd>P</kbd> or the button at the bottom.
+
+* **Mac/Linux-only**: in the CLI, if you press tab you can get suggestions and
+autocomplete for commands, and, in the second argument position, folder names
+for `waveform_sim`/`build_live_sim`. There is also up/down history browsing
+like in a real shell.
     * There is a third-party library for readline I want to eventually add
     so Windows has a better experience.
 
-## Updating
+## Updating the software
 
-At some point I intend to create GitHub releases/tagged versions in order to
-more "properly" version the project. For now, use `git pull` to update the
-project. This will not modify your waveform viewer settings or delete your
-code. However, if you have modified any of the project's source files, you
-should revert your changes before pulling.
+Use `git pull` to update the project. This will not modify your waveform viewer
+settings or delete your code. However, if you have modified any of the project's
+source files, you should revert your changes before pulling.
 
 The Docker image will change sometimes. When a change is made
 to the code that requires an update to the Docker image, I will change the code

@@ -2,31 +2,25 @@
 
 module tb();
 
-reg clk;
-reg enabled;
+reg switch_1;
+reg switch_2;
 wire light;
 
-light_manager light_instance(clk, enabled, light);
-
-//1 Hz = 1000ms period
-localparam CLK_HALF_PERIOD = 5;
+light_manager light_instance(switch_1, switch_2, light);
 
 initial begin
     $dumpfile("$DUMP_FILENAME");
     $dumpvars(0, tb);
-    clk = 0;
-    enabled = 1;
+    switch_1 = 0;
+    switch_2 = 0;
     #100;
-    enabled = 0;
+    switch_1 = 1;
     #100;
-    enabled = 1;
+    switch_2 = 1;
+    #100;
+    switch_1 = 0;
     #100;
     $finish;
-end
-
-always begin
-  #CLK_HALF_PERIOD
-  clk = ~clk;
 end
 
 endmodule
