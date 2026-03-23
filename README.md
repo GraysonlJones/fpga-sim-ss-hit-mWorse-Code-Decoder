@@ -31,8 +31,8 @@ more advanced computer skills to set up.
 * **Linux**:
     * Minimum 4GB of RAM.
     * See these two links for information about Linux support:
-        * [Docker Engine's supported distributions](https://docs.docker.com/desktop/setup/install/linux/#supported-platforms)
-        * [Docker Desktop's system requirements](https://docs.docker.com/desktop/setup/install/linux/#general-system-requirements) (which I assume extend to Docker Engine).
+        * [Docker Engine's supported distributions](https://docs.docker.com/engine/install/)
+        * [Docker Desktop's system requirements](https://docs.docker.com/desktop/setup/install/linux/#general-system-requirements) (which are presumably less than or equal to those of Engine)
 
 > [!Important]  
 > Students: please read [the student-targeted instructions](STUDENT_INSTRUCTIONS.md) before continuing.
