@@ -59,12 +59,31 @@ software without thinking about it. The internet is a scary place!
 * **uv** to set up the Python environment. Check if it is already installed (unlikely)
 with `uv --version`.
     * Mac/Windows:
-        * First try `python3 -m pip uv` (common on Mac or Linux),
-        `py -m pip uv` (Windows), or `python -m pip uv`, which would install it via
+        * First try `python3 -m pip install uv` (common on Mac or Linux),
+        `py -m pip install uv` (Windows), or `python -m pip install uv`, which would install it via
         Python's built-in package manager.
             * If none of those work, use
             [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
     * Linux: use [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
+
+    * **Fixing a Windows problem**:
+        * Once installed, if running `uv --version` *in a new window of
+        PowerShell* gets an error like "unrecognized cmdlet", you will need to
+        modify your path
+        * If installed with pip:
+            * Run `py -m pip show uv` (substitute py with whatever pip command worked)
+            to see where it is installed, in the Location field.
+            * Copy this entire path
+            * Type environment variables in the start search menu and choose the
+            settings result with a similar name
+            * As illustrated in [this SuperUser answer](https://superuser.com/a/1861277),
+            select Path and click Edit. In the subsequent window, add a new
+            entry and paste in theat path
+        * This does not seem likely to happen with uv's
+        standalone installer. If it does, I will add
+        info about that later.
+
+
 
 * **Docker** to run the server-side code. Not needed if running in [native mode](#native-mode).
     * Windows and Mac: install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
