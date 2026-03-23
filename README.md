@@ -4,7 +4,7 @@ This is a program for students learning Verilog, using [Verilator](https://veril
 backend. It provides a friendly command-line interface to run Verilog code, both in testbenches and
 to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to run Verilator in an Ubuntu VM).
 
-<img width="500" alt="GIF demonstrating live simulation" src="https://github.com/user-attachments/assets/b557681d-6a7e-4934-9ae3-26ab077222f0" />
+<a href="#"><img width="500" alt="GIF demonstrating live simulation" src="https://github.com/user-attachments/assets/b557681d-6a7e-4934-9ae3-26ab077222f0" /></href>
 
 Primary development is on Mac, with some testing on Windows and Ubuntu.
 It is essentially identical across platforms, except that Windows lacks tab
