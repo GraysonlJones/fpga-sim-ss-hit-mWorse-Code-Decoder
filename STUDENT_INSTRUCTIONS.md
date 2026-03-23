@@ -6,6 +6,9 @@ These instructions go over the basics of using a terminal, a very useful and
 important skill (and not extremely complicated). Please read them
 thoroughly and **don't just ask an LLM how to do all of this stuff!**
 
+Do not miss [the section about CPU architectures](#identifying-processor-architecture),
+which is required information to select the correct software downloads.
+
 ## What is a terminal?
 
 ```sh
@@ -137,3 +140,26 @@ It can delete folders with `rm -r <name>` (`-r` meaning recursive).
 
 There is a ton more to the terminal but you should be good to go from here for
 the setup of the simulator if you follow those instructions closely.
+
+
+## Identifying processor architecture
+Every computer's CPU has a specific instruction set architecture (ISA).
+Some of the required software needs you to select the correct version.
+This software supports two architectures. I know the naming conventions are
+confusing but it's just something you need to get used to:
+   - **x86-64**, a.k.a. AMD64, x64, x86, x86_64, or Intel.
+   - **AArch64**, a.k.a. ARM64, ARM, or (Mac-only) Apple Silicon.
+
+How to identify, by OS:
+- Mac: any Mac from the M1 on, released late 2020, is ARM, while older Macs
+(back to 2006) are Intel.
+    - Run `arch` in Terminal to check
+- Windows: the vast majority of Windows PCs are x86. Some laptops are ARM,
+almost all of which have Snapdragon chips.
+    - Run the below command to check. Output will be `ARM 64-bit Processor`
+    if on ARM, or `64-bit` if on x86.
+```
+(Get-CimInstance Win32_operatingsystem).OSArchitecture
+```
+- Linux: If you are on Linux, you *probably* know your architecture, but check
+with `uname -m` in your terminal if unsure.

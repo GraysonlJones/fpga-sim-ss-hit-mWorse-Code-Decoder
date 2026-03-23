@@ -42,29 +42,6 @@ more advanced computer skills to set up.
 
 ## Required software
 
-> [!Note]  
-> **Identifying your processor's architecture**
->
-> Every computer's CPU has a specific instruction set architecture (ISA).
-Some of the required software needs you to select the correct version.
-These mostly support two architectures, one of which almost
-any personal computer is running on. I know the naming conventions are
-confusing but it's just something you need to get used to:
->   - **x86-64**, a.k.a. AMD64, x64, x86, x86_64, or Intel.
->   - **AArch64**, a.k.a. ARM64, ARM, or (Mac-only) Apple Silicon.
->
-> How to identify, by OS:
->   - Mac: any Mac from the M1 on, released late 2020, is ARM, while older Macs
->   (back to 2006) are Intel.
->       - Run `arch` in Terminal to check.
->   - Windows: the vast majority of Windows PCs are x86. Some laptops are ARM,
->   almost all of which have Snapdragon chips.
->        - Run the below command to check. Output will be `ARM 64-bit Processor`
->        if on ARM, or `64-bit` if on x86.
->           - `(Get-CimInstance Win32_operatingsystem).OSArchitecture`
->   - Linux: I am sure that, if you are on Linux, you know your architecture.
->       - If you don't: run `uname -m` in your terminal.
-
 > [!Caution]
 > The recommended programs are trustworthy†, but please do not download random
 software without thinking about it. The internet is a scary place!
