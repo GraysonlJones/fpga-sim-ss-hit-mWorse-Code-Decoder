@@ -133,25 +133,40 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     docker load -i fpga_sim_image_ARM.tar
     ```
 
-    If you do not have access to my Docker images, you can build it yourself,
-    though it will take a while (~10 minutes on my nice Mac and Windows laptops):
+    
+<details>
 
-    ```
-    docker buildx build -t fpga-sim-server:v1 .
-    ```
+<summary>Building if images are unavailable</summary>
 
-    * If you are an instructor who wants to use this, you can recreate the x86
-    and ARM images yourself with this command, which builds both at once
-    using emulation (I have only run this on ARM Mac):
+If you do not have access to my Docker images, you can build it yourself,
+though it will take a while (~10 minutes on my nice Mac and Windows laptops):
 
-        ```
-        docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
-        ```
+```
+docker buildx build -t fpga-sim-server:v1 .
+```
 
-        This took quite a long time when both ran at once from a clean slate.
-        It may go faster if you first build it for just your platform using the
-        regular build command so the cache will be reused, rather than running
-        both in parallel and having them starve each other for RAM.
+If you are an instructor who wants to use this, you can recreate the x86
+and ARM images yourself with this command, which builds both at once
+using emulation (I have only run this on ARM Mac):
+
+```
+docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
+```
+
+This took quite a long time when both ran at once from a clean slate.
+It will go faster if you first build it for just your platform using the
+regular build command so the cache will be reused, rather than running
+both in parallel and having them starve each other for RAM. To create tarfiles, subsequently run these two commands:
+
+```
+docker image save --output fpga_sim_image_x86.tar fpga-sim-server --platform linux/amd64
+```
+and
+```
+docker image save --output fpga_sim_image_ARM.tar fpga-sim-server --platform linux/arm64
+```
+
+</details>
 
 
 3. Run the program from the terminal, in `fpga-sim`:
