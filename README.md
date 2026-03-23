@@ -59,8 +59,8 @@ software without thinking about it. The internet is a scary place!
 * **uv** to set up the Python environment. Check if it is already installed (unlikely)
 with `uv --version`.
     * Mac/Windows:
-        * First try `python3 -m pip` (common on Mac or Linux),
-        `py -m pip` (Windows), or `python -m pip`, which would install it via
+        * First try `python3 -m pip uv` (common on Mac or Linux),
+        `py -m pip uv` (Windows), or `python -m pip uv`, which would install it via
         Python's built-in package manager.
             * If none of those work, use
             [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
