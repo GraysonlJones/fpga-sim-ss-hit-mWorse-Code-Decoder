@@ -429,7 +429,6 @@ if __name__ == "__main__":
         except ImportError:
             print("Run help or ? to see available commands!")
         else: # else means no exception was caught. weird syntax, don't love it
-            usable_readline = False
             backend = readline.backend
             match backend:
                 # Astral uses editline for Linux builds, unlike normal ones.
@@ -437,15 +436,17 @@ if __name__ == "__main__":
                 #   uv could load that. Or Astral could change their minds!
                 case "editline":
                     readline.parse_and_bind("bind ^I rl_complete")
+                    usable_readline = True
                 case "readline":
                     readline.parse_and_bind("tab: complete")
-                case _: # 
                     usable_readline = True
+                case _: # this will never happen according to Python docs but just in case
+                    usable_readline = False
 
             if usable_readline:
                 readline.set_completer(commands_completer)
                 print("Suggestions and autocomplete are available with tab!")
-            else: # this will never happen according to Python docs
+            else:
                 print(f"Readline backend is unrecognized '{backend}'; this means you do not get tab suggestions and autocomplete")
                 print("Run help or ? to see available commands!")
 
