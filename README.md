@@ -206,7 +206,7 @@ There are a couple things to note about what your modules must look like:
 `$dumpfile("$DUMP_FILENAME");` and `$dumpvars(0, tb);` must be the first
 things in your `initial begin` block.
 * `$display` statements will not be forwarded back to the user.
-* End your testbench with `$stop`, like the example; using `$finish`, or not
+* End your testbench with `$finish`, like the example; using `$stop`, or not
 having an ending command, will crash the simulator.
 
 All filenames must match their module names (i.e. `lights` ↔︎ `lights.v`, etc).
