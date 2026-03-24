@@ -103,11 +103,10 @@ to vary for some systems.
 * [Download Visual Studio Code](https://code.visualstudio.com/Download).
 Just like Docker Desktop, open it when the download finishes, and an
 installation process will start.
-    * After VSCode is installed, install these two extensions
-    (links will open directly in VSCode):
-        * [Verilog syntax highlighter](vscode:extension/mshr-h.VerilogHDL)
+    * After VSCode is installed, install these two extensions:
+        * [Verilog syntax highlighter](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL)
             * If you find a better one please let me know
-        * [VaporView](vscode:extension/lramseyer.vaporview)
+        * [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) VCD viewer
 
 4. Install uv:
 * Windows: use [uv's standalone Windows installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2) (paste the listed command into your terminal to run a script).
