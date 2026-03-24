@@ -1,6 +1,5 @@
 __pycache__/
 .DS_Store
-.vscode
 host_server/
 docker_cache/
 python/waveform_viewer_choice.txt
