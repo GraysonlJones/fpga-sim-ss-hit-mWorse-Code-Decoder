@@ -4,6 +4,7 @@ Launched as subprocess from client__shell.py
 
 import base64
 import dataclasses as dc
+import os
 import socket
 import sys
 import threading
@@ -48,7 +49,7 @@ class MainWindow(EmptyWindow):
         self.frameless_checkbox = QCheckBox("Frameless")
         self.frameless_checkbox.toggled.connect(self.set_frameless)
 
-        self.on_top_checkbox = QCheckBox("Stay on top")
+        self.on_top_checkbox = QCheckBox("Always on top")
         self.on_top_checkbox.setChecked(True)
         self.on_top_checkbox.toggled.connect(self.set_on_top)
 
@@ -82,7 +83,11 @@ class MainWindow(EmptyWindow):
         self.last_few_fps: list[float] = []
         self.last_time = time.time()
         self.fps_counter = QLabel("__.__/60 FPS")
-        self.main_layout.addLayout(hbox_factory(self.fps_counter, self.frameless_checkbox, self.on_top_checkbox))
+
+        if "WAYLAND_DISPLAY" not in os.environ:
+            self.main_layout.addLayout(hbox_factory(self.fps_counter, self.frameless_checkbox, self.on_top_checkbox))
+        else: # always-on-top not available on Wayland. Instead right-click title bar
+            self.main_layout.addLayout(hbox_factory(self.fps_counter, self.frameless_checkbox))
 
         # Pause/play with P.
         #   Spacebar is more obvious, but it makes tabbed navigation not work
