@@ -95,7 +95,7 @@ class EmptyWindow(QMainWindow):
     @override
     def mousePressEvent(self, event: QMouseEvent):
         # if not filtered, right-click is wonky on Ubuntu/Wayland
-        if event.button == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.windowHandle().startSystemMove()
 
     @override
