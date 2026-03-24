@@ -58,32 +58,8 @@ software without thinking about it. The internet is a scary place!
 
 * **uv** to set up the Python environment. Check if it is already installed (unlikely)
 with `uv --version`.
-    * Mac/Windows:
-        * First try `python3 -m pip install uv` (common on Mac or Linux),
-        `py -m pip install uv` (Windows), or `python -m pip install uv`, which would install it via
-        Python's built-in package manager.
-            * If none of those work, use
-            [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer).
-    * Linux: use [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
-
-    * **Fixing a Windows problem**:
-        * Once installed, if running `uv --version` *in a new window of
-        PowerShell* gets an error like "unrecognized cmdlet", you will need to
-        modify your path
-        * If installed with pip:
-            * Run `py -m pip show uv` (substitute py with whatever pip command worked)
-            to see where it is installed, in the Location field.
-            * Copy this entire path
-            * Type environment variables in the start search menu and choose the
-            settings result with a similar name
-            * As illustrated in [this SuperUser answer](https://superuser.com/a/1861277),
-            select Path and click Edit. In the subsequent window, add a new
-            entry and paste in theat path
-        * This does not seem likely to happen with uv's
-        standalone installer. If it does, I will add
-        info about that later.
-
-
+    * Windows: use the Windows version of [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2).
+    * Mac/Linux: use [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_1)
 
 * **Docker** to run the server-side code. Not needed if running in [native mode](#native-mode).
     * Windows and Mac: download then install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
@@ -238,6 +214,8 @@ This rule goes for live simulation, too.
 
 Run the testbench with `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`.
 This may take a few minutes.
+> [!Note]  
+> On Windows, when a waveform sim is run and the output opens automatically in VSCode, if it shows an error like "this file has an error and can't be opened", delete the file in the `python` folder called `waveform_viewer_choice.txt`. Close the program, run it again, and enter "None" when prompted to choose a waveform viewer.
 
 If `-overwrite`, or any shortening of it (`-o` or longer), is provided as the
 third argument, the output file will be overwritten if it already exists.
@@ -247,8 +225,12 @@ any, to automatically open waveforms in. You can later change your setting
 by deleting the file `python/waveform_viewer_choice.txt` and running the
 program again.
 
-* **Example call:** `build_live_sim ex_tb wave.vcd`
-* **Example call (allowing overwrite):** `build_live_sim ex_tb wave.vcd -ov`
+* **Example call:** `waveform_sim ex_tb wave.vcd`
+* **Example call (allowing overwrite):** `waveform_sim ex_tb wave.vcd -ov`
+
+> [!Note]  
+> Unlike live simulation, testbench/waveform simulation does not have separate build and run steps.
+
 
 ### Live simulation
 Place your modules in a new folder within the `verilog/live_sim` folder.
