@@ -90,17 +90,13 @@ class EmptyWindow(QMainWindow):
 
         self.old_pos = self.pos()
 
-    # Make window draggable from anywhere (https://stackoverflow.com/a/37718648)
-    # Added to allow moving while frameless
+    # Make window draggable from anywhere
+    # (Added to allow moving while frameless)
     @override
     def mousePressEvent(self, event: QMouseEvent):
-        self.old_pos = event.globalPos()
-
-    @override
-    def mouseMoveEvent(self, event: QMouseEvent):
-        delta = QPoint (event.globalPos() - self.old_pos)
-        self.move(self.x() + delta.x(), self.y() + delta.y())
-        self.old_pos = event.globalPos()
+        # if not filtered, right-click is wonky on Ubuntu/Wayland
+        if event.button == Qt.MouseButton.LeftButton:
+            self.windowHandle().startSystemMove()
 
     @override
     def keyPressEvent(self, event: QKeyEvent):
