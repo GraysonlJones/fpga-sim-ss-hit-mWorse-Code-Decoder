@@ -45,7 +45,7 @@ class MainWindow(EmptyWindow):
         self.lights_line = BoardComponents.Lights()
         self.switches_line = BoardComponents.Switches()
 
-        self.frameless_checkbox = QCheckBox("Frameless window")
+        self.frameless_checkbox = QCheckBox("Frameless")
         self.frameless_checkbox.toggled.connect(self.set_frameless)
 
         self.on_top_checkbox = QCheckBox("Stay on top")
@@ -101,7 +101,7 @@ class MainWindow(EmptyWindow):
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
 
-        QTimer.singleShot(0, lambda: self.setFixedSize(self.size()))
+        QTimer.singleShot(0, lambda: self.setFixedSize(self.minimumSizeHint()))        
 
     def set_frameless(self, enable: bool):
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint, enable)
@@ -154,7 +154,7 @@ class MainWindow(EmptyWindow):
                 self.last_few_fps.clear()
             self.last_time = new_time
         else:
-            self.fps_counter.setText(f"<code>__.__/60</code> FPS (paused)")
+            self.fps_counter.setText(f"<em><code>&nbsp;PAUSED&nbsp;</code></em> FPS")
             self.last_few_fps.clear() # While paused, times are meaningless
             self.last_time = time.time()
 
