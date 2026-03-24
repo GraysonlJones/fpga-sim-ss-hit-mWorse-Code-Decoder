@@ -21,6 +21,7 @@ from PySide6.QtGui import (
     QColor,
     QGuiApplication,
     QKeyEvent,
+    QMouseEvent,
     QPainter,
     QPalette,
     QPen,
@@ -85,8 +86,17 @@ class EmptyWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(self.main_layout)
         self.setCentralWidget(central_widget)
-        self.show()
         self.shift_pressed = Event()
+
+        self.old_pos = self.pos()
+
+    # Make window draggable from anywhere
+    # (Added to allow moving while frameless)
+    @override
+    def mousePressEvent(self, event: QMouseEvent):
+        # if not filtered, right-click is wonky on Ubuntu/Wayland
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.windowHandle().startSystemMove()
 
     @override
     def keyPressEvent(self, event: QKeyEvent):
@@ -133,12 +143,12 @@ class AppStyle(QProxyStyle):
     @override
     def pixelMetric(self, metric, option=None, widget=None):
         match metric: # modify size of checkboxes
-            case QStyle.PixelMetric.PM_IndicatorWidth:
+            case QStyle.PixelMetric.PM_IndicatorWidth if isinstance(widget, SwitchCheckbox):
                 return c.Sizes.switch.width()
-            case QStyle.PixelMetric.PM_IndicatorHeight:
+            case QStyle.PixelMetric.PM_IndicatorHeight if isinstance(widget, SwitchCheckbox):
                 return c.Sizes.switch.height()
-
-        return super().pixelMetric(metric, option, widget)
+            case _:
+                return super().pixelMetric(metric, option, widget)
 
     @override
     def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOption, painter: QPainter, widget: QWidget | None = None):

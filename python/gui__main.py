@@ -4,6 +4,7 @@ Launched as subprocess from client__shell.py
 
 import base64
 import dataclasses as dc
+import os
 import socket
 import sys
 import threading
@@ -18,9 +19,9 @@ from gui__qt_util import (
     vbox_factory,
 )
 from gui__states import InputState, OutputState, WholeInputState, WholeOutputState
-from PySide6.QtCore import QTimer, Signal, Slot
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QCheckBox, QLabel, QPushButton
 from shared__util import (
     big_receive,
     deserialize_dataclass,
@@ -44,6 +45,13 @@ class MainWindow(EmptyWindow):
         self.four_digits = BoardComponents.FourDigits()
         self.lights_line = BoardComponents.Lights()
         self.switches_line = BoardComponents.Switches()
+
+        self.frameless_checkbox = QCheckBox("Frameless")
+        self.frameless_checkbox.toggled.connect(self.set_frameless)
+
+        self.on_top_checkbox = QCheckBox("Always on top")
+        self.on_top_checkbox.setChecked(True)
+        self.on_top_checkbox.toggled.connect(self.set_on_top)
 
         self.main_layout.addWidget(self.plus_buttons)
         self.main_layout.addWidget(self.four_digits)
@@ -75,7 +83,11 @@ class MainWindow(EmptyWindow):
         self.last_few_fps: list[float] = []
         self.last_time = time.time()
         self.fps_counter = QLabel("__.__/60 FPS")
-        self.main_layout.addWidget(self.fps_counter)
+
+        if "WAYLAND_DISPLAY" not in os.environ:
+            self.main_layout.addLayout(hbox_factory(self.fps_counter, self.frameless_checkbox, self.on_top_checkbox))
+        else: # always-on-top not available on Wayland. Instead right-click title bar
+            self.main_layout.addLayout(hbox_factory(self.fps_counter, self.frameless_checkbox))
 
         # Pause/play with P.
         #   Spacebar is more obvious, but it makes tabbed navigation not work
@@ -94,7 +106,30 @@ class MainWindow(EmptyWindow):
         t = threading.Thread(target=lambda: listen(self), daemon=True)
         t.start()
 
-        QTimer.singleShot(0, lambda: self.setFixedSize(self.size()))
+        QTimer.singleShot(0, lambda: self.setFixedSize(self.minimumSizeHint()))        
+
+    def set_frameless(self, enable: bool):
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint, enable)
+
+        if sys.platform == 'win32':
+            if not enable:
+                # nudge a tiny bit to fix issue where size is wrong after
+                #   made frameful, then wait a tiny bit before going home
+                target_pos = self.pos() - QPoint(0, 30) 
+                QTimer.singleShot(0, lambda: self.move(self.pos() + QPoint(1, 0)))
+                QTimer.singleShot(50, lambda: self.move(target_pos))
+            else: # move down by size of top bar
+                QTimer.singleShot(0, lambda: self.move(self.pos() + QPoint(0, 30)))
+        elif sys.platform == 'darwin':
+            if enable:
+                self.move(self.pos() + QPoint(0, 28))
+            else:
+                QTimer.singleShot(0, lambda: self.move(self.pos() + QPoint(0, -28)))
+        self.show()
+
+    def set_on_top(self, enable: bool):
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, enable)
+        self.show()
 
     @Slot(WholeOutputState)
     def set_output_state(self, new_output_state: WholeOutputState):
@@ -139,7 +174,7 @@ class MainWindow(EmptyWindow):
                 self.last_few_fps.clear()
             self.last_time = new_time
         else:
-            self.fps_counter.setText(f"<code>__.__/60</code> FPS (paused)")
+            self.fps_counter.setText(f"<em><code>&nbsp;PAUSED&nbsp;</code></em> FPS")
             self.last_few_fps.clear() # While paused, times are meaningless
             self.last_time = time.time()
 
@@ -174,7 +209,10 @@ def listen(window: MainWindow):
 def run_app(sock: socket.socket):
     app = make_app()
     window = MainWindow(sock)
-    # TODO: make it go to front. Tried window.raise_() but it doesn't work on Mac
+    # hacky way to make sure it starts on top
+    # TODO: do it without needing to this
+    window.set_on_top(True)
+    window.show()
     app.exec()
     return app
 
