@@ -86,9 +86,9 @@ with `uv --version`.
 
 
 * **Docker** to run the server-side code. Not needed if running in [native mode](#native-mode).
-    * Windows and Mac: install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+    * Windows and Mac: download then install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
     Same architecture situation as git, using the name AMD64 here instead of X64.
-    This may take a while (took 5-10 minutes for me on Windows on
+    This may take a while (installation took 5-10 minutes for me on Windows on
     fast internet). Once installation is done, hit the "skip" button in the top right a few times
     to get past the prompts to log in, which is unnecessary.
         * **Windows note**:
@@ -277,6 +277,12 @@ you release the mouse.
 <kbd>ctrl</kbd>+<kbd>W</kbd>
 (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
 It can be paused and unpaused with <kbd>P</kbd> or the button at the bottom.
+* There are two checkboxes at the bottom next to the FPS counter:
+    * Frameless mode, which hides the window chrome
+    * Always-on-top mode. This will not be shown if you are on Wayland; the same
+    effect can be achieved by right-clicking the window's top bar and selecting
+    the relevant option
+  
 
 * **Mac/Linux-only**: in the CLI, if you press tab you can get suggestions and
 autocomplete for commands, and, in the second argument position, folder names
