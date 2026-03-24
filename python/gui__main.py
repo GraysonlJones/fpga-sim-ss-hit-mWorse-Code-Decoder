@@ -124,7 +124,7 @@ class MainWindow(EmptyWindow):
             if enable:
                 self.move(self.pos() + QPoint(0, 28))
             else:
-                QTimer.singleShot(0, lambda: self.move(self.pos() + QPoint(0, -28)))
+                self.move(self.pos() + QPoint(0, -28))
         self.show()
 
     def set_on_top(self, enable: bool):
