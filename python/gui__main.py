@@ -120,6 +120,11 @@ class MainWindow(EmptyWindow):
                 QTimer.singleShot(50, lambda: self.move(target_pos))
             else: # move down by size of top bar
                 QTimer.singleShot(0, lambda: self.move(self.pos() + QPoint(0, 30)))
+        elif sys.platform == 'darwin':
+            if enable:
+                self.move(self.pos() + QPoint(0, 28))
+            else:
+                QTimer.singleShot(0, lambda: self.move(self.pos() + QPoint(0, -28)))
         self.show()
 
     def set_on_top(self, enable: bool):
