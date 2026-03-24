@@ -45,62 +45,95 @@ more advanced computer skills to set up.
 > The recommended programs are trustworthy†, but please do not download random
 software without thinking about it. The internet is a scary place!
 
-* **git** to download this repository. Check if already installed with
-`git --version`.
-    * Windows: [git install instructions for Windows](https://git-scm.com/install/windows).
-    * Mac: use `xcode-select --install`. This gets you various tools including git. Note that you may need to run `sudo xcodebuild -license accept`
-    (which will prompt for your password) sometimes when your computer updates
-    in order to re-accept Apple's TOS and use git.
-    * Linux: [git install instructions for Linux](https://git-scm.com/install/linux)
-    (lists various package manager commands) 
+Instructions to install each of these are embedded in the list of steps.
+If any of these are already on your computer, there is no need to reinstall
+them.
 
-<!-- TODO: maybe cut out git and make a release on GitHub that people just download? -->
+* git to download the code
+    * Check if you have it: run `git --version` in your terminal
+* uv to manage Python
+    * Check if you have it: run `uv --version` in your terminal
+* Docker, which is how the software backend runs in an Ubuntu VM
+* Visual Studio Code or another IDE, including extensions for a Verilog syntax
+highlighter
+* A waveform viewer
+    * This program supports automaticaly opening with VSCode's VaporView
+    extension or with GTKWave, but any program that can open .vcd files can
+    be used manually
 
-* **uv** to set up the Python environment. Check if it is already installed (unlikely)
-with `uv --version`.
-    * Windows: use the Windows version of [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2).
-    * Mac/Linux: use [uv's standalone installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_1)
+## Installation
 
-* **Docker** to run the server-side code. Not needed if running in [native mode](#native-mode).
-    * Windows and Mac: download then install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-    Same architecture situation as git, using the name AMD64 here instead of X64.
-    This may take a while (installation took 5-10 minutes for me on Windows on
-    fast internet). Once installation is done, hit the "skip" button in the top right a few times
-    to get past the prompts to log in, which is unnecessary.
-        * **Windows note**:
-            * When installation is done, Docker will prompt you to restart.
-            * On first launch after installation, you will likely have to run
-            a command in the terminal to update Windows Subsystem for Linux
-            (WSL).
-    * Linux: install [Docker Engine](https://docs.docker.com/engine/install/);
-    Docker Desktop is unnecessary for this software, and the core "engine"
-    has support for more distributions. Setup with apt, as described on Docker's
-    site, was very easy for me on Ubuntu.
-        * You must follow the [post-install instructions](https://docs.docker.com/engine/install/linux-postinstall#manage-docker-as-a-non-root-user)
-        and make Docker usable as a non-root user for my software to be able to
-        access it. I had to restart in order for these to apply, though it seems
-        to vary for some systems.
-* **Visual Studio Code** (or another IDE)
-    * All platforms: [Visual Studio Code download page](https://code.visualstudio.com/Download)
-    * Also: install a syntax highlighter.
-    I use [this Verilog extension](https://marketplace.visualstudio.com/items?itemName=mshr-h.VerilogHDL), though there there may be better ones out there!
-* **VaporView** or **GTKWave** (or another waveform viewer supporting VCDs)
-    * Highly recommended, and integrated into VSCode: [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview).
-    * [GTKWave](https://gtkwave.github.io/gtkwave/index.html) is less pretty,
-    without IDE integration, though it has the benefits of launching its own
-    window. It may be annoying to get running on Windows.
+1. Open your terminal. [Check your CPU architecture](STUDENT_INSTRUCTIONS.md#identifying-processor-architecture),
+as described in the student instructions.
 
-## Installation and usage
+> [!Caution]
+> On Windows, make sure you are in Windows Terminal, and that the tab is
+labeled PowerShell, **not** Command Prompt.
 
-1. Download materials and set up Docker:
+2. Download and install Docker:
 
-* Clone this git repository:
+**Windows/Mac**:
+* Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+for your appropriate OS and CPU architecture.
+Open it when done to start the installation process, which takes 5-10 minutes.
+**You can continue until step 7 while waiting for this to finish.**
+After installation, open it if it does not automatically open itself.
+* On Windows, it will likely prompt you to update WSL, which is the Windows
+component Docker runs on; it will display a terminal command, which you must
+paste into your terminal and run. When that process says it is done, return to
+Docker and press the "try again" button.
+* You may need to restart after installing on Windows. It seems to vary by
+computer.
+* When prompted to make an account, you can skip. It is unnecessary for the
+program.
+
+**Linux**:
+* Install [Docker Engine](https://docs.docker.com/engine/install/);
+Docker Desktop is unnecessary for this software, and the core "engine"
+has support for more distributions than the "Desktop" GUI. Setup using apt, as
+described on Docker's site, was very easy for me on Ubuntu.
+* You must follow the [post-install instructions](https://docs.docker.com/engine/install/linux-postinstall#manage-docker-as-a-non-root-user)
+and make Docker usable as a non-root user for my software to be able to
+access it. I had to restart in order for these to apply, though it seems
+to vary for some systems.
+
+3. Install Visual Studio Code (not mandatory but highly recommended):
+
+**All platforms**:
+* [Download Visual Studio Code](https://code.visualstudio.com/Download).
+Just like Docker Desktop, open it when the download finishes, and an
+installation process will start.
+    * After VSCode is installed, install these two extensions
+    (links will open directly in VSCode):
+        * [Verilog syntax highlighter](vscode:extension/mshr-h.VerilogHDL)
+            * If you find a better one please let me know
+        * [VaporView](vscode:extension/lramseyer.vaporview)
+
+4. Install uv:
+* Windows: use [uv's standalone Windows installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2) (paste the listed command into your terminal to run a script).
+    * This can also try installing with `py -m pip install uv`, which may
+    work for some people if the normal installation fails.
+        * If you install this way, uv must be invoked with `py -m uv`
+        in place of `uv` (so `py -m uv run ...` etc)
+* Mac/Linux: use [uv's standalone Mac/Linux installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_1) (paste the listed command in the terminal to run a script).
+
+5. Close VSCode and your terminal app completely.
+
+* The point of this is to make sure any terminal you will open from now can
+find uv and VSCode.
+
+6. Download the code and the Docker image:
+
+* In your terminal, run cd `~/Documents` to go to the Documents folder.
+
+* "Clone" this git repository. This will put the software in a new folder within
+Documents:
 
 ```
 git clone https://github.com/TheHarmonicRealm/fpga-sim.git
 ```
 
-* Open the folder it makes in your IDE. For VSCode you can do:
+* Open the folder it makes in your IDE. For VSCode do:
 
 ```
 code ./fpga-sim
@@ -109,15 +142,11 @@ code ./fpga-sim
 * Download the appropriate Docker image (i.e. choose ARM or x86) from Canvas.
 Put it in the `fpga-sim` folder.
 
-* Open Docker Desktop. Wait for the start screen, which says something like
-"loading Docker Engine", to finish. You might be prompted to sign in and make
-an account the first time (TODO: check if true).
+> [!Note]
+> Make sure Docker is open when loading or building the image and when running
+the simulator program. They will visibly fail if it is not.
 
-> [!Note]  
-> Docker must be open when building the image and when running the simulator
-program. They will visibly fail if it is not.
-
-2. Load Docker image. From the `fpga-sim` directory
+7. Load the Docker image. From the `fpga-sim` directory
 (the IDE's integrated terminal is convenient and will start in the right place;
 open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
 
@@ -129,71 +158,81 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     docker load -i fpga_sim_image_ARM.tar
     ```
 
-    
-<details>
+    <!-- TODO: Move build instructions to a separate file.
+    Students should never need to do this and it's a lot of noise -->
 
-<summary>Building if images are unavailable</summary>
+    <details>
 
-If you do not have access to my Docker images, you can build it yourself,
-though it will take a while (~10 minutes on my nice Mac and Windows laptops):
+    <summary>Building if images are unavailable</summary>
 
-```
-docker buildx build -t fpga-sim-server:v1 .
-```
-
-If you are an instructor who wants to use this, you can recreate the x86
-and ARM images yourself with this command, which builds both at once
-using emulation (I have only run this on ARM Mac):
-
-```
-docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
-```
-
-This took quite a long time when both ran at once from a clean slate.
-It will go faster if you first build it for just your platform using the
-regular build command so the cache will be reused, rather than running
-both in parallel and having them starve each other for RAM. To create tarfiles, subsequently run these two commands:
-
-```
-docker image save --output fpga_sim_image_x86.tar fpga-sim-server --platform linux/amd64
-```
-and
-```
-docker image save --output fpga_sim_image_ARM.tar fpga-sim-server --platform linux/arm64
-```
-
-</details>
-
-
-3. Run the program from the terminal, in `fpga-sim`:
+    If you do not have access to my Docker images, you can build it yourself,
+    though it will take a while (~10 minutes on my nice Mac and Windows laptops):
 
     ```
-    uv run ./python/client__shell.py
+    docker buildx build -t fpga-sim-server:v1 .
     ```
 
-    This will take a little bit the first time, as uv must
-    set up a virtual environment, which involves downloading packages
-    and possibly a new Python version. After the first time,
-    the program is still run with this command and should not have any
-    unusual startup delay.
+    If you are an instructor who wants to use this, you can recreate the x86
+    and ARM images yourself with this command, which builds both at once
+    using emulation (I have only run this on ARM Mac):
 
-    **You cannot run the script with a different command**, as the Python
-    version must be correct and the packages must be available.
+    ```
+    docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
+    ```
 
-4. The client gives you a command-line interface (CLI). You can run three
-specific commands here, along with `exit` to quit the client and server,
-and `help` to list the commands.
+    This took quite a long time when both ran at once from a clean slate.
+    It will go faster if you first build it for just your platform using the
+    regular build command so the cache will be reused, rather than running
+    both in parallel and having them starve each other for RAM. To create tarfiles, subsequently run these two commands:
+
+    ```
+    docker image save --output fpga_sim_image_x86.tar fpga-sim-server --platform linux/amd64
+    ```
+    and
+    ```
+    docker image save --output fpga_sim_image_ARM.tar fpga-sim-server --platform linux/arm64
+    ```
+
+    </details>
+
+
+8. Run the program from the terminal, in `fpga-sim`:
+
+```
+uv run ./python/client__shell.py
+```
+
+* This will take a little bit the first time, as uv must
+set up a virtual environment, which involves downloading packages
+and possibly a new Python version. After the first time,
+the program is still run with this command and should not have any
+unusual startup delay.
+
+* **You cannot run the script with a different command**, as the Python
+version must be correct and the packages must be available.
+
+> [!Note]
+> You cannot run the script with a different command. uv ensures you are on the correct Python
+version and have the necessary packages available.
+
+## Program usage
+
+The client gives you a command-line interface (CLI), where it requests terminal
+input and you enter commands, resembling the behavior of a shell.
+You can run three specific commands here, along with `exit` to quit the client
+and server, and `help` to list the commands.
+
 Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps);
 on Mac/Linux, it is intentionally ignored to avoid an improper exit,
 while on Windows it closes the program with errors.
+
+The commands listed in the below sections are to be run within the CLI after
+starting it up.
 
 Note that where an argument is shown in angle brackets (<>), you are replace
 its value with your own, **without brackets.**
 For example, `print <name>` would be called as `print Goddard`,
 NOT `print <Goddard>`.
-
-The commands listed in the below sections are to be run within the CLI after
-starting it up.
 
 ### Waveform testbench simulation
 Place your testbench and modules in a new folder within the `verilog/testbench`
@@ -286,7 +325,7 @@ do not match if you update the code without loading a required new version
 of the image. The process to load a new version of the image is the same as
 to load the first time. **The current Docker image version is v1.**
 
-### Native mode
+#### Native mode
 
 While Ubuntu is the primary target for Verilator, it also compiles on
 Mac (both Clang and G++) and Windows, and some other systems;
