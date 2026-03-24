@@ -89,7 +89,8 @@ with `uv --version`.
     * Windows and Mac: install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
     Same architecture situation as git, using the name AMD64 here instead of X64.
     This may take a while (took 5-10 minutes for me on Windows on
-    fast internet).
+    fast internet). Once installation is done, hit the "skip" button in the top right a few times
+    to get past the prompts to log in, which is unnecessary.
         * **Windows note**:
             * When installation is done, Docker will prompt you to restart.
             * On first launch after installation, you will likely have to run
