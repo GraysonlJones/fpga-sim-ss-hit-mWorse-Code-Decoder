@@ -173,6 +173,10 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     <!-- TODO: Move build instructions to a separate file.
     Students should never need to do this and it's a lot of noise -->
 
+    * If takes forever (perhaps: over 2 minutes), press
+    <kbd>ctrl</kbd>+<kbd>W</kbd> to quit the process.
+    Restart Docker and try again.
+
     <details>
 
     <summary>Building if images are unavailable</summary>
@@ -208,7 +212,7 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     </details>
 
 
-9. In the same terminal (i.e. still in `fpga-sim`) run:
+10. In the same terminal (i.e. still in `fpga-sim`) run:
 
 ```
 uv run ./python/client__shell.py
@@ -265,6 +269,7 @@ This rule goes for live simulation, too.
 
 Run the testbench with `waveform_sim <input_directory> <output_filename.vcd> [-overwrite]`.
 This may take a few minutes.
+
 > [!Note]  
 > On Windows, when a waveform sim is run and the output opens automatically in VSCode, if it shows an error like "this file has an error and can't be opened", delete the file in the `python` folder called `waveform_viewer_choice.txt`. Close the program, run it again, and enter "None" when prompted to choose a waveform viewer.
 
