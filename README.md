@@ -337,7 +337,7 @@ do not match if you update the code without loading a required new version
 of the image. The process to load a new version of the image is the same as
 to load the first time. **The current Docker image version is v1.**
 
-#### Native mode
+## Native mode
 
 While Ubuntu is the primary target for Verilator, it also compiles on
 Mac (both Clang and G++) and Windows, and some other systems;
