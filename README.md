@@ -76,7 +76,7 @@ labeled PowerShell, **not** Command Prompt.
 * Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 for your appropriate OS and CPU architecture.
 Open it when done to start the installation process, which takes 5-10 minutes.
-**You can continue until step 7 while waiting for this to finish.**
+**You can continue until step 8 while waiting for this to finish.**
 After installation, open it if it does not automatically open itself.
 * On Windows, it will likely prompt you to update WSL, which is the Windows
 component Docker runs on; it will display a terminal command, which you must
@@ -109,19 +109,32 @@ installation process will start.
         * [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) VCD viewer
 
 4. Install uv:
-* Windows: use [uv's standalone Windows installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2) (paste the listed command into your terminal to run a script).
+* Windows: use [uv's standalone Windows installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2) (paste the **first listed command** into your terminal to run a script).
     * This can also try installing with `py -m pip install uv`, which may
     work for some people if the normal installation fails.
         * If you install this way, uv must be invoked with `py -m uv`
         in place of `uv` (so `py -m uv run ...` etc)
 * Mac/Linux: use [uv's standalone Mac/Linux installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_1) (paste the listed command in the terminal to run a script).
 
-5. Close VSCode and your terminal app completely.
+5. Install git:
+
+* Windows: download the [git installer for Windows](https://git-scm.com/install/windows),
+for your appropriate CPU architecture.
+Open it when done to start the installation process, which will consist of a lot
+of screens, all of which you should choose the defaults on.
+* Mac: use `xcode-select --install`. This gets you various tools including git.
+Note that you will need to run `sudo xcodebuild -license accept`
+(which will prompt for your password) sometimes when your computer updates
+in order to re-accept Apple's TOS and use git.
+* Linux: [git install instructions for Linux](https://git-scm.com/install/linux)
+(lists various package manager commands)
+
+6. Close VSCode and your terminal app completely.
 
 * The point of this is to make sure any terminal you will open from now can
-find uv and VSCode.
+find uv, git, and VSCode.
 
-6. Download the code and the Docker image:
+7. Download the code and the Docker image:
 
 * In your terminal, run cd `~/Documents` to go to the Documents folder.
 
@@ -145,7 +158,7 @@ Put it in the `fpga-sim` folder.
 > Make sure Docker is open when loading or building the image and when running
 the simulator program. They will visibly fail if it is not.
 
-7. Load the Docker image. From the `fpga-sim` directory
+8. Load the Docker image. From the `fpga-sim` directory
 (the IDE's integrated terminal is convenient and will start in the right place;
 open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
 
@@ -195,7 +208,7 @@ open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
     </details>
 
 
-8. Run the program from the terminal, in `fpga-sim`:
+9. In the same terminal (i.e. still in `fpga-sim`) run:
 
 ```
 uv run ./python/client__shell.py
