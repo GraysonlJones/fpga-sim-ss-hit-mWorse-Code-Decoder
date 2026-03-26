@@ -10,11 +10,12 @@ to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to r
   <img width="500" alt="GIF demonstrating live simulation" srcset="https://github.com/user-attachments/assets/9a959d62-3031-48f5-b0cf-86b5cd25d2df">
 </picture>
 
-Primary development is on Mac, with some testing on Windows and Ubuntu.
+Primary development is on Mac, with significant testing on Windows and Ubuntu.
 It is essentially identical across platforms, except that Windows lacks tab
 autocompletion; there are no known major platform-specific issues aside from
 this, and it will run at full speed on most compatible computers.
-I recommend running this on Mac or Linux over Windows if you have a choice.
+This is quite a handy feature, so I recommend running the program on Mac or
+Linux over Windows if you have a choice.
 
 ## System requirements
 
@@ -33,12 +34,13 @@ more advanced computer skills to set up.
     * Windows 11 version 22H2 (build 22631) or higher
         * Docker supports the currently-serviced versions of Windows 11 (see [Docker's Windows requirements](https://docs.docker.com/desktop/setup/install/windows-install/#system-requirements)).
     * 8GB of RAM.
+        * It appears to be possible to configure WSL2 to use less RAM, to run Docker with less than 8GB. I have not tested this.
 
 * **Linux**:
     * Minimum 4GB of RAM.
     * See these two links for information about Linux support:
         * [Docker Engine's supported distributions](https://docs.docker.com/engine/install/)
-        * [Docker Desktop's system requirements](https://docs.docker.com/desktop/setup/install/linux/#general-system-requirements) (which are presumably less than or equal to those of Engine)
+        * [Docker Desktop's system requirements](https://docs.docker.com/desktop/setup/install/linux/#general-system-requirements) (which are presumably greater than or equal to those of Engine)
 
 > [!Important]  
 > Students: please read [the student-targeted instructions](STUDENT_INSTRUCTIONS.md) before continuing.
