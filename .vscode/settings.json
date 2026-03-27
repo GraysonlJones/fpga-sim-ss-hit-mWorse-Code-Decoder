@@ -2,4 +2,11 @@
     "explorer.compactFolders": false,
     "chat.disableAIFeatures": true,
     "inlineChat.affordance": "off",
+
+    "[verilog]": {
+        "editor.colorDecorators": false
+    },
+    "[systemverilog]": {
+        "editor.colorDecorators": false
+    }
 }
