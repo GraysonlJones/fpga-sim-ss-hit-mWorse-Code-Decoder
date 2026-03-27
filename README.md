@@ -116,6 +116,12 @@ installation process will start.
             more sophisticated. Uninstall the old one if you have it already.
         * [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) VCD viewer
 
+**If you are not using VSCode**:
+Install [GTKWave](https://gtkwave.github.io/gtkwave/index.html). This is
+not recommended on Windows if you are not experienced with compiling software.
+If you use another VCD viewer and like it, please contact me and I may add it
+as an officially supported viewer to automatically open waveforms.
+
 4. Install uv:
 * Windows: use [uv's standalone Windows installer](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2) (paste the **first listed command** into your terminal to run a script).
     * This can also try installing with `py -m pip install uv`, which may
