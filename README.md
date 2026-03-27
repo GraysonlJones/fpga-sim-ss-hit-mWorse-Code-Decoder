@@ -82,7 +82,7 @@ labeled PowerShell, **not** Command Prompt.
 * Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 for your appropriate OS and CPU architecture.
 Open it when done to start the installation process, which takes 5-10 minutes.
-**You can continue until step 8 while waiting for this to finish.**
+**You can continue until step 7 while waiting for this to finish.**
 After installation, open it if it does not automatically open itself.
 * On Windows, it will likely prompt you to update WSL, which is the Windows
 component Docker runs on; it will display a terminal command, which you must
@@ -149,78 +149,38 @@ find uv, git, and VSCode.
 * "Clone" this git repository. This will put the software in a new folder within
 Documents:
 
-```
-git clone https://github.com/TheHarmonicRealm/fpga-sim.git
-```
+    ```
+    git clone https://github.com/TheHarmonicRealm/fpga-sim.git
+    ```
 
 * Open the folder it makes in your IDE. For VSCode do:
 
-```
-code ./fpga-sim
-```
-
-* Download the appropriate Docker image (i.e. choose ARM or x86) from Canvas.
-Put it in the `fpga-sim` folder.
+    ```
+    code ./fpga-sim
+    ```
 
 > [!Note]
-> Make sure Docker is open when loading or building the image and when running
+> Make sure Docker is open when loading the image and when running
 the simulator program. They will visibly fail if it is not.
 
-8. Load the Docker image. From the `fpga-sim` directory
+* Pull the appropriate docker image
+
+    * x86:
+
+        ```
+        docker pull --platform linux/amd64 ghcr.io/theharmonicrealm/fpga-sim-server:v1
+        ```
+
+    * ARM:
+
+        ```
+        docker pull --platform linux/arm64 ghcr.io/theharmonicrealm/fpga-sim-server:v1
+        ```
+
+8. From the `fpga-sim` directory
 (the IDE's integrated terminal is convenient and will start in the right place;
-open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode) run the appropriate one of:
-
-    ```
-    docker load -i fpga_sim_image_x86.tar
-    ```
-    or 
-    ```
-    docker load -i fpga_sim_image_ARM.tar
-    ```
-
-    <!-- TODO: Move build instructions to a separate file.
-    Students should never need to do this and it's a lot of noise -->
-
-    * If takes forever (perhaps: over 2 minutes), press
-    <kbd>ctrl</kbd>+<kbd>W</kbd> to quit the process.
-    Restart Docker and try again.
-
-    <details>
-
-    <summary>Building if images are unavailable</summary>
-
-    If you do not have access to my Docker images, you can build it yourself,
-    though it will take a while (~10 minutes on my nice Mac and Windows laptops):
-
-    ```
-    docker buildx build -t fpga-sim-server:v1 .
-    ```
-
-    If you are an instructor who wants to use this, you can recreate the x86
-    and ARM images yourself with this command, which builds both at once
-    using emulation (I have only run this on ARM Mac):
-
-    ```
-    docker buildx build --platform linux/amd64,linux/arm64 -t fpga-sim-server:v1 .
-    ```
-
-    This took quite a long time when both ran at once from a clean slate.
-    It will go faster if you first build it for just your platform using the
-    regular build command so the cache will be reused, rather than running
-    both in parallel and having them starve each other for RAM. To create tarfiles, subsequently run these two commands:
-
-    ```
-    docker image save --output fpga_sim_image_x86.tar fpga-sim-server --platform linux/amd64
-    ```
-    and
-    ```
-    docker image save --output fpga_sim_image_ARM.tar fpga-sim-server --platform linux/arm64
-    ```
-
-    </details>
-
-
-10. In the same terminal (i.e. still in `fpga-sim`) run:
+open it with <kbd>ctrl</kbd>+<kbd>`</kbd> in VSCode)
+run the program with:
 
 ```
 uv run ./python/client__shell.py
