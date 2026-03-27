@@ -175,14 +175,14 @@ the simulator program. They will visibly fail if it is not.
 
         ```
         docker pull --platform linux/amd64 ghcr.io/theharmonicrealm/fpga-sim-server:v1 \
-            && docker tag ghcr.io/theharmonicrealm/fpga-sim-server:v1 fpga-sim-server:v1
+          && docker tag ghcr.io/theharmonicrealm/fpga-sim-server:v1 fpga-sim-server:v1
         ```
 
     * ARM:
 
         ```
         docker pull --platform linux/arm64 ghcr.io/theharmonicrealm/fpga-sim-server:v1 \
-            && docker tag ghcr.io/theharmonicrealm/fpga-sim-server:v1 fpga-sim-server:v1
+          && docker tag ghcr.io/theharmonicrealm/fpga-sim-server:v1 fpga-sim-server:v1
         ```
 
 8. From the `fpga-sim` directory
