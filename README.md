@@ -14,8 +14,10 @@ Primary development is on Mac, with significant testing on Windows and Ubuntu.
 It is essentially identical across platforms, except that Windows lacks tab
 autocompletion; there are no known major platform-specific issues aside from
 this, and it will run at full speed on most compatible computers.
-This is quite a handy feature, so I recommend running the program on Mac or
-Linux over Windows if you have a choice.
+This is quite a handy feature, and Windows more often has fixable but tedious
+issues where installed tools are not automatically added to your system path, so
+I strongly recommend running the program on Mac or Linux over Windows if you have
+a choice.
 
 ## System requirements
 
@@ -66,6 +68,8 @@ highlighter
     * This program supports automaticaly opening with VSCode's VaporView
     extension or with GTKWave, but any program that can open .vcd files can
     be used manually
+* Linux users: if you happen to have not run a Qt app before, you may be
+required to install a package when you try to run live simulation.
 
 ## Installation
 
