@@ -33,6 +33,7 @@ from prompt_toolkit.completion import (
 )
 from prompt_toolkit.document import Document
 from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 from shared__util import (
     AckMessage,
@@ -454,18 +455,40 @@ if __name__ == "__main__":
 
         signal.signal(signal.SIGINT, signal.SIG_IGN) # ignore ctrl-C
 
-        # with history, but only show completions when hitting tab on empty word:
-        sesh = PromptSession("> ", enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), history=InMemoryHistory())
-        
-        # emulate readline:
-        # sesh = PromptSession("> ", complete_style=CompleteStyle.READLINE_LIKE, enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), history=InMemoryHistory())
 
-        # much cooler but no history. TODO: see if any way to rebind keys to
-        # allow history browsing?
-        # sesh = PromptSession("> ", completer=main_command_completer())
+        kb = KeyBindings()
 
-        # I think it may be possible to get history and just map up/down
-        # to not do selections. which would imo be be the best option
+        # move history to shift + up/down because lots of people probably will
+        # use normal up/down thinking it will go through the menu below
+        @kb.add("s-up")
+        def _(event: KeyPressEvent):
+            event.current_buffer.cancel_completion()
+            event.current_buffer.history_backward()
+        @kb.add("s-down")
+        def _(event: KeyPressEvent):
+            event.current_buffer.cancel_completion()
+            event.current_buffer.history_forward()
+
+        # browse menu with tab/shift-tab or up/down
+        @kb.add("up")
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_next()
+        @kb.add("down")
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_previous()
+        @kb.add("c-i") # tab
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_next()
+        @kb.add("s-tab") # shift-tab
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_previous()
+
+        # apply keybindings. gets full functionality with small compromise!
+        sesh = PromptSession("> ", completer=main_command_completer(), history=InMemoryHistory(), key_bindings=kb)
 
         while True:
             command_string = sesh.prompt()
