@@ -24,6 +24,7 @@ from client__paths import (
 )
 from colorama import Fore, Style
 from prompt_toolkit import PromptSession, prompt
+from prompt_toolkit.application import get_app
 from prompt_toolkit.completion import (
     CompleteEvent,
     Completer,
@@ -213,7 +214,9 @@ def main_command_completer():
         {
             "waveform_sim": WaveformSimCompleter(),
             "build_live_sim": BuildLiveSimCompleter(),
-            "start_live_sim": None
+            "start_live_sim": None,
+            "help": None,
+            "exit": None
         }
     )
 
@@ -331,6 +334,27 @@ def waveform_viewer_wizard():
     print("Choice has been saved to ./python/waveform_viewer_choice.txt")
 
     return viewer_choice
+
+def toolbar():
+    full_text = get_app().current_buffer.text
+    split_line = full_text.split()
+    if full_text.endswith(" ") and split_line != []:
+        split_line.append(" ") # add a fake word
+    match split_line:
+        case ["waveform_sim", *_]:
+            return "Arguments: <folder> <filename.vcd> [-overwrite]"
+        case ["build_live_sim", *_]:
+            return "Arguments: <folder>"
+        case ["start_live_sim", *_]:
+            return "No arguments"
+        case ["help"] | ["?"]:
+            return "Help!"
+        case ["exit"]:
+            return "Bye!"
+        case [_] | []:
+            return "Press tab/shift-tab or up/down to select suggestions, and space to accept the highlighted one"
+        case [_, _]:
+            return "It appears you are typing in an invalid command"
 
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
@@ -477,7 +501,7 @@ if __name__ == "__main__":
             event.current_buffer.complete_previous()
 
         # apply keybindings. gets full functionality with small compromise!
-        sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb)
+        sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb, bottom_toolbar=toolbar)
 
         while True:
             command_string = sesh.prompt()
