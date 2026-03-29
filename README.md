@@ -1,10 +1,13 @@
-# TODO: update info now that PPT is in use!
-
 # Graphical FPGA Simulator
 
-This is a program for students learning Verilog, using [Verilator](https://verilator.org) as its
-backend. It provides a friendly command-line interface to run Verilog code, both in testbenches and
-to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to run Verilator in an Ubuntu VM).
+This is a program for students learning Verilog, using
+[Verilator](https://verilator.org) as its backend. It provides a friendly
+command-line interface to run Verilog code, both in testbenches and
+to drive interactive simulations.
+It uses Python and Docker (to run Verilator in an Ubuntu VM).
+The live simulation window uses PySide6 (Qt), while the CLI uses
+Python Prompt Toolkit and Colorama.
+ <!-- TODO: eliminate Colorama in favor of PPT's color features? -->
 
 <picture>
   <source alt="GIF demonstrating live simulation" media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/b53f4bde-7469-4815-a827-48ac8b01094f">
@@ -217,15 +220,24 @@ version and have the necessary packages available.
 
 The client gives you a command-line interface (CLI), where it requests terminal
 input and you enter commands, resembling the behavior of a shell.
+
 You can run three specific commands here, along with `exit` to quit the client
 and server, and `help` to list the commands.
 
-Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps);
-on Mac/Linux, it is intentionally ignored to avoid an improper exit,
-while on Windows it closes the program with errors.
+Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps)
+while running the program; depending on your system it may be ignored, or
+it may crash the program.
+<!-- TODO: investigate on Windows/Linux -->
 
-The commands listed in the below sections are to be run within the CLI after
-starting it up.
+The client provides suggestions when you start typing or press tab. You can
+cycle through them with tab or the down arrow, and with shift-tab or the up
+arrow. Once your desired choice is highlighted, press space to move onto the
+next word and continue typing. To ignore choices, just type without pressing
+any cycling buttons; to restore to what you were typing before you started
+cycling, go "backwards" all the way to the "top" of the list.
+
+Suggestions are selected based on the index of the argument you are currently
+typing, to properly recommend folders or existing output files.
 
 Note that where an argument is shown in angle brackets (<>), you are replace
 its value with your own, **without brackets.**
