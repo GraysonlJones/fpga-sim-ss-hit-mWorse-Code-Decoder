@@ -560,8 +560,7 @@ if __name__ == "__main__":
                     case "help" | "?" | "-h":
                         print("Available commands: \n* build_live_sim <folder>\n* waveform_sim <folder> <filename.vcd> [-overwrite]\n* start_live_sim\n* exit")
                     case _:
-                        print(f"Unrecognized command: {command}"
-                        "\n\nAvailable commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* help")
+                        print("Unrecognized command")
             except ContinueException as e:
                 print(f"{error_title()} {e}")
                 continue # when help is called or a bad argument is passed
