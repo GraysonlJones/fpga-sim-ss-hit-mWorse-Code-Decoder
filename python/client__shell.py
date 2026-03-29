@@ -458,26 +458,15 @@ if __name__ == "__main__":
 
         kb = KeyBindings()
 
-        # move history to shift + up/down because lots of people probably will
-        # use normal up/down thinking it will go through the menu below
-        @kb.add("s-up")
-        def _(event: KeyPressEvent):
-            event.current_buffer.cancel_completion()
-            event.current_buffer.history_backward()
-        @kb.add("s-down")
-        def _(event: KeyPressEvent):
-            event.current_buffer.cancel_completion()
-            event.current_buffer.history_forward()
-
         # browse menu with tab/shift-tab or up/down
         @kb.add("up")
         def _(event: KeyPressEvent):
             event.current_buffer.start_completion()
-            event.current_buffer.complete_next()
+            event.current_buffer.complete_previous()
         @kb.add("down")
         def _(event: KeyPressEvent):
             event.current_buffer.start_completion()
-            event.current_buffer.complete_previous()
+            event.current_buffer.complete_next()
         @kb.add("c-i") # tab
         def _(event: KeyPressEvent):
             event.current_buffer.start_completion()
@@ -487,12 +476,8 @@ if __name__ == "__main__":
             event.current_buffer.start_completion()
             event.current_buffer.complete_previous()
 
-        # cancel with escape
-        @kb.add("escape")
-        def _(event: KeyPressEvent):
-            event.current_buffer.cancel_completion()
         # apply keybindings. gets full functionality with small compromise!
-        sesh = PromptSession("> ", completer=main_command_completer(), history=InMemoryHistory(), key_bindings=kb)
+        sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb)
 
         while True:
             command_string = sesh.prompt()
