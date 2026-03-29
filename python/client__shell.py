@@ -487,6 +487,10 @@ if __name__ == "__main__":
             event.current_buffer.start_completion()
             event.current_buffer.complete_previous()
 
+        # cancel with escape
+        @kb.add("escape")
+        def _(event: KeyPressEvent):
+            event.current_buffer.cancel_completion()
         # apply keybindings. gets full functionality with small compromise!
         sesh = PromptSession("> ", completer=main_command_completer(), history=InMemoryHistory(), key_bindings=kb)
 
