@@ -193,11 +193,6 @@ class WaveformSimCompleter(Completer):
             yield from FolderNameCompleter(testbench_folder).get_completions(document, complete_event)
         elif args_length == 1:
             yield from FileNameCompleter(waveforms_folder).get_completions(document, complete_event)
-        elif args_length == 2:
-            word = document.get_word_before_cursor()
-            if "-overwrite".startswith(word):
-                yield Completion("-overwrite", start_position=-len(word))
-                yield Completion("", start_position=-len(document.get_word_before_cursor()))
 
 class BuildLiveSimCompleter(Completer):
     def get_completions(self, document, complete_event): # pyright: ignore[reportMissingParameterType
