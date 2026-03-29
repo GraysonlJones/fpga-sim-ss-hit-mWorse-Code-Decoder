@@ -14,8 +14,6 @@ from pathlib import Path
 from sys import argv
 from typing import IO
 
-from prompt_toolkit.history import InMemoryHistory
-
 from client__paths import (
     docker_tag_filepath,
     live_sim_folder,
@@ -34,6 +32,7 @@ from prompt_toolkit.completion import (
     WordCompleter,
 )
 from prompt_toolkit.document import Document
+from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.shortcuts import CompleteStyle
 from shared__util import (
     AckMessage,
@@ -182,7 +181,7 @@ class FileNameCompleter(Completer):
 
 class WaveformSimCompleter(Completer):
     def get_completions(self, document, complete_event): # pyright: ignore[reportMissingParameterType
-        split_line = shlex.split(document.text)[1:]
+        split_line = document.text.split()[1:]
         args_length = len(split_line)
         if document.text.endswith(" "):
             args_length += 1
@@ -200,7 +199,7 @@ class WaveformSimCompleter(Completer):
 
 class BuildLiveSimCompleter(Completer):
     def get_completions(self, document, complete_event): # pyright: ignore[reportMissingParameterType
-        split_line = shlex.split(document.text)[1:]
+        split_line = document.text.split()[1:]
         args_length = len(split_line)
         if document.text.endswith(" "):
             args_length += 1
@@ -455,11 +454,14 @@ if __name__ == "__main__":
 
         signal.signal(signal.SIGINT, signal.SIG_IGN) # ignore ctrl-C
 
-
-        # allow history but don't show suggestions while typing
+        # with history, but only show completions when hitting tab on empty word:
         sesh = PromptSession("> ", enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), history=InMemoryHistory())
+        
+        # emulate readline:
+        # sesh = PromptSession("> ", complete_style=CompleteStyle.READLINE_LIKE, enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), history=InMemoryHistory())
 
-        # normal behavior
+        # much cooler but no history. TODO: see if any way to rebind keys to
+        # allow history browsing?
         # sesh = PromptSession("> ", completer=main_command_completer())
 
         # I think it may be possible to get history and just map up/down
@@ -468,7 +470,7 @@ if __name__ == "__main__":
         while True:
             command_string = sesh.prompt()
 
-            words = shlex.split(command_string)
+            words = command_string.split()
             if len(words) == 0:
                 continue
 
