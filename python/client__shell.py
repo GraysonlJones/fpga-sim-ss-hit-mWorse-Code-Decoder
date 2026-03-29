@@ -504,7 +504,10 @@ if __name__ == "__main__":
         sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb, bottom_toolbar=toolbar)
 
         while True:
-            command_string = sesh.prompt()
+            try:
+                command_string = sesh.prompt()
+            except KeyboardInterrupt:
+                continue
 
             words = command_string.split()
             if len(words) == 0:
