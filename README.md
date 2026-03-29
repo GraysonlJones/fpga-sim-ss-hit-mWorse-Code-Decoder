@@ -16,13 +16,11 @@ Python Prompt Toolkit and Colorama.
 </picture>
 
 Primary development is on Mac, with significant testing on Windows and Ubuntu.
-It is essentially identical across platforms, except that Windows lacks tab
-autocompletion; there are no known major platform-specific issues aside from
-this, and it will run at full speed on most compatible computers.
-This is quite a handy feature, and Windows more often has fixable but tedious
-issues where installed tools are not automatically added to your system path, so
-I strongly recommend running the program on Mac or Linux over Windows if you have
-a choice.
+It is essentially identical across platforms and the live simulations used for
+classes will run at full speed on almost any computer that can handle Docker.
+I recommend running the program on Mac or Linux over Windows if you
+have a choice; Windows is the most likely of the three to have tedious
+installation issues.
 
 ## System requirements
 
@@ -310,10 +308,10 @@ you release the mouse.
 (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
 It can be paused and unpaused with <kbd>P</kbd> or the button at the bottom.
 * There are two checkboxes at the bottom next to the FPS counter:
-    * Frameless mode, which hides the window chrome
-    * Always-on-top mode. This will not be shown if you are on Wayland; the same
-    effect can be achieved by right-clicking the window's top bar and selecting
-    the relevant option
+    * Frameless mode, which hides the window chrome.
+    * Always-on-top mode. This will not be shown if you are on Wayland, which
+    does not let programs enable this mode; instead right-click the window's top
+    bar and select the relevant option to get the same effect.
   
 
 * **Mac/Linux-only**: in the CLI, if you press tab you can get suggestions and
