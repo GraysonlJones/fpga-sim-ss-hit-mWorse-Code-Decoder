@@ -498,6 +498,10 @@ if __name__ == "__main__":
         # apply keybindings. gets full functionality with small compromise!
         sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb, bottom_toolbar=toolbar)
 
+        # call this to have experience like old one on Mac/Linux.
+        # TODO: support setting to switch to this
+        # sesh = PromptSession("> ", enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), complete_style=CompleteStyle.READLINE_LIKE, history=InMemoryHistory())
+
         while True:
             try:
                 command_string = sesh.prompt()
