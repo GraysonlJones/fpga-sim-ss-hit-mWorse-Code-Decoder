@@ -1,3 +1,5 @@
+# TODO: update info now that PPT is in use!
+
 # Graphical FPGA Simulator
 
 This is a program for students learning Verilog, using [Verilator](https://verilator.org) as its
