@@ -7,7 +7,6 @@ import signal
 import socket
 import subprocess
 import sys
-import textwrap
 import time
 from argparse import ArgumentParser
 from enum import Enum, auto
@@ -24,6 +23,19 @@ from client__paths import (
     waveforms_folder,
 )
 from colorama import Fore, Style
+from prompt_toolkit import PromptSession, prompt
+from prompt_toolkit.application import get_app
+from prompt_toolkit.completion import (
+    CompleteEvent,
+    Completer,
+    Completion,
+    NestedCompleter,
+    WordCompleter,
+)
+from prompt_toolkit.document import Document
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
+from prompt_toolkit.shortcuts import CompleteStyle
 from shared__util import (
     AckMessage,
     AnyCommand,
@@ -143,54 +155,67 @@ class SuggestMode(Enum):
 def is_overwrite(text: str):
     return len(text) >= 2 and "-overwrite".startswith(text) and len(text) <= len("-overwrite")
 
-def suggest_folders(path: Path):
-    return [thing for thing in os.listdir(path) if path.joinpath(thing).is_dir()]
+def get_folder_names(path: Path):
+    return [thing for thing in os.listdir(path) if not " " in thing and path.joinpath(thing).is_dir()]
 
-def filter_start(li: list[str], text: str):
-    return [x for x in li if x.startswith(text)]
+def get_file_names(path: Path):
+    return [thing for thing in os.listdir(path) if not " " in thing and not path.joinpath(thing).is_dir()]
 
-def commands_completer(text: str, state: int):
-    '''Matches signature expected'''
-    # if help and/or exit are included, output is spaced super wonky.
-    options: list[str] = ["build_live_sim", "waveform_sim", "start_live_sim"]
+class FolderNameCompleter(Completer):
+    def __init__(self, folder: Path) -> None:
+        self.folder = folder
+        super().__init__()
+    def get_completions(self, document: Document, complete_event: CompleteEvent): 
+        word = document.get_word_before_cursor(WORD=True) # splits only by whitespace (i.e. allows the . in .vcd)
+        for thing in get_folder_names(self.folder):
+            if thing.startswith(word) and self.folder.joinpath(thing).is_dir():
+                yield Completion(thing, start_position=-len(word))
 
-    full_line = readline.get_line_buffer().lstrip()
+class FileNameCompleter(Completer):
+    def __init__(self, folder: Path) -> None:
+        self.folder = folder
+        super().__init__()
+    def get_completions(self, document: Document, complete_event: CompleteEvent):
+        word = document.get_word_before_cursor(WORD=True)
+        for thing in get_file_names(self.folder):
+            if thing.startswith(word) and thing.endswith(".vcd") and not self.folder.joinpath(thing).is_dir():
+                yield Completion(thing, start_position=-len(word))
 
-    shlexd = shlex.split(full_line)
+class WaveformSimCompleter(Completer):
+    def get_completions(self, document, complete_event): # pyright: ignore[reportMissingParameterType
+        split_line = document.text.split()[1:]
+        args_length = len(split_line)
+        if document.text.endswith(" "):
+            args_length += 1
 
-    current_word = max(len(shlexd) - 1, 0) # start at 0. both 1 and 0 tokens = word 0
+        # this logic feels a bit off but idk it's magic it works
+        if args_length == 0:
+            yield from FolderNameCompleter(testbench_folder).get_completions(document, complete_event)
+        elif args_length == 1:
+            yield from FileNameCompleter(waveforms_folder).get_completions(document, complete_event)
 
-    # must check emptiness first or the function will except, with readline silencing the error
-    if full_line != "" and full_line[-1] == " " and len(shlexd) > 0: # treat trailing space a new word being started
-        current_word += 1
+class BuildLiveSimCompleter(Completer):
+    def get_completions(self, document, complete_event): # pyright: ignore[reportMissingParameterType
+        split_line = document.text.split()[1:]
+        args_length = len(split_line)
+        if document.text.endswith(" "):
+            args_length += 1
 
-    matches = [] # default value
+        if args_length == 0:
+            yield from FolderNameCompleter(live_sim_folder).get_completions(document, complete_event)
+           
+def main_command_completer():
+    return NestedCompleter.from_nested_dict(
+        {
+            "waveform_sim": WaveformSimCompleter(),
+            "build_live_sim": BuildLiveSimCompleter(),
+            "start_live_sim": None,
+            "help": None,
+            "exit": None
+        }
+    )
 
-    if current_word == 0: # empty line/one word maybe partially typed
-        matches = filter_start(options, full_line)
-    else:
-        suggest_mode = SuggestMode.NONE
-        match shlexd:
-            case ["build_live_sim", *_] if current_word == 1:
-                suggest_mode = SuggestMode.LIVE
-            case ["waveform_sim", *_] if current_word == 1:
-                suggest_mode = SuggestMode.TB
-                # adding -overwrite suggestion at end wasn't working, TODO: fix
 
-        try:
-            last_term = shlexd[current_word]
-        except IndexError:
-            last_term = ""
-
-        if suggest_mode == suggest_mode.LIVE:
-            matches = filter_start(suggest_folders(live_sim_folder), last_term)
-        elif suggest_mode == suggest_mode.TB:
-            matches = filter_start(suggest_folders(testbench_folder), last_term)
-    try:
-        return matches[state]
-    except IndexError:
-        return None
-    
 def get_server_image_tag():
     proc = subprocess.run('docker image ls fpga-sim-server --format "{{.Tag}}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     match proc.returncode:
@@ -288,7 +313,7 @@ def clickable_filepath(filepath: Path, depth: int):
 
 def waveform_viewer_wizard():
     print("Type vaporview or gtkwave to choose one of those. Reply with anything else to choose nothing")
-    viewer_choice = input("-> ").lower()
+    viewer_choice = prompt("-> ", completer=WordCompleter(["vaporview", "gtkwave", "none"], sentence=True)).lower()
 
     match viewer_choice:
         case "vaporview":
@@ -304,6 +329,27 @@ def waveform_viewer_wizard():
     print("Choice has been saved to ./python/waveform_viewer_choice.txt")
 
     return viewer_choice
+
+def toolbar():
+    full_text = get_app().current_buffer.text
+    split_line = full_text.split()
+    if full_text.endswith(" ") and split_line != []:
+        split_line.append(" ") # add a fake word
+    match split_line:
+        case ["waveform_sim", *_]:
+            return "Arguments: <folder> <filename.vcd> [-overwrite]"
+        case ["build_live_sim", *_]:
+            return "Arguments: <folder>"
+        case ["start_live_sim", *_]:
+            return "No arguments"
+        case ["help"] | ["?"]:
+            return "Help!"
+        case ["exit"]:
+            return "Bye!"
+        case [_] | []:
+            return "Press tab/shift-tab or up/down to select suggestions, and space to accept the highlighted one"
+        case [_, _]:
+            return "It appears you are typing in an invalid command"
 
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
@@ -424,40 +470,47 @@ if __name__ == "__main__":
         else:
             print(f"Connected to native server running at port {socket_port}")
 
-        try:
-            import readline
-        except ImportError:
-            print("Run help or ? to see available commands!")
-        else: # else means no exception was caught. weird syntax, don't love it
-            backend = readline.backend
-            match backend:
-                # Astral uses editline for Linux builds, unlike normal ones.
-                #   However, if .14 is already installed separately, I think
-                #   uv could load that. Or Astral could change their minds!
-                case "editline":
-                    readline.parse_and_bind("bind ^I rl_complete")
-                    usable_readline = True
-                case "readline":
-                    readline.parse_and_bind("tab: complete")
-                    usable_readline = True
-                case _: # this will never happen according to Python docs but just in case
-                    usable_readline = False
-
-            if usable_readline:
-                readline.set_completer(commands_completer)
-                print("Suggestions and autocomplete are available with tab!")
-            else:
-                print(f"Readline backend is unrecognized '{backend}'; this means you do not get tab suggestions and autocomplete")
-                print("Run help or ? to see available commands!")
-
         app = None
 
         signal.signal(signal.SIGINT, signal.SIG_IGN) # ignore ctrl-C
 
-        while True:
-            command_string = input("> ").strip()
 
-            words = shlex.split(command_string)
+        kb = KeyBindings()
+
+        # browse menu with tab/shift-tab or up/down
+        @kb.add("up")
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_previous()
+        @kb.add("down")
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_next()
+        @kb.add("c-i") # tab
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_next()
+        @kb.add("s-tab") # shift-tab
+        def _(event: KeyPressEvent):
+            event.current_buffer.start_completion()
+            event.current_buffer.complete_previous()
+
+        # apply keybindings. gets full functionality with small compromise!
+        # sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb, bottom_toolbar=toolbar)
+
+        # call this to have experience like old one on Mac/Linux.
+        #   going with this to have the least disruption
+        #   TODO: support the fancy one with a setting. I think it's
+        #   *good* but could be distracting
+        sesh = PromptSession("> ", enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), complete_style=CompleteStyle.READLINE_LIKE, history=InMemoryHistory())
+
+        while True:
+            try:
+                command_string = sesh.prompt()
+            except KeyboardInterrupt:
+                continue
+
+            words = command_string.split()
             if len(words) == 0:
                 continue
 
@@ -509,8 +562,7 @@ if __name__ == "__main__":
                     case "help" | "?" | "-h":
                         print("Available commands: \n* build_live_sim <folder>\n* waveform_sim <folder> <filename.vcd> [-overwrite]\n* start_live_sim\n* exit")
                     case _:
-                        print(f"Unrecognized command: {command}"
-                        "\n\nAvailable commands: \n* build_live_sim\n* waveform_sim\n* start_live_sim\n* help")
+                        print("Unrecognized command")
             except ContinueException as e:
                 print(f"{error_title()} {e}")
                 continue # when help is called or a bad argument is passed

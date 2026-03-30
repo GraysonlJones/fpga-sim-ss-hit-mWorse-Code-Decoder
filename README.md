@@ -1,8 +1,13 @@
 # Graphical FPGA Simulator
 
-This is a program for students learning Verilog, using [Verilator](https://verilator.org) as its
-backend. It provides a friendly command-line interface to run Verilog code, both in testbenches and
-to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to run Verilator in an Ubuntu VM).
+This is a program for students learning Verilog, using
+[Verilator](https://verilator.org) as its backend. It provides a friendly
+command-line interface to run Verilog code, both in testbenches and
+to drive interactive simulations.
+It uses Python and Docker (to run Verilator in an Ubuntu VM).
+The live simulation window uses PySide6 (Qt), while the CLI uses
+Python Prompt Toolkit and Colorama.
+ <!-- TODO: eliminate Colorama in favor of PPT's color features? -->
 
 <picture>
   <source alt="GIF demonstrating live simulation" media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/b53f4bde-7469-4815-a827-48ac8b01094f">
@@ -11,13 +16,11 @@ to drive interactive simulations. It uses Python, PySide6 (Qt), and Docker (to r
 </picture>
 
 Primary development is on Mac, with significant testing on Windows and Ubuntu.
-It is essentially identical across platforms, except that Windows lacks tab
-autocompletion; there are no known major platform-specific issues aside from
-this, and it will run at full speed on most compatible computers.
-This is quite a handy feature, and Windows more often has fixable but tedious
-issues where installed tools are not automatically added to your system path, so
-I strongly recommend running the program on Mac or Linux over Windows if you have
-a choice.
+It is essentially identical across platforms and the live simulations used for
+classes will run at full speed on almost any computer that can handle Docker.
+I recommend running the program on Mac or Linux over Windows if you
+have a choice; Windows is the most likely of the three to have tedious
+installation issues.
 
 ## System requirements
 
@@ -215,15 +218,18 @@ version and have the necessary packages available.
 
 The client gives you a command-line interface (CLI), where it requests terminal
 input and you enter commands, resembling the behavior of a shell.
+
 You can run three specific commands here, along with `exit` to quit the client
 and server, and `help` to list the commands.
 
-Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps);
-on Mac/Linux, it is intentionally ignored to avoid an improper exit,
-while on Windows it closes the program with errors.
+The client provides suggestions when you press tab, and you can cycle through
+the current session's history using the up and down arrows, similarly to the
+external shell. Python Prompt Toolkit is used to provide an experience very
+similar to the Python standard library's readline functionality prevoiusly
+exclusively available on Mac.
 
-The commands listed in the below sections are to be run within the CLI after
-starting it up.
+Suggestions are selected based on the index of the argument you are currently
+typing, to properly recommend folders or existing output files.
 
 Note that where an argument is shown in angle brackets (<>), you are replace
 its value with your own, **without brackets.**
@@ -296,10 +302,10 @@ you release the mouse.
 (Mac: <kbd>⌘</kbd>+<kbd>Q</kbd> or <kbd>⌘</kbd>+<kbd>W</kbd>).
 It can be paused and unpaused with <kbd>P</kbd> or the button at the bottom.
 * There are two checkboxes at the bottom next to the FPS counter:
-    * Frameless mode, which hides the window chrome
-    * Always-on-top mode. This will not be shown if you are on Wayland; the same
-    effect can be achieved by right-clicking the window's top bar and selecting
-    the relevant option
+    * Frameless mode, which hides the window chrome.
+    * Always-on-top mode. This will not be shown if you are on Wayland, which
+    does not let programs enable this mode; instead right-click the window's top
+    bar and select the relevant option to get the same effect.
   
 
 * **Mac/Linux-only**: in the CLI, if you press tab you can get suggestions and
