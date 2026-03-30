@@ -496,11 +496,13 @@ if __name__ == "__main__":
             event.current_buffer.complete_previous()
 
         # apply keybindings. gets full functionality with small compromise!
-        sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb, bottom_toolbar=toolbar)
+        # sesh = PromptSession("> ", completer=main_command_completer(), key_bindings=kb, bottom_toolbar=toolbar)
 
         # call this to have experience like old one on Mac/Linux.
-        # TODO: support setting to switch to this
-        # sesh = PromptSession("> ", enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), complete_style=CompleteStyle.READLINE_LIKE, history=InMemoryHistory())
+        #   going with this to have the least disruption
+        #   TODO: support the fancy one with a setting. I think it's
+        #   *good* but could be distracting
+        sesh = PromptSession("> ", enable_history_search=True, complete_while_typing=False, completer=main_command_completer(), complete_style=CompleteStyle.READLINE_LIKE, history=InMemoryHistory())
 
         while True:
             try:
