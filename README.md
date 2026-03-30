@@ -227,12 +227,11 @@ while running the program; depending on your system it may be ignored, or
 it may crash the program.
 <!-- TODO: investigate on Windows/Linux -->
 
-The client provides suggestions when you start typing or press tab. You can
-cycle through them with tab or the down arrow, and with shift-tab or the up
-arrow. Once your desired choice is highlighted, press space to move onto the
-next word and continue typing. To ignore choices, just type without pressing
-any cycling buttons; to restore to what you were typing before you started
-cycling, go "backwards" all the way to the "top" of the list.
+The client provides suggestions when you press tab, and you can cycle through
+the current session's history using the up and down arrows, similarly to the
+external shell. Python Prompt Toolkit is used to provide an experience very
+similar to the Python standard library's readline functionality prevoiusly
+exclusively available on Mac.
 
 Suggestions are selected based on the index of the argument you are currently
 typing, to properly recommend folders or existing output files.
