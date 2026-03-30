@@ -166,7 +166,7 @@ class FolderNameCompleter(Completer):
         self.folder = folder
         super().__init__()
     def get_completions(self, document: Document, complete_event: CompleteEvent): 
-        word = document.get_word_before_cursor()
+        word = document.get_word_before_cursor(WORD=True) # splits only by whitespace (i.e. allows the . in .vcd)
         for thing in get_folder_names(self.folder):
             if thing.startswith(word) and self.folder.joinpath(thing).is_dir():
                 yield Completion(thing, start_position=-len(word))
@@ -176,7 +176,7 @@ class FileNameCompleter(Completer):
         self.folder = folder
         super().__init__()
     def get_completions(self, document: Document, complete_event: CompleteEvent):
-        word = document.get_word_before_cursor()
+        word = document.get_word_before_cursor(WORD=True)
         for thing in get_file_names(self.folder):
             if thing.startswith(word) and thing.endswith(".vcd") and not self.folder.joinpath(thing).is_dir():
                 yield Completion(thing, start_position=-len(word))
