@@ -222,11 +222,6 @@ input and you enter commands, resembling the behavior of a shell.
 You can run three specific commands here, along with `exit` to quit the client
 and server, and `help` to list the commands.
 
-Do not press <kbd>ctrl</kbd>+<kbd>C</kbd> (normally quit for terminal apps)
-while running the program; depending on your system it may be ignored, or
-it may crash the program.
-<!-- TODO: investigate on Windows/Linux -->
-
 The client provides suggestions when you press tab, and you can cycle through
 the current session's history using the up and down arrows, similarly to the
 external shell. Python Prompt Toolkit is used to provide an experience very
