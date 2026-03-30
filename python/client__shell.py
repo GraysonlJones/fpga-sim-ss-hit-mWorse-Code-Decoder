@@ -243,7 +243,7 @@ def get_latest_container_port(tag: str):
                 end = port_string.find("->9834")
                 return port_string[start:end]
             else:
-                raise RuntimeError(f"No container for the server was found running; make sure that you started one, and that it was built with the exact command specified in the instructions.")
+                raise RuntimeError(f"No container for the server was found running. This means the program failed, not you. Perhaps Docker crashed between starting the program and now?")
         case _:
             raise RuntimeError(f"docker ps command failed; make sure that Docker Desktop is installed and is open.")
 
