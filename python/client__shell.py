@@ -418,7 +418,12 @@ if __name__ == "__main__":
 
         required_tag = docker_tag_filepath.read_text().strip()
 
-        available_tag = get_server_image_tag()
+        try:
+            available_tag = get_server_image_tag()
+        except RuntimeError as e:
+            print(e)
+            print("You can start Docker from the command line with:\n\tdocker desktop start")
+            exit(1)
 
         if available_tag is None:
             print(f"{error_title()} Docker is running, but the necessary Docker image (fpga-sim-server:{required_tag}) is not available. Make sure you downloaded and then loaded it!")
