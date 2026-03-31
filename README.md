@@ -99,6 +99,9 @@ Docker and press the "try again" button.
 computer.
 * When prompted to make an account, you can skip. It is unnecessary for the
 program.
+* You can launch Docker from the command line with `docker desktop start`.
+I recommend disabling the "Open Docker Dashboard when Docker Desktop starts"
+option in Docker Desktop's settings.
 
 **Linux**:
 * Install [Docker Engine](https://docs.docker.com/engine/install/);
