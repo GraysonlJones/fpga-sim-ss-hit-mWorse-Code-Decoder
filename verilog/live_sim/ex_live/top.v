@@ -19,7 +19,7 @@ module top(
 // Expected behavior:
 // * LEDs match corresponding switches if CB is pressed. Otherwise, all off.
 // * Number display shows 8888 any of the buttons aside from CB are pressed.
-// * When display is on, dot should be on (TODO: DOT NOT WORKING CURRENTLY!).
+// * When display is on, dot should be on.
 
 always @(posedge clk) begin
     if(CB) begin
