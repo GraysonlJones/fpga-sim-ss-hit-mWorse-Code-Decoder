@@ -336,8 +336,13 @@ The Docker image will change sometimes. When a change is made
 to the code that requires an update to the Docker image, I will change the code
 to check the image's version. The code will fail on startup and tell you they
 do not match if you update the code without loading a required new version
-of the image. The process to load a new version of the image is the same as
-to load the first time. **The current Docker image version is v1.**
+of the image. The process to update the image is the same as to pull the first
+time.
+
+Sometimes, the online Docker image will be changed without breaking
+changes, and the version will not increment. I will not announce these; if you
+want to stay on the cutting edge, you can run the docker pull command at
+any time. **The current Docker image version is v1.**
 
 ## Native mode
 
