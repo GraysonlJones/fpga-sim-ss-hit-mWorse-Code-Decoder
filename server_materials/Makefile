@@ -22,6 +22,13 @@ else
   VERILATOR_COVERAGE = $(VERILATOR_ROOT)/bin/verilator_coverage
 endif
 
+# prevent situation where a module has a trailing comma, raising NULLPORT, but
+# 	build still tries to happen and PINMISSING errors are also printed, based
+# 	on the assumption that the nullport was intentional happen.
+# TODO: probably there is a better way to avoid *some* inconsistent errors
+#	without needing to terminate linting/elaboration completely
+lint_flags = --lint-only -Werror-NULLPORT -I./user_inputs
+
 # Generate C++ in executable form
 VERILATOR_FLAGS += -cc --exe
 # Generate makefile dependencies (not shown as complicates the Makefile)
@@ -49,6 +56,8 @@ build:
 	@echo
 	@echo "-- Verilator live sim build"
 	@echo
+	@echo "-- LINT ----------------"
+	$(VERILATOR) $(lint_flags) $(VERILATOR_INPUT)
 	@echo "-- VERILATE ----------------"
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILATOR_INPUT)
 
