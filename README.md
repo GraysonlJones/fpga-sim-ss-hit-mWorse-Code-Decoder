@@ -69,7 +69,7 @@ them.
 highlighter
 * A waveform viewer
     * This program supports automaticaly opening with VSCode's VaporView
-    extension or with GTKWave, but any program that can open .vcd files can
+    extension, GTKWave, or Surfer, but any program that can open .vcd files can
     be used manually
 * Linux users: if you happen to have not run a Qt app before, you may be
 required to install a package when you try to run live simulation.
@@ -127,8 +127,12 @@ installation process will start.
         * [VaporView](https://marketplace.visualstudio.com/items?itemName=lramseyer.vaporview) VCD viewer
 
 **If you are not using VSCode**:
-Install [GTKWave](https://gtkwave.github.io/gtkwave/index.html). This is
-not recommended on Windows if you are not experienced with compiling software.
+Install [GTKWave](https://gtkwave.github.io/gtkwave/index.html) or
+[Surfer](https://gitlab.com/surfer-project/surfer) to somewhere that can be
+found by the terminal from your system path. GTKWave is not recommended on
+Windows if you are not experienced with compiling software.
+[Surfer can also be used in the browser](https://app.surfer-project.org/)
+(without an auto-opening feature, and maybe with bad performance).
 If you use another VCD viewer and like it, please contact me and I may add it
 as an officially supported viewer to automatically open waveforms.
 

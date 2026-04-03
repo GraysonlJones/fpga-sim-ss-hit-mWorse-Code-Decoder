@@ -94,11 +94,15 @@ def waveform_sim(input_files: list[NamedFile], output_path: Path, folder_name: s
             match vcd_viewer:
                 case "vaporview":
                     print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in VaporView.")
-                    subprocess.run(f"code --reuse-window {output_path}", shell=True)
+                    subprocess.run(f"code --reuse-window {shlex.quote(str(output_path))}", shell=True)
                 case "gtkwave":
                     print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in GTKWave.")
                     # gtkwave launches in background. the startup text is stderr
-                    subprocess.Popen(f"gtkwave {output_path}", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                    subprocess.Popen(f"gtkwave {shlex.quote(str(output_path))}", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                case "surfer":
+                    print(result_start, f"Opening {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL} in Surfer.")
+                    # run in background and suppress all prints
+                    subprocess.Popen(f"surfer {shlex.quote(str(output_path))}", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 case None:
                     print(result_start, f"Saved output to {Style.BRIGHT}{Fore.CYAN}{clickable_filepath(output_path, 2)}{Style.RESET_ALL}")
 
@@ -313,13 +317,15 @@ def clickable_filepath(filepath: Path, depth: int):
 
 def waveform_viewer_wizard():
     print("Type vaporview or gtkwave to choose one of those. Reply with anything else to choose nothing")
-    viewer_choice = prompt("-> ", completer=WordCompleter(["vaporview", "gtkwave", "none"], sentence=True)).lower()
+    viewer_choice = prompt("-> ", completer=WordCompleter(["vaporview", "gtkwave", "surfer", "none"], sentence=True)).lower()
 
     match viewer_choice:
         case "vaporview":
             print("VSCode/VaporView selected")
         case "gtkwave":
             print("GTKWave selected.")
+        case "surfer":
+            print("Surfer selected.")
         case _:
             viewer_choice = "NO_VIEWER"
             print("No viewer chosen. Waveforms will not be automatically opened.")
@@ -387,6 +393,16 @@ if __name__ == "__main__":
                     print("GTKWave is selected to automatically open waveforms.")
                 else:
                     print("GTKWave does not seem to be installed. It may need to be added to your path (under the key 'gtkwave');")
+                    print(" if you do this, you must restart the terminal for it to work.")
+                    print(" Waveforms will not be automatically opened for this session!")
+                    vcd_viewer = "NO_VIEWER"
+
+                print(clear_message)
+            case "surfer":
+                if shutil.which("surfer") is not None:
+                    print("surfer is selected to automatically open waveforms.")
+                else:
+                    print("surfer does not seem to be installed. It may need to be added to your path (under the key 'gtkwave');")
                     print(" if you do this, you must restart the terminal for it to work.")
                     print(" Waveforms will not be automatically opened for this session!")
                     vcd_viewer = "NO_VIEWER"
