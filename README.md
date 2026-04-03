@@ -340,9 +340,9 @@ of the image. The process to update the image is the same as to pull the first
 time.
 
 Sometimes, the online Docker image will be changed without breaking
-changes, and the version will not increment. I will not announce these; if you
-want to stay on the cutting edge, you can run the docker pull command at
-any time. **The current Docker image version is v1.**
+compatibility, so the version number will not increase. I will not announce
+these; if you want to stay on the cutting edge, you can run the docker pull
+command at any time. **The current Docker image version is v1.**
 
 ## Native mode
 
