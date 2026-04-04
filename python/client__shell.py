@@ -230,7 +230,7 @@ def get_server_image_tag():
             else:
                 return tag
         case _:
-            raise RuntimeError(f"docker image ls command failed; make sure that Docker Desktop is installed and is open.")
+            raise RuntimeError("docker image ls command failed.")
     
 def get_latest_container_port(tag: str):
     '''Gets the port of the latest-started Docker server container.
@@ -367,6 +367,9 @@ def is_docker_open():
             return False
 
 def print_status(message: str, success: bool):
+    '''Prints "Success:"/"Error:" in green/red followed by given message.
+    Formats message so be careful about possible HTML in there messing it up.
+    Python builtin module html has escape() function which may be required'''
     if success:
         print_formatted_text(HTML(f"<ansigreen>Success:</ansigreen> {message}"))
     else:
@@ -377,7 +380,7 @@ def error_exit(message: str, *, hint: str = "", cmd: str = ""):
 
     if hint != "":
         if cmd != "":
-            print_formatted_text(HTML(f"<ansiyellow>Hint:</ansiyellow> {hint}\n  <i>{cmd}</i>"))
+            print_formatted_text(HTML(f"<ansiyellow>Hint:</ansiyellow> {hint}:\n  <i>{cmd}</i>"))
         else:
             print_formatted_text(HTML(f"<ansiyellow>Hint:</ansiyellow> {hint}"))
     exit(1)
@@ -456,22 +459,28 @@ if __name__ == "__main__":
     except IndexError: # No argument passed
         docker_mode = True
 
+        if not shutil.which("docker"):
+            error_exit("Docker is not installed (could not be found in system path).", hint="If you ran the installer, you may need to open a new terminal or restart your computer.")
+
         if not is_docker_open():
             if sys.platform != 'linux':
-                error_exit("Docker is not running", hint="You can open it from the command line with:", cmd = "docker desktop start")
+                error_exit("Docker is not running.", hint="You can open it from the command line with", cmd="docker desktop start")
             else: # Linux users are probably not on Docker Desktop per instructions
-                error_exit("Docker is not running", hint="Launch it")
+                error_exit("Docker is not running")
 
         # print("Launching Docker container.")
 
         required_tag = docker_tag_filepath.read_text().strip()
         
-        available_tag = get_server_image_tag()
+        try:
+            available_tag = get_server_image_tag()
+        except RuntimeError as e: # very unlikely. hard to have a reasonable hint here
+            error_exit(f"Docker is open, but {e}", hint="Try running this program again. This is an unusual error.")
 
         if available_tag is None:
-            error_exit(f"The necessary Docker image (fpga-sim-server:{required_tag}) is not installed", hint="Run docker pull as described in the README at:", cmd="https://github.com/TheHarmonicRealm/fpga-sim")
+            error_exit(f"The necessary Docker image (fpga-sim-server:{required_tag}) is not installed", hint="Run docker pull as described in the README at", cmd="https://github.com/TheHarmonicRealm/fpga-sim")
         elif available_tag != required_tag:
-            error_exit(f"fpga-sim-server tag {available_tag} is loaded; software requires {required_tag}", hint="Run git pull and/or the docker pull command described in the README at:", cmd="https://github.com/TheHarmonicRealm/fpga-sim")
+            error_exit(f"fpga-sim-server:{available_tag} is loaded; software requires {required_tag}", hint="Run git pull and/or the docker pull command described in the README at", cmd="https://github.com/TheHarmonicRealm/fpga-sim")
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
         if sys.platform != 'win32':
