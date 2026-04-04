@@ -23,7 +23,7 @@ from client__paths import (
     waveforms_folder,
 )
 from colorama import Fore, Style
-from prompt_toolkit import PromptSession, prompt
+from prompt_toolkit import HTML, PromptSession, print_formatted_text, prompt
 from prompt_toolkit.application import get_app
 from prompt_toolkit.completion import (
     CompleteEvent,
@@ -356,6 +356,31 @@ def toolbar():
             return "Press tab/shift-tab or up/down to select suggestions, and space to accept the highlighted one"
         case [_, _]:
             return "It appears you are typing in an invalid command"
+        
+
+def is_docker_open():
+    proc = subprocess.run("docker info", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    match proc.returncode:
+        case 0:
+            return True
+        case _:
+            return False
+
+def print_status(message: str, success: bool):
+    if success:
+        print_formatted_text(HTML(f"<ansigreen>Success:</ansigreen> {message}"))
+    else:
+        print_formatted_text(HTML(f"<ansired>Error:</ansired> {message}"))
+
+def error_exit(message: str, *, hint: str = "", cmd: str = ""):
+    print_status(message, False)
+
+    if hint != "":
+        if cmd != "":
+            print_formatted_text(HTML(f"<ansiyellow>Hint:</ansiyellow> {hint}\n  <i>{cmd}</i>"))
+        else:
+            print_formatted_text(HTML(f"<ansiyellow>Hint:</ansiyellow> {hint}"))
+    exit(1)
 
 if __name__ == "__main__":
     if sys.prefix == sys.base_prefix: # if not in a venv give some guidance
@@ -430,25 +455,23 @@ if __name__ == "__main__":
         docker_mode = False
     except IndexError: # No argument passed
         docker_mode = True
+
+        if not is_docker_open():
+            if sys.platform != 'linux':
+                error_exit("Docker is not running", hint="You can open it from the command line with:", cmd = "docker desktop start")
+            else: # Linux users are probably not on Docker Desktop per instructions
+                error_exit("Docker is not running", hint="Launch it")
+
         # print("Launching Docker container.")
 
         required_tag = docker_tag_filepath.read_text().strip()
-
-        try:
-            available_tag = get_server_image_tag()
-        except RuntimeError as e:
-            print(e)
-            print("You can start Docker from the command line with:\n\tdocker desktop start")
-            exit(1)
+        
+        available_tag = get_server_image_tag()
 
         if available_tag is None:
-            print(f"{error_title()} Docker is running, but the necessary Docker image (fpga-sim-server:{required_tag}) is not available. Make sure you downloaded and then loaded it!")
-            exit(1)
+            error_exit(f"The necessary Docker image (fpga-sim-server:{required_tag}) is not installed", hint="Run docker pull as described in the README at:", cmd="https://github.com/TheHarmonicRealm/fpga-sim")
         elif available_tag != required_tag:
-            print(f"{error_title()} Docker is running, but you have the wrong version ({available_tag}) of the fpga-sim-server image loaded; requires {required_tag}")
-            print(f"* If the required version has a higher number, you should redownload from Canvas")
-            print(f"* If the required version has a lower number, you should run git pull in this terminal to update the software")
-            exit(1)
+            error_exit(f"fpga-sim-server tag {available_tag} is loaded; software requires {required_tag}", hint="Run git pull and/or the docker pull command described in the README at:", cmd="https://github.com/TheHarmonicRealm/fpga-sim")
         # Launch docker:
         #   preexec_fn is part of ignoring ctrl-C
         if sys.platform != 'win32':
