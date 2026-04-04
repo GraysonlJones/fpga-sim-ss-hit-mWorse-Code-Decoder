@@ -313,7 +313,7 @@ def crawl_input_directory(front_target: str, containing_folder: Path, folder_nam
     return [NamedFile.from_fp(open(file_path, "r"), close_after=True) for file_path in file_paths]
 
 def clickable_filepath(filepath: Path, depth: int):
-    return f"./{Path(*filepath.parts[-depth:])}"
+    return f"{Path(*filepath.parts[-depth:])}"
 
 def waveform_viewer_wizard():
     print("Type vaporview or gtkwave to choose one of those. Reply with anything else to choose nothing")
@@ -544,7 +544,11 @@ if __name__ == "__main__":
                         match args:
                             case [folder, filename, *_]:
                                 waveforms_folder.mkdir(exist_ok=True)
-                                output_path = waveforms_folder.joinpath(filename)
+                                # not visible at all to user but make the path
+                                #   relative instead of absolute.
+                                # when debugging I saw the giant full-length
+                                #   path passed to Surfer and it made me sad
+                                output_path = waveforms_folder.joinpath(filename).relative_to(top_folder)
 
                                 overwrite = False
 
