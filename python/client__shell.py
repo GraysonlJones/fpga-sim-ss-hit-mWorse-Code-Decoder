@@ -316,19 +316,27 @@ def clickable_filepath(filepath: Path, depth: int):
     return f"{Path(*filepath.parts[-depth:])}"
 
 def waveform_viewer_wizard():
-    print("Type vaporview or gtkwave to choose one of those. Reply with anything else to choose nothing")
-    viewer_choice = prompt("-> ", completer=WordCompleter(["vaporview", "gtkwave", "surfer", "none"], sentence=True)).lower()
+    print("Type in vaporview, surfer, gtkwave or none to select auto-open software, or exit to quit.")
+    print("Press tab to list these options or complete a partial entry.")
+    while True: # loop until they give a good option or enter exit
+        viewer_choice = prompt("-> ", completer=WordCompleter(["vaporview", "gtkwave", "surfer", "none"], sentence=True), complete_style=CompleteStyle.READLINE_LIKE).strip().lower()
 
-    match viewer_choice:
-        case "vaporview":
-            print("VSCode/VaporView selected")
-        case "gtkwave":
-            print("GTKWave selected.")
-        case "surfer":
-            print("Surfer selected.")
-        case _:
-            viewer_choice = "NO_VIEWER"
-            print("No viewer chosen. Waveforms will not be automatically opened.")
+        match viewer_choice:
+            case "vaporview":
+                print("VSCode/VaporView selected")
+            case "gtkwave":
+                print("GTKWave selected.")
+            case "surfer":
+                print("Surfer selected.")
+            case "none":
+                viewer_choice = "NO_VIEWER"
+                print("No viewer chosen. Waveforms will not be automatically opened.")
+            case "exit":
+                exit(0)
+            case _:
+                print("Invalid choice.")
+                continue
+        break # avoided only by _ branch
 
     settings_filepath.write_text(viewer_choice)
 
