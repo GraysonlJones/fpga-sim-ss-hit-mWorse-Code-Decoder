@@ -217,7 +217,7 @@ uv run ./python/client__shell.py
 ```
 
 * This will take a little bit the first time, as uv must
-set up a virtual environment, which involves downloading packages
+set up a virtual environment, which entails automatically downloading packages
 and possibly a new Python version. After the first time,
 the program is still run with this command and should not have any
 unusual startup delay.
