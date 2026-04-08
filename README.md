@@ -162,7 +162,7 @@ in order to re-accept Apple's TOS and use git.
 * The point of this is to make sure any terminal you will open from now can
 find uv, git, and VSCode.
 
-7. Download the code and the Docker image:
+7. Download the code and pull the Docker image:
 
 * In your terminal, run cd `~/Documents` to go to the Documents folder.
 
