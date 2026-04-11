@@ -8,5 +8,9 @@
     },
     "[systemverilog]": {
         "editor.colorDecorators": false
+    "python.terminal.activateEnvironment": false,
+
+    "files.associations": {
+        "*.v": "systemverilog"
     }
 }
