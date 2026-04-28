@@ -7,7 +7,7 @@ python/waveform_viewer_choice.txt
 # Allow examples in these
 waveforms/*
 !waveforms/ex_*
-verilog/live_sim/*
+
 !verilog/live_sim/ex_*
-verilog/testbench/*
+
 !verilog/testbench/ex_*
