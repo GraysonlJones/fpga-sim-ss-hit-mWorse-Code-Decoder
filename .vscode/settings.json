@@ -1,6 +1,6 @@
 {
     "explorer.compactFolders": false,
-    "chat.disableAIFeatures": true,
+    "chat.disableAIFeatures": false,
     "inlineChat.affordance": "off",
 
     "[verilog]": {
