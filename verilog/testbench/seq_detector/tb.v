@@ -3,7 +3,7 @@
 module tb();
 
 reg clk;
-reg [2:0] in_bit;
+reg in_bit;
 reg [4:0] let_ind;
 reg [7:0] lett;
 

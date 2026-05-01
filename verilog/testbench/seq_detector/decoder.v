@@ -2,21 +2,32 @@
 
 module decoder(
     input clk,
-    input [1:0] in_bit,
+    input in_bit,
     output [4:0] letter_ind
 );
 
-localparam [1:0] IDLE = 0;
-localparam [1:0] DECODE = 1;
+localparam IDLE = 0;
+localparam DECODE = 1;
 
-localparam [1:0] prev_bit;
+reg prev_bit;
+reg read;
 
-reg [2:0] current_state;
-reg [2:0] next_state;
+reg current_state;
+reg next_state;
+
+reg [4:0] out_letter;
+
+letter_detection ld(
+    clk,
+    read,
+    in_bit,
+    out_letter // as in 0-26
+);
 
 initial begin
     current_state = IDLE;
-    letter_ind = 0;
+    prev_bit = 0;
+    read = 0;
 end
 
 always_ff @(posedge clk) begin
@@ -25,21 +36,26 @@ end
 
 always_comb begin
     if (current_state == IDLE) begin
-        if (in_bit ~^ prev_bit) next_state = DECODE;
+        if (in_bit ~^ prev_bit) begin
+            /* verilator lint_off MULTIDRIVEN */
+            next_state = DECODE;
+            read = 1;
+            /* verilator lint_on MULTIDRIVEN */
+        end
         else begin
+            /* verilator lint_off MULTIDRIVEN */
             next_state = IDLE;
             prev_bit = in_bit;
+            /* verilator lint_on MULTIDRIVEN */
         end
     end
-    else if (current_state == DECODE) begin
-        letter_detector ld(
-            clk,
-            in_bit,
-            out_letter // as in 0-26
-        )
+    else begin // DECODE
         if (out_letter != 0) begin
+            /* verilator lint_off MULTIDRIVEN */
             next_state = IDLE;
             letter_ind = out_letter;
+            read = 0;
+            /* verilator lint_on MULTIDRIVEN */
         end
     end
 end

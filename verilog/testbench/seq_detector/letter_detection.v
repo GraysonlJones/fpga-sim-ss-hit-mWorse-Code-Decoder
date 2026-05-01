@@ -2,57 +2,68 @@
 
 module letter_detection(
     input clk,
+    input read,
     input in_bit,
-    output reg [5:0] output_letter
+    output reg [4:0] output_letter
 );
 
-localparam DOT = 0;
-localparam LONG = 1;
-localparam BREAK = 2;
+localparam [1:0] DOT = 0;
+localparam [1:0] LONG = 1;
+localparam [1:0] BREAK = 2;
 
-reg [5:0] curr_letter;
+reg [4:0] curr_letter;
 reg a;
-reg [5:0] result;
+reg [4:0] result;
 
 reg [1:0] current_state;
 reg [1:0] next_state;
+reg activate_tree;
+
+letterTree letterTree_i(activate_tree, curr_letter, current_state, result);
 
 initial begin
     current_state = DOT;
     curr_letter = 0;
     a = in_bit;
     result = 0;
+    activate_tree = 0;
 end
 
 always_comb begin
-    case(current_state)
-        DOT: begin
-            if(in_bit == a) begin
-                next_state = LONG;
-            end else
-                letterTree letterTree_i(curr_letter, current_state, result);
-                curr_letter = result;
+    if (read) begin
+        case(current_state)
+            DOT: begin
+                if(in_bit == a) begin
+                    next_state = LONG;
+                end 
+                else begin
+                    activate_tree = 1;
+                    curr_letter = result;
+                    next_state = DOT;
+                    a = ~a;
+                    activate_tree = 0;
+                end
+            end
+            LONG: begin
+                if(in_bit == a) begin
+                    next_state = BREAK;
+                end 
+                else begin
+                    activate_tree = 1;
+                    curr_letter = result;
+                    next_state = DOT;
+                    a = ~a;
+                    activate_tree = 0;
+                end
+            end
+            BREAK: begin
                 next_state = DOT;
+                output_letter = curr_letter;
+                curr_letter = 0;
                 a = ~a;
             end
-        end
-        LONG: begin
-            if(in_bit == a) begin
-                next_state = BREAK;
-            end else
-                letterTree letterTree_i(curr_letter, current_state, result);
-                curr_letter = result;
-                next_state = DOT;
-                a = ~a;
-            end
-        end
-        BREAK: begin
-            next_state = DOT;
-            output_letter = curr_letter;
-            curr_letter = 0;
-            a = ~a;
-        end
-    endcase
+        endcase
+    end
 end
 
 endmodule
