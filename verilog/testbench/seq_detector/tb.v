@@ -23,6 +23,56 @@ initial begin
     $dumpvars(0, tb);
     clk = 0;
 
+    in_bit = 0;
+    #20
+    in_bit = 1;
+    #5; // dot
+    in_bit = 0;
+    #15; // letter end - E
+    in_bit = 1;
+    #10; // dash
+    in_bit = 0;
+    #15; // letter end - T
+    in_bit = 1;
+    #5; // dot
+    in_bit = 0;
+    #10; // dash
+    in_bit = 1;
+    #10; // dash
+    in_bit = 0;
+    #5; // dot
+    in_bit = 1;
+    #15; // letter end - P
+    in_bit = 0;
+    #5; // dot
+    in_bit = 1;
+    #5; // dot
+    in_bit = 0;
+    #5; // dot
+    in_bit = 1;
+    #5; // dot
+    in_bit = 0;
+    #15; // letter end - H
+    in_bit = 1;
+    #10; // dash
+    in_bit = 0;
+    #10; // dash
+    in_bit = 1;
+    #10; // dash
+    in_bit = 0;
+    #15; // letter end - O
+    in_bit = 1;
+    #10; // dash
+    in_bit = 0;
+    #5; // dot
+    in_bit = 1;
+    #15; // letter end - N
+    in_bit = 0;
+    #5; // dot
+    in_bit = 1;
+    #15; // letter end - E
+    
+
 
     // LETTER CONVERSION TESTING
     // let_ind = 0;
