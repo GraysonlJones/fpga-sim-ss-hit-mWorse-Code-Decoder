@@ -19,14 +19,18 @@ reg [1:0] current_state;
 reg [1:0] next_state;
 reg activate_tree;
 
-letterTree letterTree_i(activate_tree, curr_letter, current_state, result);
-
 initial begin
     current_state = DOT;
     curr_letter = 0;
-    a = in_bit;
+    // a = in_bit;
     result = 0;
     activate_tree = 0;
+end
+
+letterTree letterTree_i(activate_tree, curr_letter, current_state, result);
+
+always_ff @(posedge clk) begin
+    current_state = next_state;
 end
 
 always_comb begin
@@ -40,7 +44,7 @@ always_comb begin
                     activate_tree = 1;
                     curr_letter = result;
                     next_state = DOT;
-                    a = ~a;
+                    a <= in_bit;
                     activate_tree = 0;
                 end
             end
@@ -52,7 +56,7 @@ always_comb begin
                     activate_tree = 1;
                     curr_letter = result;
                     next_state = DOT;
-                    a = ~a;
+                    a <= in_bit;
                     activate_tree = 0;
                 end
             end
@@ -60,8 +64,13 @@ always_comb begin
                 next_state = DOT;
                 output_letter = curr_letter;
                 curr_letter = 0;
-                a = ~a;
+                a <= in_bit;
             end
+            default: begin
+                next_state = BREAK;
+                output_letter = 0;
+                curr_letter = 0;
+                a <= in_bit;
         endcase
     end
 end

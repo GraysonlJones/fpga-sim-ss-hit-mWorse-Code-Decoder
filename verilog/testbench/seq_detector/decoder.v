@@ -3,7 +3,7 @@
 module decoder(
     input clk,
     input in_bit,
-    output [4:0] letter_ind
+    output reg [4:0] letter_ind
 );
 
 localparam IDLE = 0;
@@ -37,25 +37,25 @@ end
 always_comb begin
     if (current_state == IDLE) begin
         if (in_bit ~^ prev_bit) begin
-            /* verilator lint_off MULTIDRIVEN */
+            /* verilator lint_off ALWCOMBORDER */
             next_state = DECODE;
             read = 1;
-            /* verilator lint_on MULTIDRIVEN */
+            /* verilator lint_on ALWCOMBORDER */
         end
         else begin
-            /* verilator lint_off MULTIDRIVEN */
+            /* verilator lint_off ALWCOMBORDER */
             next_state = IDLE;
             prev_bit = in_bit;
-            /* verilator lint_on MULTIDRIVEN */
+            /* verilator lint_on ALWCOMBORDER */
         end
     end
     else begin // DECODE
         if (out_letter != 0) begin
-            /* verilator lint_off MULTIDRIVEN */
+            /* verilator lint_off ALWCOMBORDER */
             next_state = IDLE;
-            letter_ind = out_letter;
+            letter_ind <= out_letter;
             read = 0;
-            /* verilator lint_on MULTIDRIVEN */
+            /* verilator lint_on ALWCOMBORDER */
         end
     end
 end
