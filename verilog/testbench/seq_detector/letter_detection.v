@@ -2,8 +2,9 @@
 
 module letter_detection(
     input clk,
-    // input read,
+    input read,
     input in_bit,
+    input prev_bit,
     output reg [4:0] output_letter
 );
 
@@ -12,7 +13,6 @@ localparam [1:0] LONG = 1;
 localparam [1:0] BREAK = 2;
 
 reg [4:0] curr_letter;
-reg a;
 reg [4:0] result;
 
 reg [1:0] current_state;
@@ -22,7 +22,6 @@ reg activate_tree;
 initial begin
     current_state = DOT;
     curr_letter = 0;
-    a = in_bit;
     result = 0;
     activate_tree = 0;
 end
@@ -34,46 +33,42 @@ always_ff @(posedge clk) begin
 end
 
 always_ff @(posedge clk) begin
-    //if (read) begin
+    if (read) begin
         case(current_state)
             DOT: begin
-                if(in_bit == a) begin
+                if(in_bit == prev_bit) begin
                     next_state = LONG;
                 end 
                 else begin
                     activate_tree = 1;
                     curr_letter = result;
                     next_state = DOT;
-                    a = in_bit;
-                    activate_tree = 0;
                 end
             end
             LONG: begin
-                if(in_bit == a) begin
+                if(in_bit == prev_bit) begin
                     next_state = BREAK;
                 end 
                 else begin
                     activate_tree = 1;
                     curr_letter = result;
                     next_state = DOT;
-                    a = in_bit;
-                    activate_tree = 0;
                 end
             end
             BREAK: begin
                 next_state = DOT;
+                activate_tree = 0;
                 output_letter = curr_letter;
                 curr_letter = 0;
-                a = in_bit;
             end
             default: begin
                 next_state = BREAK;
+                activate_tree = 0;
                 output_letter = 0;
                 curr_letter = 0;
-                a = in_bit;
             end
         endcase
-    // end
+    end
 end
 
 endmodule
