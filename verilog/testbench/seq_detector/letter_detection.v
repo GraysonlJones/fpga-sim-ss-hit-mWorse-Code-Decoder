@@ -22,7 +22,7 @@ reg activate_tree;
 initial begin
     current_state = DOT;
     curr_letter = 0;
-    // a = in_bit;
+    a = in_bit;
     result = 0;
     activate_tree = 0;
 end
@@ -44,7 +44,7 @@ always_comb begin
                     activate_tree = 1;
                     curr_letter = result;
                     next_state = DOT;
-                    a <= in_bit;
+                    a = in_bit;
                     activate_tree = 0;
                 end
             end
@@ -56,7 +56,7 @@ always_comb begin
                     activate_tree = 1;
                     curr_letter = result;
                     next_state = DOT;
-                    a <= in_bit;
+                    a = in_bit;
                     activate_tree = 0;
                 end
             end
@@ -64,13 +64,14 @@ always_comb begin
                 next_state = DOT;
                 output_letter = curr_letter;
                 curr_letter = 0;
-                a <= in_bit;
+                a = in_bit;
             end
             default: begin
                 next_state = BREAK;
                 output_letter = 0;
                 curr_letter = 0;
-                a <= in_bit;
+                a = in_bit;
+            end
         endcase
     end
 end

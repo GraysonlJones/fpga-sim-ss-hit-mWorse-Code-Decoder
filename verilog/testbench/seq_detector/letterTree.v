@@ -10,7 +10,7 @@ reg dorD;
 
 assign dorD = state[0];
 
-always @(*) begin
+always_latch begin
     if (activate) begin
         case (currentLetterIndx)
             5'd0:   newLetter = dorD ?    5'd20 :    5'd5;

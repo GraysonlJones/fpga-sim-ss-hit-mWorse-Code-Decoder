@@ -27,7 +27,7 @@ letter_detection ld(
 initial begin
     current_state = IDLE;
     prev_bit = 0;
-    read = 0;
+    // read = 0;
 end
 
 always_ff @(posedge clk) begin
@@ -37,26 +37,21 @@ end
 always_comb begin
     if (current_state == IDLE) begin
         if (in_bit ~^ prev_bit) begin
-            /* verilator lint_off ALWCOMBORDER */
             next_state = DECODE;
             read = 1;
-            /* verilator lint_on ALWCOMBORDER */
         end
         else begin
-            /* verilator lint_off ALWCOMBORDER */
             next_state = IDLE;
             prev_bit = in_bit;
-            /* verilator lint_on ALWCOMBORDER */
         end
     end
-    else begin // DECODE
-        if (out_letter != 0) begin
-            /* verilator lint_off ALWCOMBORDER */
+    else if (out_letter != 0) begin
             next_state = IDLE;
-            letter_ind <= out_letter;
+            letter_ind = out_letter;
             read = 0;
-            /* verilator lint_on ALWCOMBORDER */
-        end
+    end
+    else begin
+    	next_state = IDLE;
     end
 end
 
