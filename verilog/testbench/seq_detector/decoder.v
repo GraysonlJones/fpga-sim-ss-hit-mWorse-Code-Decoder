@@ -34,7 +34,7 @@ always_ff @(posedge clk) begin
     current_state = next_state;
 end
 
-always_comb begin
+always_ff @(posedge clk) begin
     if (current_state == IDLE) begin
         if (in_bit ~^ prev_bit) begin
             next_state = DECODE;

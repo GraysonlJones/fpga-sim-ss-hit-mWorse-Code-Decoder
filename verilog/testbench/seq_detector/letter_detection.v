@@ -33,7 +33,7 @@ always_ff @(posedge clk) begin
     current_state = next_state;
 end
 
-always_comb begin
+always_ff @(posedge clk) begin
     //if (read) begin
         case(current_state)
             DOT: begin
