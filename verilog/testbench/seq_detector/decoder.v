@@ -10,7 +10,7 @@ localparam IDLE = 0;
 localparam DECODE = 1;
 
 reg prev_bit;
-reg read;
+// reg read;
 
 reg current_state;
 reg next_state;
@@ -19,7 +19,7 @@ reg [4:0] out_letter;
 
 letter_detection ld(
     clk,
-    read,
+    // read,
     in_bit,
     out_letter // as in 0-26
 );
@@ -38,7 +38,7 @@ always_comb begin
     if (current_state == IDLE) begin
         if (in_bit ~^ prev_bit) begin
             next_state = DECODE;
-            read = 1;
+            // read = 1;
         end
         else begin
             next_state = IDLE;
@@ -48,7 +48,7 @@ always_comb begin
     else if (out_letter != 0) begin
             next_state = IDLE;
             letter_ind = out_letter;
-            read = 0;
+            // read = 0;
     end
     else begin
     	next_state = IDLE;

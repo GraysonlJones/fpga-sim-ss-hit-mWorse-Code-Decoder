@@ -2,7 +2,7 @@
 
 module letter_detection(
     input clk,
-    input read,
+    // input read,
     input in_bit,
     output reg [4:0] output_letter
 );
@@ -34,7 +34,7 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
-    if (read) begin
+    //if (read) begin
         case(current_state)
             DOT: begin
                 if(in_bit == a) begin
@@ -73,7 +73,7 @@ always_comb begin
                 a = in_bit;
             end
         endcase
-    end
+    // end
 end
 
 endmodule
