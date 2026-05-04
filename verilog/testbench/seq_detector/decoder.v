@@ -13,6 +13,9 @@ reg prev_bit;
 reg p_prev_bit;
 reg read;
 
+reg bit_ind;
+reg [2:0] last_3_bits;
+
 reg current_state;
 reg next_state;
 
@@ -21,8 +24,9 @@ reg [4:0] out_letter;
 letter_detection ld(
     clk,
     read,
-    in_bit,
-    prev_bit,
+    last_3_bits,
+    // in_bit,
+    // prev_bit,
     out_letter // as in 0-26
 );
 
@@ -30,11 +34,16 @@ initial begin
     current_state = IDLE;
     prev_bit = 0;
     read = 0;
+    last_3_bits = 3'b000;
 end
 
 always_ff @(posedge clk) begin
     current_state = next_state;
     prev_bit = p_prev_bit;
+    last_3_bits[2] = last_3_bits[1];
+    last_3_bits[0] = in_bit;
+    last_3_bits[1] = prev_bit;
+
 end
 
 always_ff @(posedge clk) begin
@@ -45,7 +54,7 @@ always_ff @(posedge clk) begin
         end
         else begin
             next_state = IDLE;
-            prev_bit = in_bit;
+            // prev_bit = in_bit;
         end
     end
     else if (current_state == DECODE) begin
